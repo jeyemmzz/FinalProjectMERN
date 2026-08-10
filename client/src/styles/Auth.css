@@ -1,0 +1,321 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at 20% 20%, #0f172a 0%, #030712 100%);
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
+
+/* Wrapper para sa buong page */
+.auth-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #030712;
+  animation: pageSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Astig at Smooth Page Transition Animation */
+@keyframes pageSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Navbar Container para ma-center sa itaas */
+.auth-navbar-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px 20px 10px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: transparent;
+}
+
+/* Floating Pill-shaped Container na may bilog paligid */
+.nav-pill-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 10px 24px;
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.nav-item {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  cursor: pointer;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-item:hover {
+  color: #38bdf8;
+}
+
+/* Underline Animation effect para sa navbar items */
+.nav-pill-container .nav-item::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #38bdf8;
+  transition: width 0.3s ease;
+}
+
+.nav-pill-container .nav-item:hover::after {
+  width: 100%;
+}
+
+/* Pill buttons para sa Login at Register sa loob ng navbar */
+.nav-pill-btn {
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-pill-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  animation: subtlePulse 3s infinite;
+}
+
+.nav-pill-btn.register {
+  background: #0284c7;
+  border: none;
+  color: #ffffff;
+}
+
+.nav-pill-btn.register:hover {
+  background: #0369a1;
+}
+
+/* Floating Glow Pulse Animation para sa Active Buttons */
+@keyframes subtlePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(56, 189, 248, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+
+.auth-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+
+/* Left Side: Professional Branding */
+.auth-brand-side {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+}
+
+.auth-brand-side h1 {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.auth-brand-side p {
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  color: #94a3b8;
+  line-height: 1.6;
+  max-width: 450px;
+}
+
+/* Right Side: Form Section */
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+}
+
+/* Glassmorphism Card Style na may smooth hover */
+.auth-card-pro {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  padding: 35px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card-pro:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+}
+
+.auth-card-pro h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f8fafc;
+  margin-bottom: 6px;
+}
+
+.auth-subtitle {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.input-group {
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(3, 7, 18, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+  border-color: #38bdf8;
+  background: rgba(3, 7, 18, 0.8);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  animation: subtlePulse 3s infinite;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+
+.switch-text {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.switch-text span {
+  color: #38bdf8;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.switch-text span:hover {
+  text-decoration: underline;
+}
+
+/* Skeleton / Ghost Loading Shimmer Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 1024px) {
+  .auth-brand-side {
+    padding: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    justify-content: center;
+    align-items: center;
+  }
+  .auth-brand-side {
+    display: none;
+  }
+  .auth-form-side {
+    width: 100%;
+    padding: 20px;
+  }
+  .auth-card-pro {
+    max-width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .nav-pill-container {
+    gap: 14px;
+    padding: 8px 16px;
+  }
+}
