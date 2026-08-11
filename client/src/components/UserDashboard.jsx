@@ -43,7 +43,7 @@ export default function UserDashboard({ onLogout }) {
         <div className="nav-pill-container" style={{ gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '1rem', fontWeight: '800', color: '#ffffff' }}>
-              Syntax <span style={{ color: '#38bdf8' }}>4</span> <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '400' }}>(Student Portal)</span>
+              Syntax <span style={{ color: '#38bdf8' }}>4</span> <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '400' }}></span>
             </span>
           </div>
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
