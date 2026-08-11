@@ -3,6 +3,7 @@ import '../styles/Auth.css';
 
 export default function UserDashboard({ onLogout }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('All');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -13,8 +14,28 @@ export default function UserDashboard({ onLogout }) {
 
   const registeredEvents = [
     { id: 1, title: 'Tech Summit 2026', date: 'Oct 12, 2026', venue: 'NU MOA Main Auditorium', status: 'Confirmed' },
-    { id: 2, title: 'Syntax 4 Hackathon', date: 'Oct 25, 2026', venue: 'Computer Lab 402', status: 'Pending Approval' }
+    { id: 2, title: 'Syntax 4 Hackathon', date: 'Oct 25, 2026', venue: 'Computer Lab 402', status: 'Pending Approval' },
+    { id: 3, title: 'AI & Robotics Expo', date: 'Nov 05, 2026', venue: 'Multipurpose Hall', status: 'Declined' }
   ];
+
+  const tabs = ['All', 'Confirmed', 'Pending Approval', 'Declined'];
+
+  const filteredEvents = activeTab === 'All'
+    ? registeredEvents
+    : registeredEvents.filter(event => event.status === activeTab);
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'Confirmed':
+        return { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' };
+      case 'Pending Approval':
+        return { background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' };
+      case 'Declined':
+        return { background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' };
+      default:
+        return { background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', border: '1px solid rgba(148, 163, 184, 0.3)' };
+    }
+  };
 
   return (
     <div className="auth-page-wrapper">
@@ -53,19 +74,52 @@ export default function UserDashboard({ onLogout }) {
             </div>
 
             <h3 style={{ fontSize: '1.1rem', color: '#ffffff', marginBottom: '15px' }}>My Registered Events</h3>
-            
+
+            {/* Filter Tabs */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      border: isActive ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: isActive ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                      color: isActive ? '#38bdf8' : '#94a3b8',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {tab}
+                  </button>
+                ); 
+              })}
+            </div>
+
+            {/* Event List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {registeredEvents.map((item) => (
-                <div key={item.id} style={{ background: 'rgba(3, 7, 18, 0.5)', padding: '18px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                  <div>
-                    <h4 style={{ fontSize: '1rem', color: '#ffffff', marginBottom: '4px' }}>{item.title}</h4>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>📅 {item.date} | 📍 {item.venue}</p>
+              {filteredEvents.length > 0 ? (
+                filteredEvents.map((item) => (
+                  <div key={item.id} style={{ background: 'rgba(3, 7, 18, 0.5)', padding: '18px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <h4 style={{ fontSize: '1rem', color: '#ffffff', marginBottom: '4px' }}>{item.title}</h4>
+                      <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>📅 {item.date} | 📍 {item.venue}</p>
+                    </div>
+                    <span style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px', fontWeight: '500', ...getStatusStyle(item.status) }}>
+                      {item.status}
+                    </span>
                   </div>
-                  <span style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px', background: item.status === 'Confirmed' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: item.status === 'Confirmed' ? '#10b981' : '#f59e0b', fontWeight: '500' }}>
-                    {item.status}
-                  </span>
+                ))
+              ) : (
+                <div style={{ padding: '30px', textAlign: 'center', background: 'rgba(3, 7, 18, 0.3)', borderRadius: '10px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No events found under "{activeTab}".</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
