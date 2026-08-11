@@ -97,7 +97,7 @@ export default function UserDashboard({ onLogout }) {
                   >
                     {tab}
                   </button>
-                ); 
+                );
               })}
             </div>
 
