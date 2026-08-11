@@ -106,7 +106,7 @@ export default function Signup({ onBackToHome, onSwitchToLogin, onNavigateAbout,
                   <input 
                     type="text" 
                     name="fullName"
-                    placeholder="Jose Mari Gomon Jr."
+                    placeholder= "Juan Dela Cruz"
                     value={formData.fullName}
                     onChange={handleChange}
                     style={{ width: '100%', padding: '11px 14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '8px', color: '#fff', fontSize: '0.9rem', outline: 'none' }}
