@@ -43,7 +43,7 @@ export default function UserDashboard({ onLogout }) {
         <div className="nav-pill-container" style={{ gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '1rem', fontWeight: '800', color: '#ffffff' }}>
-              Syntax <span style={{ color: '#38bdf8' }}>4</span> <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '400' }}></span>
+              Syntax <span style={{ color: '#38bdf8' }}>4</span>
             </span>
           </div>
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
@@ -54,29 +54,38 @@ export default function UserDashboard({ onLogout }) {
         </div>
       </nav>
 
-      <div style={{ maxWidth: '900px', width: '90%', margin: '40px auto', flex: 1 }}>
+      {/* Expanded Wrapper: Max width set to 1200px for a wide canvas */}
+      <div style={{ maxWidth: '1200px', width: '95%', margin: '40px auto', flex: 1 }}>
         {isPageLoading ? (
-          <div className="auth-card-pro" style={{ padding: '30px' }}>
-            <div className="skeleton-loader" style={{ height: '30px', width: '50%', marginBottom: '15px' }}></div>
-            <div className="skeleton-loader" style={{ height: '18px', width: '80%', marginBottom: '30px' }}></div>
-            <div className="skeleton-loader" style={{ height: '150px', width: '100%', borderRadius: '12px' }}></div>
+          /* Loading State: Force maxWidth to 100% to override Auth.css */
+          <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px' }}>
+            <div className="skeleton-loader" style={{ height: '35px', width: '25%', marginBottom: '15px' }}></div>
+            <div className="skeleton-loader" style={{ height: '18px', width: '40%', marginBottom: '40px' }}></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+              <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
+              <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
+              <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
+            </div>
           </div>
         ) : (
-          <div className="auth-card-pro" style={{ padding: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+          /* Main Dashboard Card: Force maxWidth to 100% to override Auth.css */
+          <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px' }}>
+            
+            {/* Header section set to flex-row for landscape alignment */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
               <div>
-                <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#ffffff', marginBottom: '6px' }}>Dashboard</h1>
-                <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Welcome back! Track your registered campus activities here.</p>
+                <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#ffffff', marginBottom: '8px' }}>Dashboard</h1>
+                <p style={{ fontSize: '1rem', color: '#94a3b8' }}>Welcome back! Track your registered campus activities here.</p>
               </div>
-              <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '10px 18px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: '600' }}>Role: Regular Student</span>
+              <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '12px 20px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '600' }}>Role: Regular Student</span>
               </div>
             </div>
 
-            <h3 style={{ fontSize: '1.1rem', color: '#ffffff', marginBottom: '15px' }}>My Registered Events</h3>
+            <h3 style={{ fontSize: '1.2rem', color: '#ffffff', marginBottom: '20px' }}>My Registered Events</h3>
 
             {/* Filter Tabs */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', flexWrap: 'wrap' }}>
               {tabs.map((tab) => {
                 const isActive = activeTab === tab;
                 return (
@@ -84,9 +93,9 @@ export default function UserDashboard({ onLogout }) {
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     style={{
-                      padding: '8px 16px',
+                      padding: '10px 20px',
                       borderRadius: '8px',
-                      fontSize: '0.85rem',
+                      fontSize: '0.9rem',
                       fontWeight: '600',
                       cursor: 'pointer',
                       border: isActive ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
@@ -101,23 +110,56 @@ export default function UserDashboard({ onLogout }) {
               })}
             </div>
 
-            {/* Event List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Event List converted to a Landscape Grid Matrix */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', 
+              gap: '24px' 
+            }}>
               {filteredEvents.length > 0 ? (
                 filteredEvents.map((item) => (
-                  <div key={item.id} style={{ background: 'rgba(3, 7, 18, 0.5)', padding: '18px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                    <div>
-                      <h4 style={{ fontSize: '1rem', color: '#ffffff', marginBottom: '4px' }}>{item.title}</h4>
-                      <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>📅 {item.date} | 📍 {item.venue}</p>
+                  <div key={item.id} style={{ 
+                    background: 'rgba(3, 7, 18, 0.6)', 
+                    padding: '24px', 
+                    borderRadius: '12px', 
+                    border: '1px solid rgba(255, 255, 255, 0.08)', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    minHeight: '160px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                  }}>
+                    <div style={{ marginBottom: '20px' }}>
+                      <h4 style={{ fontSize: '1.15rem', color: '#ffffff', marginBottom: '12px', letterSpacing: '-0.01em' }}>{item.title}</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>📅 {item.date}</p>
+                        <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>📍 {item.venue}</p>
+                      </div>
                     </div>
-                    <span style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px', fontWeight: '500', ...getStatusStyle(item.status) }}>
-                      {item.status}
-                    </span>
+                    <div>
+                      <span style={{ 
+                        fontSize: '0.8rem', 
+                        padding: '6px 14px', 
+                        borderRadius: '6px', 
+                        fontWeight: '600',
+                        display: 'inline-block',
+                        ...getStatusStyle(item.status) 
+                      }}>
+                        {item.status}
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (
-                <div style={{ padding: '30px', textAlign: 'center', background: 'rgba(3, 7, 18, 0.3)', borderRadius: '10px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
-                  <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No events found under "{activeTab}".</p>
+                <div style={{ 
+                  gridColumn: '1 / -1', 
+                  padding: '50px 30px', 
+                  textAlign: 'center', 
+                  background: 'rgba(3, 7, 18, 0.4)', 
+                  borderRadius: '12px', 
+                  border: '1px dashed rgba(255, 255, 255, 0.15)' 
+                }}>
+                  <p style={{ color: '#94a3b8', fontSize: '1rem' }}>No events found under "{activeTab}".</p>
                 </div>
               )}
             </div>
