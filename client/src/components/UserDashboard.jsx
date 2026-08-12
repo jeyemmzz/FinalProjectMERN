@@ -65,7 +65,7 @@ export default function UserDashboard({ onLogout }) {
           <div className="auth-card-pro" style={{ padding: '40px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
               <div>
-                <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#ffffff', marginBottom: '6px' }}>Student Dashboard</h1>
+                <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#ffffff', marginBottom: '6px' }}>Dashboard</h1>
                 <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Welcome back! Track your registered campus activities here.</p>
               </div>
               <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '10px 18px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
