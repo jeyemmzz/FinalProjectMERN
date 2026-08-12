@@ -6,8 +6,8 @@
 }
 
 body {
-  background: radial-gradient(circle at 20% 20%, #0f172a 0%, #030712 100%);
-  color: #e2e8f0;
+  background: radial-gradient(circle at 20% 20%, #1e293b 0%, #020617 100%);
+  color: #f1f5f9;
   overflow-x: hidden;
 }
 
@@ -16,7 +16,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #030712;
+  background-color: #020617;
   animation: pageSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -44,25 +44,25 @@ body {
   background: transparent;
 }
 
-/* Floating Pill-shaped Container na may bilog paligid */
+/* Floating Pill-shaped Container na may mas matingkad na border at glow */
 .nav-pill-container {
   display: flex;
   align-items: center;
   gap: 24px;
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(30, 41, 59, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.4); /* Mas matingkad na border */
   padding: 10px 24px;
   border-radius: 9999px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.15);
 }
 
 .nav-item {
   font-size: 0.92rem;
-  color: #94a3b8;
+  color: #cbd5e1;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   position: relative;
   transition: color 0.3s ease;
 }
@@ -90,7 +90,7 @@ body {
 /* Pill buttons para sa Login at Register sa loob ng navbar */
 .nav-pill-btn {
   background: transparent;
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  border: 1px solid rgba(56, 189, 248, 0.6);
   color: #38bdf8;
   padding: 6px 16px;
   border-radius: 9999px;
@@ -101,28 +101,30 @@ body {
 }
 
 .nav-pill-btn.active {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(56, 189, 248, 0.25);
   border-color: #38bdf8;
+  color: #ffffff;
   animation: subtlePulse 3s infinite;
 }
 
 .nav-pill-btn.register {
-  background: #0284c7;
+  background: #0ea5e9;
   border: none;
   color: #ffffff;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 .nav-pill-btn.register:hover {
-  background: #0369a1;
+  background: #0284c7;
 }
 
 /* Floating Glow Pulse Animation para sa Active Buttons */
 @keyframes subtlePulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(56, 189, 248, 0);
+    box-shadow: 0 0 0 10px rgba(56, 189, 248, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
@@ -151,12 +153,12 @@ body {
   margin-bottom: 16px;
   letter-spacing: -0.025em;
   line-height: 1.2;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .auth-brand-side p {
   font-size: clamp(0.95rem, 1.2vw, 1.1rem);
-  color: #94a3b8;
+  color: #cbd5e1;
   line-height: 1.6;
   max-width: 450px;
 }
@@ -170,35 +172,35 @@ body {
   padding: 30px;
 }
 
-/* Glassmorphism Card Style na may smooth hover */
+/* Glassmorphism Card Style na may mas matingkad na glow at border */
 .auth-card-pro {
   width: 100%;
   max-width: 400px;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(30, 41, 59, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
   padding: 35px;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.1);
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .auth-card-pro:hover {
-  border-color: rgba(56, 189, 248, 0.35);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.2);
 }
 
 .auth-card-pro h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: #ffffff;
   margin-bottom: 6px;
 }
 
 .auth-subtitle {
   font-size: 0.88rem;
-  color: #94a3b8;
+  color: #cbd5e1;
   margin-bottom: 24px;
 }
 
@@ -209,16 +211,16 @@ body {
 .input-group label {
   display: block;
   font-size: 0.85rem;
-  font-weight: 500;
-  color: #cbd5e1;
+  font-weight: 600;
+  color: #e2e8f0;
   margin-bottom: 6px;
 }
 
 .input-group input {
   width: 100%;
   padding: 11px 14px;
-  background: rgba(3, 7, 18, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 8px;
   color: #ffffff;
   font-size: 0.95rem;
@@ -228,14 +230,14 @@ body {
 
 .input-group input:focus {
   border-color: #38bdf8;
-  background: rgba(3, 7, 18, 0.8);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
 
 .submit-btn {
   width: 100%;
   padding: 11px;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -244,7 +246,7 @@ body {
   cursor: pointer;
   transition: opacity 0.2s;
   margin-top: 4px;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
   animation: subtlePulse 3s infinite;
 }
 
@@ -256,13 +258,13 @@ body {
   margin-top: 20px;
   text-align: center;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 
 .switch-text span {
   color: #38bdf8;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .switch-text span:hover {
@@ -282,9 +284,9 @@ body {
 .skeleton-loader {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 25%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 75%
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.05) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -312,7 +314,7 @@ body {
   }
   .auth-card-pro {
     max-width: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.3);
   }
   .nav-pill-container {
     gap: 14px;
