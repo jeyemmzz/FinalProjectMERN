@@ -57,10 +57,12 @@ export default function UserDashboard({ onLogout }) {
       {/* Expanded Wrapper: Max width set to 1200px for a wide canvas */}
       <div style={{ maxWidth: '1200px', width: '95%', margin: '40px auto', flex: 1 }}>
         {isPageLoading ? (
-          /* Loading State: Force maxWidth to 100% to override Auth.css */
+          /* Loading State */
           <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px' }}>
-            <div className="skeleton-loader" style={{ height: '35px', width: '25%', marginBottom: '15px' }}></div>
-            <div className="skeleton-loader" style={{ height: '18px', width: '40%', marginBottom: '40px' }}></div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '40px' }}>
+              <div className="skeleton-loader" style={{ height: '35px', width: '25%', marginBottom: '15px' }}></div>
+              <div className="skeleton-loader" style={{ height: '18px', width: '40%' }}></div>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
               <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
               <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
@@ -68,24 +70,24 @@ export default function UserDashboard({ onLogout }) {
             </div>
           </div>
         ) : (
-          /* Main Dashboard Card: Force maxWidth to 100% to override Auth.css */
+          /* Main Dashboard Card */
           <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px' }}>
             
-            {/* Header section set to flex-row for landscape alignment */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
+            {/* Centered Header Section: Dashboard Title & Subtext first, Role Badge below */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '40px', gap: '16px' }}>
               <div>
                 <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#ffffff', marginBottom: '8px' }}>Dashboard</h1>
                 <p style={{ fontSize: '1rem', color: '#94a3b8' }}>Welcome back! Track your registered campus activities here.</p>
               </div>
-              <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '12px 20px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+              <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                 <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '600' }}>Role: Regular Student</span>
               </div>
             </div>
 
-            <h3 style={{ fontSize: '1.2rem', color: '#ffffff', marginBottom: '20px' }}>My Registered Events</h3>
+            <h3 style={{ fontSize: '1.2rem', color: '#ffffff', marginBottom: '20px', textAlign: 'center' }}>My Registered Events</h3>
 
-            {/* Filter Tabs */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', flexWrap: 'wrap' }}>
+            {/* Filter Tabs - Centered */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '30px', flexWrap: 'wrap' }}>
               {tabs.map((tab) => {
                 const isActive = activeTab === tab;
                 return (
@@ -110,7 +112,7 @@ export default function UserDashboard({ onLogout }) {
               })}
             </div>
 
-            {/* Event List converted to a Landscape Grid Matrix */}
+            {/* Event List */}
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', 
@@ -125,13 +127,15 @@ export default function UserDashboard({ onLogout }) {
                     border: '1px solid rgba(255, 255, 255, 0.08)', 
                     display: 'flex', 
                     flexDirection: 'column', 
+                    alignItems: 'center',
+                    textAlign: 'center',
                     justifyContent: 'space-between',
                     minHeight: '160px',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
                   }}>
-                    <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <h4 style={{ fontSize: '1.15rem', color: '#ffffff', marginBottom: '12px', letterSpacing: '-0.01em' }}>{item.title}</h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>📅 {item.date}</p>
                         <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>📍 {item.venue}</p>
                       </div>
