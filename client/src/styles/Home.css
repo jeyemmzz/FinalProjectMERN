@@ -127,15 +127,15 @@ html, body {
   margin: 0 auto;
 }
 
-.hero-section h1 {
-  font-size: clamp(2.5rem, 4vw, 3.8rem);
+.hero-section h1 { /* changes */
+  font-size: clamp(2.8rem, 4.5vw, 4.2rem);
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  /* Eto yung glow effect sa header para hindi madilim tignan */
-  text-shadow: 0 0 20px rgba(192, 230, 253, 0.6), 0 0 40px rgba(63, 101, 147, 0.4);
+  /* Eto yung mismong nag-glow sa text: */
+  text-shadow: 0 0 25px rgba(192, 230, 253, 0.7), 0 0 50px rgba(63, 101, 147, 0.5);
 }
 
 .hero-section p {
