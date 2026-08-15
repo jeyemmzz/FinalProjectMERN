@@ -130,19 +130,19 @@ html, body {
 .hero-section h1 {
   font-size: clamp(2.5rem, 4vw, 3.8rem);
   font-weight: 800;
-  color: #c0e6fd;
+  color: #c0e6fd !important;
   margin-bottom: 20px;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  text-shadow: none;
+  text-shadow: none !important;
 }
 
 .hero-section p {
   font-size: clamp(1rem, 1.2vw, 1.15rem);
-  color: #80aad3;
+  color: #80aad3 !important;
   line-height: 1.6;
   margin-bottom: 40px;
-  text-shadow: none;
+  text-shadow: none !important;
 }
 
 .hero-buttons {
