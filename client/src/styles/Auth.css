@@ -168,7 +168,7 @@ body {
   margin-bottom: 16px;
   letter-spacing: -0.025em;
   line-height: 1.2;
-  text-shadow: 0 0 20px rgba(192, 230, 253, 0.6), 0 0 40px rgba(63, 101, 147, 0.4);
+  /* text-shadow: 0 0 20px rgba(192, 230, 253, 0.6), 0 0 40px rgba(63, 101, 147, 0.4); turn off*/
 }
 
 .auth-brand-side p {
@@ -176,7 +176,7 @@ body {
   color: #c0e6fd;
   line-height: 1.6;
   max-width: 450px;
-  text-shadow: 0 0 8px rgba(192, 230, 253, 0.3);
+ /* text-shadow: 0 0 8px rgba(192, 230, 253, 0.3);  turn off */
 }
 
 /* Right Side: Form Section */
