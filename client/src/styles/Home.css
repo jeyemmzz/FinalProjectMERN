@@ -22,12 +22,21 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle at 50% 20%, #1b3554 0%, #000f22 100%);
+  /* Dito natin nilagyan ng lively animated gradient background */
+  background: linear-gradient(135deg, #000f22, #1b3554, #0f2342, #3f6593);
+  background-size: 300% 300%;
+  animation: gradientAnimation 12s ease infinite;
   margin: 0;
   padding: 0;
 }
 
-/* Navbar Style - Full Width hanggang dulo */
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Navbar Style */
 .home-navbar {
   width: 100%;
   display: flex;
@@ -48,6 +57,7 @@ html, body {
   font-weight: 700;
   color: #c0e6fd;
   letter-spacing: -0.025em;
+  text-shadow: 0 0 10px rgba(192, 230, 253, 0.6); /* May konting glow ang logo */
 }
 
 .nav-links {
@@ -61,11 +71,12 @@ html, body {
   color: #80aad3;
   cursor: pointer;
   font-weight: 600;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .nav-links span:hover, .nav-links span.active {
   color: #c0e6fd;
+  text-shadow: 0 0 8px rgba(192, 230, 253, 0.8);
 }
 
 .nav-login-btn {
@@ -93,15 +104,16 @@ html, body {
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .nav-register-btn:hover {
   background: #5b86b6;
-  color: #000f22;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(91, 134, 182, 0.6);
 }
 
-/* Hero Section Style */
+/* Hero Section Style na may Text Glow */
 .hero-section {
   flex: 1;
   width: 100%;
@@ -118,23 +130,34 @@ html, body {
 .hero-section h1 {
   font-size: clamp(2.5rem, 4vw, 3.8rem);
   font-weight: 800;
-  color: #c0e6fd;
+  color: #ffffff;
   margin-bottom: 20px;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  /* Eto yung glow effect sa header para hindi madilim tignan */
+  text-shadow: 0 0 20px rgba(192, 230, 253, 0.6), 0 0 40px rgba(63, 101, 147, 0.4);
 }
 
 .hero-section p {
   font-size: clamp(1rem, 1.2vw, 1.15rem);
-  color: #80aad3;
+  color: #c0e6fd;
   line-height: 1.6;
   margin-bottom: 40px;
+  text-shadow: 0 0 8px rgba(192, 230, 253, 0.3); /* Subtle glow din sa paragraphs */
 }
 
 .hero-buttons {
   display: flex;
   gap: 16px;
+}
+
+/* Button Click Animation (Active press effect) */
+.primary-btn, .secondary-btn, .nav-register-btn, .nav-login-btn {
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.primary-btn:active, .secondary-btn:active, .nav-register-btn:active, .nav-login-btn:active {
+  transform: scale(0.95); /* Lumiliit nang konti kapag pinindot (click animation) */
 }
 
 .primary-btn {
@@ -147,12 +170,12 @@ html, body {
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  transition: opacity 0.2s;
 }
 
 .primary-btn:hover {
-  opacity: 0.9;
   background: linear-gradient(135deg, #5b86b6 0%, #3f6593 100%);
+  box-shadow: 0 0 20px rgba(91, 134, 182, 0.7); /* Glowing hover effect */
+  color: #ffffff;
 }
 
 .secondary-btn {
@@ -164,11 +187,12 @@ html, body {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 .secondary-btn:hover {
   background: rgba(59, 101, 147, 0.8);
+  box-shadow: 0 0 15px rgba(63, 101, 147, 0.5);
+  color: #ffffff;
 }
 
 /* Responsive query for mobile nav */
