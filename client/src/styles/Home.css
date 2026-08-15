@@ -57,7 +57,7 @@ html, body {
   font-weight: 700;
   color: #c0e6fd;
   letter-spacing: -0.025em;
-  text-shadow: 0 0 10px rgba(192, 230, 253, 0.6); /* May konting glow ang logo */
+
 }
 
 .nav-links {
@@ -76,7 +76,6 @@ html, body {
 
 .nav-links span:hover, .nav-links span.active {
   color: #c0e6fd;
-  text-shadow: 0 0 8px rgba(192, 230, 253, 0.8);
 }
 
 .nav-login-btn {

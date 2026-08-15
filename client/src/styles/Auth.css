@@ -78,7 +78,6 @@ body {
 
 .nav-item:hover {
   color: #ffffff;
-  text-shadow: 0 0 8px rgba(192, 230, 253, 0.8);
 }
 
 /* Underline Animation effect para sa navbar items */
@@ -211,7 +210,7 @@ body {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 6px;
-  text-shadow: 0 0 10px rgba(192, 230, 253, 0.5);
+
 }
 
 .auth-subtitle {
