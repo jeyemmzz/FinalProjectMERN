@@ -11,6 +11,12 @@ import './styles/Auth.css';
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
 
+  // This function alerts the user and redirects them to the login page
+  const handleRegisterSuccess = () => {
+    alert("Account registered");
+    setCurrentView('login');
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {currentView === 'home' && (
@@ -39,6 +45,7 @@ export default function App() {
           onSwitchToLogin={() => setCurrentView('login')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
+          onRegisterSuccess={handleRegisterSuccess} /* Passed the function here */
         />
       )}
       

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Auth.css';
 
-export default function Signup({ onBackToHome, onSwitchToLogin, onNavigateAbout, onNavigateEvents }) {
+// Added onRegisterSuccess to the props list here
+export default function Signup({ onBackToHome, onSwitchToLogin, onNavigateAbout, onNavigateEvents, onRegisterSuccess }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -49,10 +50,10 @@ export default function Signup({ onBackToHome, onSwitchToLogin, onNavigateAbout,
       return;
     }
 
-    setSuccessMessage('Account created successfully! Redirecting to login...');
-    setTimeout(() => {
-      onSwitchToLogin();
-    }, 1500);
+    // Triggers the alert and the redirect from App.jsx
+    if (onRegisterSuccess) {
+      onRegisterSuccess();
+    }
   };
 
   return (
