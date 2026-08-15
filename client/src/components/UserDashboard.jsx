@@ -80,7 +80,7 @@ export default function UserDashboard({ onLogout }) {
                 <p style={{ fontSize: '1rem', color: '#94a3b8' }}>Welcome back! Track your registered campus activities here.</p>
               </div>
               <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '600' }}>Role: Regular Student</span>
+                <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '600' }}>Role: Student</span>
               </div>
             </div>
 
