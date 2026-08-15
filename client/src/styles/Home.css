@@ -10,7 +10,7 @@
 html, body {
   width: 100%;
   min-height: 100vh;
-  background-color: #002658;
+  background-color: #000f22; /* Pinalitan natin para mag-match sa simula ng gradient mo */
   color: #c0e6fd;
   overflow-x: hidden;
   margin: 0;
@@ -23,7 +23,7 @@ html, body {
   display: flex;
   flex-direction: column;
   /* Dito natin nilagyan ng lively animated gradient background */
-  background: linear-gradient(135deg, #000f22, #1b3554, #0f2342, #3f6593);
+  background: linear-gradient(135deg, #000f22, #0d233a, #1b3554, #2c4c73); /* changes */
   background-size: 300% 300%;
   animation: gradientAnimation 12s ease infinite;
   margin: 0;
