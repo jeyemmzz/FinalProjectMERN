@@ -33,7 +33,7 @@ export default function Home({ onNavigateLogin, onNavigateSignup, onNavigateAbou
       <nav className="auth-navbar-centered">
         <div className="nav-pill-container" style={{ gap: '16px' }}>
           <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onNavigateEvents}>
-            <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-main, #ffffff)' }}>
+            <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
               Syntax <span style={{ color: '#38bdf8' }}>4</span>
             </span>
           </div>
@@ -44,13 +44,13 @@ export default function Home({ onNavigateLogin, onNavigateSignup, onNavigateAbou
           <span onClick={onNavigateEvents} className="nav-item">Events</span>
           <span onClick={onNavigateAbout} className="nav-item">About</span>
 
-          {/* Dark/Light Mode Toggle Button sa Navbar */}
+          {/* Naayos na button label at icon logic */}
           <button 
             className="nav-pill-btn" 
             onClick={toggleTheme}
             style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer' }}
           >
-            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
           <button className="nav-pill-btn active" onClick={onNavigateLogin}>Login</button>
@@ -69,8 +69,8 @@ export default function Home({ onNavigateLogin, onNavigateSignup, onNavigateAbou
             </div>
           ) : (
             <>
-              <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: 'var(--text-main, #ffffff)' }}>Welcome to Event Management System</h1>
-              <p style={{ fontSize: '1.15rem', marginBottom: '35px', maxWidth: '600px', color: 'var(--text-muted, #80aad3)' }}>
+              <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: 'var(--auth-text-main, #ffffff)' }}>Welcome to Event Management System</h1>
+              <p style={{ fontSize: '1.15rem', marginBottom: '35px', maxWidth: '600px', color: 'var(--auth-text-sub, #80aad3)' }}>
                 Your ultimate portal for organizing university activities, seamless participant sign-ups, and streamlined institutional calendars.
               </p>
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
