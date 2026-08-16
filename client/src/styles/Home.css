@@ -1,5 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
+/* ==========================================
+   THEME VARIABLES (Dark & Light Mode)
+   ================================---------- */
+body[data-theme="dark"] {
+  --bg-gradient: linear-gradient(135deg, #000f22, #0d233a, #1b3554, #2c4c73);
+  --text-main: #c0e6fd;
+  --text-muted: #80aad3;
+  --nav-bg: rgba(0, 15, 34, 0.75);
+  --btn-secondary-bg: rgba(27, 53, 84, 0.6);
+}
+
+body[data-theme="light"] {
+  --bg-gradient: linear-gradient(135deg, #f0f4f8, #d9e2ec, #bcccdc, #9fb3c8);
+  --text-main: #0f2342;
+  --text-muted: #334e68;
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --btn-secondary-bg: rgba(189, 213, 234, 0.6);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -10,11 +29,12 @@
 html, body {
   width: 100%;
   min-height: 100vh;
-  background-color: #000f22; /* Pinalitan natin para mag-match sa simula ng gradient mo */
-  color: #c0e6fd;
+  background-color: #000f22;
+  color: var(--text-main, #c0e6fd);
   overflow-x: hidden;
   margin: 0;
   padding: 0;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .home-container {
@@ -22,12 +42,12 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* Dito natin nilagyan ng lively animated gradient background */
-  background: linear-gradient(135deg, #000f22, #0d233a, #1b3554, #2c4c73); /* changes */
+  background: var(--bg-gradient, linear-gradient(135deg, #000f22, #0d233a, #1b3554, #2c4c73));
   background-size: 300% 300%;
   animation: gradientAnimation 12s ease infinite;
   margin: 0;
   padding: 0;
+  transition: background 0.5s ease;
 }
 
 @keyframes gradientAnimation {
@@ -44,44 +64,62 @@ html, body {
   align-items: center;
   padding: 20px 50px;
   border-bottom: none !important;
-  background: rgba(0, 15, 34, 0.75);
+  background: var(--nav-bg, rgba(0, 15, 34, 0.75));
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 100;
   margin: 0;
+  transition: background 0.3s ease;
 }
 
 .nav-logo {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #c0e6fd;
+  color: var(--text-main, #c0e6fd);
   letter-spacing: -0.025em;
-
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
 }
 
 .nav-links span {
   font-size: 0.95rem;
-  color: #80aad3;
+  color: var(--text-muted, #80aad3);
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .nav-links span:hover, .nav-links span.active {
-  color: #c0e6fd;
+  color: var(--text-main, #c0e6fd);
+}
+
+/* Theme Toggle Button Style */
+.theme-toggle-btn {
+  background: var(--btn-secondary-bg, rgba(27, 53, 84, 0.6));
+  border: 1px solid rgba(192, 230, 253, 0.2);
+  color: var(--text-main, #c0e6fd);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(63, 101, 147, 0.8);
+  transform: translateY(-1px);
 }
 
 .nav-login-btn {
   background: transparent;
   border: none !important;
-  color: #80aad3;
+  color: var(--text-muted, #80aad3);
   padding: 8px 18px;
   border-radius: 6px;
   font-weight: 600;
@@ -90,7 +128,7 @@ html, body {
 }
 
 .nav-login-btn:hover {
-  color: #c0e6fd;
+  color: var(--text-main, #c0e6fd);
   background: rgba(63, 101, 147, 0.2);
 }
 
@@ -112,7 +150,7 @@ html, body {
   box-shadow: 0 0 15px rgba(91, 134, 182, 0.6);
 }
 
-/* Hero Section Style na may Text Glow */
+/* Hero Section Style */
 .hero-section {
   flex: 1;
   width: 100%;
@@ -129,7 +167,7 @@ html, body {
 .hero-section h1 {
   font-size: clamp(2.5rem, 4vw, 3.8rem);
   font-weight: 800;
-  color: #c0e6fd !important;
+  color: var(--text-main, #c0e6fd) !important;
   margin-bottom: 20px;
   letter-spacing: -0.03em;
   line-height: 1.15;
@@ -138,7 +176,7 @@ html, body {
 
 .hero-section p {
   font-size: clamp(1rem, 1.2vw, 1.15rem);
-  color: #80aad3 !important;
+  color: var(--text-muted, #80aad3) !important;
   line-height: 1.6;
   margin-bottom: 40px;
   text-shadow: none !important;
@@ -149,13 +187,13 @@ html, body {
   gap: 16px;
 }
 
-/* Button Click Animation (Active press effect) */
-.primary-btn, .secondary-btn, .nav-register-btn, .nav-login-btn {
+/* Button Click Animation */
+.primary-btn, .secondary-btn, .nav-register-btn, .nav-login-btn, .theme-toggle-btn {
   transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.primary-btn:active, .secondary-btn:active, .nav-register-btn:active, .nav-login-btn:active {
-  transform: scale(0.95); /* Lumiliit nang konti kapag pinindot (click animation) */
+.primary-btn:active, .secondary-btn:active, .nav-register-btn:active, .nav-login-btn:active, .theme-toggle-btn:active {
+  transform: scale(0.95);
 }
 
 .primary-btn {
@@ -172,13 +210,13 @@ html, body {
 
 .primary-btn:hover {
   background: linear-gradient(135deg, #5b86b6 0%, #3f6593 100%);
-  box-shadow: 0 0 20px rgba(91, 134, 182, 0.7); /* Glowing hover effect */
+  box-shadow: 0 0 20px rgba(91, 134, 182, 0.7);
   color: #ffffff;
 }
 
 .secondary-btn {
-  background: rgba(27, 53, 84, 0.6);
-  color: #c0e6fd;
+  background: var(--btn-secondary-bg, rgba(27, 53, 84, 0.6));
+  color: var(--text-main, #c0e6fd);
   border: none !important;
   padding: 12px 24px;
   border-radius: 8px;
