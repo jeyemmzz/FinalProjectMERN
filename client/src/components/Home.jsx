@@ -84,7 +84,14 @@ export default function Home({ onNavigateLogin, onNavigateSignup, onNavigateAbou
                 <button 
                   onClick={onNavigateEvents} 
                   className="submit-btn"
-                  style={{ width: 'auto', padding: '12px 28px', fontSize: '1rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)' }}
+                  style={{ 
+                    width: 'auto', 
+                    padding: '12px 28px', 
+                    fontSize: '1rem', 
+                    background: isDarkMode ? 'rgba(56, 189, 248, 0.1)' : 'rgba(15, 35, 66, 0.08)', 
+                    color: isDarkMode ? '#38bdf8' : '#0f2342', 
+                    border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(15, 35, 66, 0.3)' 
+                  }}
                 >
                   Explore Events
                 </button>
