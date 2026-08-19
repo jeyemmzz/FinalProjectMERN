@@ -1,0 +1,83 @@
+import React, { useState } from 'react';
+import Home from './components/Home';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import About from './components/About';
+import Event from './components/Event';
+import UserDashboard from './components/UserDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import './styles/Auth.css';
+
+export default function App() {
+  const [currentView, setCurrentView] = useState('home');
+
+  // This function alerts the user and redirects them to the login page
+  const handleRegisterSuccess = () => {
+    alert("Account registered");
+    setCurrentView('login');
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {currentView === 'home' && (
+        <Home 
+          onNavigateLogin={() => setCurrentView('login')} 
+          onNavigateSignup={() => setCurrentView('signup')}
+          onNavigateAbout={() => setCurrentView('about')} 
+          onNavigateEvents={() => setCurrentView('event')}
+        />
+      )}
+      
+      {currentView === 'login' && (
+        <Login 
+          onBackToHome={() => setCurrentView('home')} 
+          onSwitchToSignup={() => setCurrentView('signup')}
+          onNavigateAbout={() => setCurrentView('about')}
+          onNavigateEvents={() => setCurrentView('event')}
+          onNavigateUserDashboard={() => setCurrentView('user-dashboard')}
+          onNavigateAdminDashboard={() => setCurrentView('admin-dashboard')}
+        />
+      )}
+      
+      {currentView === 'signup' && (
+        <Signup 
+          onBackToHome={() => setCurrentView('home')} 
+          onSwitchToLogin={() => setCurrentView('login')}
+          onNavigateAbout={() => setCurrentView('about')}
+          onNavigateEvents={() => setCurrentView('event')}
+          onRegisterSuccess={handleRegisterSuccess} /* Passed the function here */
+        />
+      )}
+      
+      {currentView === 'about' && (
+        <About 
+          onNavigateHome={() => setCurrentView('home')} 
+          onNavigateLogin={() => setCurrentView('login')} 
+          onNavigateSignup={() => setCurrentView('signup')} 
+          onNavigateEvents={() => setCurrentView('event')}
+        />
+      )}
+
+      {currentView === 'event' && (
+        <Event 
+          onNavigateHome={() => setCurrentView('home')} 
+          onNavigateLogin={() => setCurrentView('login')} 
+          onNavigateSignup={() => setCurrentView('signup')}
+          onNavigateAbout={() => setCurrentView('about')}
+        />
+      )}
+
+      {currentView === 'user-dashboard' && (
+        <UserDashboard 
+          onLogout={() => setCurrentView('home')} 
+        />
+      )}
+
+      {currentView === 'admin-dashboard' && (
+        <AdminDashboard 
+          onLogout={() => setCurrentView('home')} 
+        />
+      )}
+    </div>
+  );
+}
