@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Auth.css';
 
+<<<<<<< HEAD
 export default function UserDashboard({ onLogout, onNavigateHome, user }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
@@ -8,11 +9,20 @@ export default function UserDashboard({ onLogout, onNavigateHome, user }) {
   const [currentUser, setCurrentUser] = useState(user || null);
 
   // Theme initialization at pag-kuha ng user data mula sa props o localStorage
+=======
+export default function UserDashboard({ onLogout, onNavigateHome }) {
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('All');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Theme initialization and persistence (Katulad sa Home.jsx at iba pang pages)
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
+<<<<<<< HEAD
     // Kung walang 'user' prop na naipasa pero may naka-save sa localStorage, kunin natin dun
     if (!user) {
       const savedUser = localStorage.getItem('syntax4_user');
@@ -28,11 +38,17 @@ export default function UserDashboard({ onLogout, onNavigateHome, user }) {
       localStorage.setItem('syntax4_user', JSON.stringify(user));
     }
 
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
     const timer = setTimeout(() => {
       setIsPageLoading(false);
     }, 400);
     return () => clearTimeout(timer);
+<<<<<<< HEAD
   }, [user]);
+=======
+  }, []);
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
 
   const toggleTheme = () => {
     const nextMode = !isDarkMode;
@@ -101,11 +117,15 @@ export default function UserDashboard({ onLogout, onNavigateHome, user }) {
 
           <button 
             className="nav-pill-btn register" 
+<<<<<<< HEAD
             onClick={() => {
               // I-clear din ang localStorage token/user pag nag-logout
               localStorage.removeItem('syntax4_user');
               if (onLogout) onLogout();
             }} 
+=======
+            onClick={onLogout} 
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
             style={{ 
               background: 'rgba(244, 63, 94, 0.15)', 
               color: '#f43f5e', 
@@ -137,6 +157,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, user }) {
           <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '40px', gap: '16px' }}>
               <div>
+<<<<<<< HEAD
                 {/* Dito na ipapakita ang pangalan ng user kung naka-login */}
                 <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', marginBottom: '8px' }}>
                   Welcome back, {currentUser?.fullName || 'Student'}! 👋
@@ -144,6 +165,10 @@ export default function UserDashboard({ onLogout, onNavigateHome, user }) {
                 <p style={{ fontSize: '1rem', color: 'var(--auth-text-muted)' }}>
                   {currentUser?.email ? `Logged in as ${currentUser.email} • ` : ''}Track your registered campus activities here.
                 </p>
+=======
+                <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', marginBottom: '8px' }}>Dashboard</h1>
+                <p style={{ fontSize: '1rem', color: 'var(--auth-text-muted)' }}>Welcome back! Track your registered campus activities here.</p>
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
               </div>
               <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                 <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '600' }}>Role: Student</span>

@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import axios from 'axios';
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
 import '../styles/Auth.css';
 
 export default function Login({ 
   onBackToHome, 
   onSwitchToSignup, 
+<<<<<<< HEAD
   onSwitchToRegister, // Sinama ko na para sakaling ito ang tawag sa App.jsx mo
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
   onNavigateAbout, 
   onNavigateEvents, 
   onNavigateUserDashboard, 
@@ -18,9 +24,12 @@ export default function Login({
   const [errorMessage, setErrorMessage] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
+<<<<<<< HEAD
   // Para sa handle switch to register kung alinman ang gamitin
   const handleRegisterClick = onSwitchToSignup || onSwitchToRegister;
 
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
   // Page loading simulation
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,7 +38,11 @@ export default function Login({
     return () => clearTimeout(timer);
   }, []);
 
+<<<<<<< HEAD
   // Theme initialization and persistence
+=======
+  // Theme initialization and persistence (Katulad sa Home.jsx)
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
@@ -44,7 +57,11 @@ export default function Login({
     localStorage.setItem('theme', themeName);
   };
 
+<<<<<<< HEAD
   const handleLogin = async (e) => {
+=======
+  const handleLogin = (e) => {
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
     e.preventDefault();
     setErrorMessage('');
 
@@ -63,13 +80,19 @@ export default function Login({
       return;
     }
 
+<<<<<<< HEAD
     // Hardcoded accounts support para sa admin at student demo
     if (email === 'admin@syntax4.com' && password === 'admin123') {
       if (onNavigateAdminDashboard) onNavigateAdminDashboard();
+=======
+    if (email === 'admin@syntax4.com' && password === 'admin123') {
+      onNavigateAdminDashboard();
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
       return;
     }
 
     if (email === 'student@syntax4.com' && password === 'student123') {
+<<<<<<< HEAD
       if (onNavigateUserDashboard) onNavigateUserDashboard();
       return;
     }
@@ -90,12 +113,23 @@ export default function Login({
       const errorMsg = error.response?.data?.message || 'Invalid email or password. Please try again.';
       setErrorMessage(errorMsg);
     }
+=======
+      onNavigateUserDashboard();
+      return;
+    }
+
+    setErrorMessage('Invalid email or password. Please try again.');
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
   };
 
   return (
     <div className="auth-page-wrapper">
       <nav className="auth-navbar-centered">
+<<<<<<< HEAD
         <div className="nav-pill-container" style={{ gap: '16px', flexWrap: 'wrap' }}>
+=======
+        <div className="nav-pill-container" style={{ gap: '16px' }}>
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
           <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onBackToHome}>
             <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
               Syntax <span style={{ color: '#38bdf8' }}>4</span>
@@ -104,10 +138,18 @@ export default function Login({
 
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
 
+<<<<<<< HEAD
           <span onClick={onBackToHome} className="nav-item" style={{ cursor: 'pointer' }}>Home</span>
           <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>Events</span>
           <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>About</span>
 
+=======
+          <span onClick={onBackToHome} className="nav-item">Home</span>
+          <span onClick={onNavigateEvents} className="nav-item">Events</span>
+          <span onClick={onNavigateAbout} className="nav-item">About</span>
+
+          {/* Theme Toggle Button (Gamit ang tamang pill style katulad sa Home) */}
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
           <button 
             className="nav-pill-btn" 
             onClick={toggleTheme}
@@ -117,12 +159,20 @@ export default function Login({
           </button>
 
           <button className="nav-pill-btn active" onClick={() => {}}>Login</button>
+<<<<<<< HEAD
           <button className="nav-pill-btn register" onClick={handleRegisterClick} style={{ cursor: 'pointer' }}>Register</button>
+=======
+          <button className="nav-pill-btn register" onClick={onSwitchToSignup}>Register</button>
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
         </div>
       </nav>
 
       <div className="auth-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
+<<<<<<< HEAD
         <div className="auth-card-pro" style={{ maxWidth: '420px', width: '100%', padding: '40px', boxSizing: 'border-box' }}>
+=======
+        <div className="auth-card-pro" style={{ maxWidth: '420px', width: '100%', padding: '40px' }}>
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
           {isPageLoading ? (
             <div>
               <div className="skeleton-loader" style={{ height: '30px', width: '60%', marginBottom: '15px' }}></div>
@@ -158,7 +208,10 @@ export default function Login({
                       color: 'var(--auth-text-main, #ffffff)',
                       fontSize: '0.9rem',
                       outline: 'none',
+<<<<<<< HEAD
                       boxSizing: 'border-box'
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
                     }}
                   />
                 </div>
@@ -179,7 +232,10 @@ export default function Login({
                       color: 'var(--auth-text-main, #ffffff)',
                       fontSize: '0.9rem',
                       outline: 'none',
+<<<<<<< HEAD
                       boxSizing: 'border-box'
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
                     }}
                   />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
@@ -196,19 +252,31 @@ export default function Login({
                   </div>
                 </div>
 
+<<<<<<< HEAD
                 <button type="submit" className="submit-btn" style={{ padding: '12px', marginTop: '5px', cursor: 'pointer' }}>
+=======
+                <button type="submit" className="submit-btn" style={{ padding: '12px', marginTop: '5px' }}>
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
                   Sign In
                 </button>
               </form>
 
               <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--auth-text-sub, #80aad3)', marginTop: '25px' }}>
                 Don't have an account?{' '}
+<<<<<<< HEAD
                 <span onClick={handleRegisterClick} style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
+=======
+                <span onClick={onSwitchToSignup} style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
                   Register here
                 </span>
               </p>
             </>
+<<<<<<< HEAD
           )} 
+=======
+          )}
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
         </div>
       </div>
     </div>

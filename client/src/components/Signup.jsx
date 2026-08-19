@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import axios from 'axios';
+=======
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
 import '../styles/Auth.css';
 
 export default function Signup({ 
@@ -21,6 +24,10 @@ export default function Signup({
   const [successMessage, setSuccessMessage] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
+<<<<<<< HEAD
+=======
+  // Theme initialization and persistence (Katulad sa Home.jsx)
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
@@ -44,7 +51,11 @@ export default function Signup({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+<<<<<<< HEAD
   const handleSignup = async (e) => {
+=======
+  const handleSignup = (e) => {
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
@@ -69,6 +80,7 @@ export default function Signup({
       return;
     }
 
+<<<<<<< HEAD
     try {
       // Eksaktong ipinapasa ang fullName, email, at password sa server.js
       const response = await axios.post('http://localhost:5000/api/register', {
@@ -90,6 +102,10 @@ export default function Signup({
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Registration failed. Please try again.';
       setErrorMessage(errorMsg);
+=======
+    if (onRegisterSuccess) {
+      onRegisterSuccess();
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
     }
   };
 
@@ -113,6 +129,10 @@ export default function Signup({
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
+<<<<<<< HEAD
+=======
+          {/* Theme Toggle Button gamit ang shared button style */}
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
           <button
             className="nav-pill-btn"
             onClick={toggleTheme}
@@ -220,6 +240,10 @@ export default function Signup({
                     style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
                   />
                   
+<<<<<<< HEAD
+=======
+                  {/* Show Password Checkbox */}
+>>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
                     <input 
                       type="checkbox" 
