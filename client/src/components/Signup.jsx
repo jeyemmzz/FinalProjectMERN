@@ -240,10 +240,6 @@ export default function Signup({
                     style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
                   />
                   
-<<<<<<< HEAD
-=======
-                  {/* Show Password Checkbox */}
->>>>>>> 7a8744f5139e20c40df8321ae34db158c5c487dc
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
                     <input 
                       type="checkbox" 
