@@ -13,7 +13,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     name: '',
     studentId: '',
     program: '',
-    institution: 'National University MOA',
+    institution: '',
     email: '',
     password: '',
     confirmPassword: ''
