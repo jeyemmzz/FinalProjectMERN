@@ -1,34 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/Auth.css';
 
-export default function Login({ 
-  onBackToHome, 
-  onSwitchToSignup, 
-  onNavigateAbout, 
-  onNavigateEvents, 
-  onNavigateUserDashboard, 
-  onNavigateAdminDashboard 
-}) {
-  const [isPageLoading, setIsPageLoading] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [animateIn, setAnimateIn] = useState(false);
 
-  // Page loading simulation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, []);
+  // Login form states
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
-  // Theme initialization and persistence (Katulad sa Home.jsx)
   useEffect(() => {
+    // I-trigger ang entry animation pagka-load/mount ng component
+    const timer = setTimeout(() => setAnimateIn(true), 10);
+    
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleTheme = () => {
@@ -39,154 +30,328 @@ export default function Login({
     localStorage.setItem('theme', themeName);
   };
 
-  const handleLogin = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
 
-    if (!email || !password) {
-      setErrorMessage('Please fill in all fields.');
-      return;
+    try {
+      setIsLoading(true);
+
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to log in. Please check your credentials.');
+      }
+
+      console.log('Successfully logged in:', data);
+
+      if (onLoginSuccess) {
+        onLoginSuccess(data.user || data);
+      }
+
+    } catch (error) {
+      console.error('Login error:', error);
+      alert(error.message || 'An error occurred during login.');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (!email.includes('@') || !email.includes('.')) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 18px',
+    borderRadius: '12px',
+    border: '1px solid rgba(56, 189, 248, 0.3)',
+    background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
+    color: isDarkMode ? '#ffffff' : '#0f172a',
+    boxSizing: 'border-box',
+    outline: 'none',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease'
+  };
 
-    if (password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
-      return;
-    }
-
-    if (email === 'admin@syntax4.com' && password === 'admin123') {
-      onNavigateAdminDashboard();
-      return;
-    }
-
-    if (email === 'student@syntax4.com' && password === 'student123') {
-      onNavigateUserDashboard();
-      return;
-    }
-
-    setErrorMessage('Invalid email or password. Please try again.');
+  const labelStyle = {
+    display: 'block',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: isDarkMode ? '#94a3b8' : '#64748b',
+    marginBottom: '6px'
   };
 
   return (
-    <div className="auth-page-wrapper">
-      <nav className="auth-navbar-centered">
-        <div className="nav-pill-container" style={{ gap: '16px' }}>
-          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onBackToHome}>
-            <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
-              Syntax <span style={{ color: '#38bdf8' }}>4</span>
-            </span>
+    <div style={{
+      minHeight: '100vh',
+      width: '100vw',
+      background: isDarkMode 
+        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)' 
+        : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      boxSizing: 'border-box',
+      overflowX: 'hidden',
+      transition: 'background 0.5s ease',
+      paddingBottom: '60px'
+    }}>
+      
+      {/* Inline Styles para sa Entry Animations & Loading Spinner */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animated-wrapper {
+          opacity: 0;
+          transform: translateY(30px) scale(0.97);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animated-wrapper.active {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        .nav-link {
+          transition: all 0.25s ease;
+        }
+        .nav-link:hover {
+          color: #38bdf8 !important;
+          transform: translateY(-2px);
+        }
+        .interactive-btn {
+          transition: all 0.25s ease;
+        }
+        .interactive-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+        .loading-spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(15, 23, 42, 0.3);
+          border-top: 2px solid #0f172a;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          display: inline-block;
+        }
+      `}</style>
+
+      {/* Pill Navbar with Glassmorphism */}
+      <nav style={{
+        width: '100%',
+        padding: '20px 40px',
+        display: 'flex',
+        justifyContent: 'center',
+        boxSizing: 'border-box'
+      }}>
+        <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          padding: '10px 24px',
+          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(16px)',
+          borderRadius: '9999px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.05)',
+          flexWrap: 'nowrap'
+        }}>
+          {/* Logo */}
+          <span 
+            onClick={onNavigateHome}
+            className="nav-link"
+            style={{ fontSize: '1rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            Syntax <span style={{ color: '#38bdf8' }}>4</span>
+          </span>
+
+          <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }}>|</span>
+
+          {/* Links */}
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+            {[
+              { name: 'Home', action: onNavigateHome },
+              { name: 'Events', action: onNavigateEvents },
+              { name: 'About', action: onNavigateAbout }
+            ].map((link) => (
+              <span 
+                key={link.name}
+                onClick={link.action}
+                className="nav-link"
+                style={{ color: '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+              >
+                {link.name}
+              </span>
+            ))}
           </div>
 
-          <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
-
-          <span onClick={onBackToHome} className="nav-item">Home</span>
-          <span onClick={onNavigateEvents} className="nav-item">Events</span>
-          <span onClick={onNavigateAbout} className="nav-item">About</span>
-
-          {/* Theme Toggle Button (Gamit ang tamang pill style katulad sa Home) */}
-          <button 
-            className="nav-pill-btn" 
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
             onClick={toggleTheme}
-            style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer' }}
+            className="nav-link"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap'
+            }}
           >
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          <button className="nav-pill-btn active" onClick={() => {}}>Login</button>
-          <button className="nav-pill-btn register" onClick={onSwitchToSignup}>Register</button>
+          {/* Login Button Pill (Active state) */}
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className="interactive-btn"
+            style={{
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 15px rgba(29, 78, 216, 0.4)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Login
+          </button>
+
+          {/* Register Button Pill */}
+          <button
+            type="button"
+            onClick={onSwitchToSignup}
+            className="interactive-btn"
+            style={{
+              background: isDarkMode ? 'rgba(31, 41, 55, 0.8)' : '#e2e8f0',
+              color: isDarkMode ? '#ffffff' : '#0f172a',
+              border: 'none',
+              padding: '8px 20px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Register
+          </button>
         </div>
       </nav>
 
-      <div className="auth-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
-        <div className="auth-card-pro" style={{ maxWidth: '420px', width: '100%', padding: '40px' }}>
-          {isPageLoading ? (
+      {/* Animated Glassmorphism Form Container */}
+      <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
+        maxWidth: '520px',
+        width: '92%',
+        margin: '60px auto auto auto',
+        flex: 1,
+        boxSizing: 'border-box',
+        transitionDelay: '0.1s'
+      }}>
+        <div style={{
+          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(24px)',
+          padding: '50px 40px',
+          borderRadius: '24px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+          border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+          boxSizing: 'border-box',
+          width: '100%'
+        }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Welcome Back</h1>
+            <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Log in to access your account credentials</p>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            
             <div>
-              <div className="skeleton-loader" style={{ height: '30px', width: '60%', marginBottom: '15px' }}></div>
-              <div className="skeleton-loader" style={{ height: '16px', width: '80%', marginBottom: '30px' }}></div>
-              <div className="skeleton-loader" style={{ height: '45px', width: '100%', marginBottom: '20px' }}></div>
-              <div className="skeleton-loader" style={{ height: '45px', width: '100%', marginBottom: '25px' }}></div>
+              <label style={labelStyle}>Email Address *</label>
+              <input
+                type="email"
+                required
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                style={inputStyle}
+              />
             </div>
-          ) : (
-            <>
-              <h2 style={{ fontSize: '1.8rem', color: 'var(--auth-text-main, #ffffff)', marginBottom: '8px', fontWeight: '700' }}>Welcome Back</h2>
-              <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-sub, #80aad3)', marginBottom: '25px' }}>Enter your credentials to access your account.</p>
 
-              {errorMessage && (
-                <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f43f5e', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '20px' }}>
-                  {errorMessage}
-                </div>
+            <div>
+              <label style={labelStyle}>Password *</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="interactive-btn"
+              style={{
+                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                color: '#0f172a',
+                border: 'none',
+                padding: '16px',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '1rem',
+                marginTop: '10px',
+                boxShadow: '0 6px 20px rgba(56, 189, 248, 0.4)',
+                opacity: isLoading ? 0.8 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading-spinner"></span>
+                  Verifying Account...
+                </>
+              ) : (
+                'Log In'
               )}
+            </button>
 
-              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-sub, #80aad3)', marginBottom: '6px' }}>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      background: 'var(--auth-input-bg, #0b192c)',
-                      border: '1px solid var(--auth-border-color, rgba(56, 189, 248, 0.2))',
-                      borderRadius: '8px',
-                      color: 'var(--auth-text-main, #ffffff)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-sub, #80aad3)', marginBottom: '6px' }}>Password</label>
-                  <input 
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      background: 'var(--auth-input-bg, #0b192c)',
-                      border: '1px solid var(--auth-border-color, rgba(56, 189, 248, 0.2))',
-                      borderRadius: '8px',
-                      color: 'var(--auth-text-main, #ffffff)',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                    }}
-                  />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                    <input 
-                      type="checkbox" 
-                      id="showPassLogin" 
-                      checked={showPassword} 
-                      onChange={(e) => setShowPassword(e.target.checked)}
-                      style={{ cursor: 'pointer', accentColor: '#38bdf8' }}
-                    />
-                    <label htmlFor="showPassLogin" style={{ fontSize: '0.8rem', color: 'var(--auth-text-sub, #80aad3)', cursor: 'pointer', userSelect: 'none' }}>
-                      Show password
-                    </label>
-                  </div>
-                </div>
-
-                <button type="submit" className="submit-btn" style={{ padding: '12px', marginTop: '5px' }}>
-                  Sign In
-                </button>
-              </form>
-
-              <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--auth-text-sub, #80aad3)', marginTop: '25px' }}>
-                Don't have an account?{' '}
-                <span onClick={onSwitchToSignup} style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
+            <div style={{ textAlign: 'center', marginTop: '12px' }}>
+              <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+                Don't have an account yet?{' '}
+                <span 
+                  onClick={onSwitchToSignup} 
+                  className="nav-link"
+                  style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                >
                   Register here
                 </span>
-              </p>
-            </>
-          )}
+              </span>
+            </div>
+
+          </form>
+
         </div>
       </div>
     </div>
