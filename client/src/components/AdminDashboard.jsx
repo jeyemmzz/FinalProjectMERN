@@ -1,30 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Auth.css';
 
-export default function AdminDashboard({ onLogout, userRole }) {
+export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('manage-events'); // 'manage-events' o 'analytics'
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [events, setEvents] = useState([
-    { 
-      id: 1, 
-      title: 'Tech Summit 2026', 
-      date: '2026-10-12', 
-      time: '09:00 AM', 
-      venue: 'NU MOA Auditorium',
-      notes: 'Bring your student ID, laptop, and wear smart casual attire.' 
-    }
-  ]);
-  
-  const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', venue: '', notes: '' });
 
-  // Theme initialization and persistence (Katulad sa Home.jsx at iba pang pages)
+  // Main state para sa Events na manggagaling sa Database via API
+  const [events, setEvents] = useState([]);
+
+  // Modal / Form States para sa Create at Update
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentEventId, setCurrentEventId] = useState(null);
+
+  // Form input fields
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'Workshop',
+    date: '',
+    venue: '',
+    description: '',
+    status: 'Active'
+  });
+
+  // Theme initialization and persistence
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    const timer = setTimeout(() => setIsPageLoading(false), 400);
-    return () => clearTimeout(timer);
+    // Fetch events mula sa Database (Backend API) kapag nag-load ang page
+    fetchEvents();
   }, []);
 
   const toggleTheme = () => {
@@ -35,64 +42,145 @@ export default function AdminDashboard({ onLogout, userRole }) {
     localStorage.setItem('theme', themeName);
   };
 
-  // Access Control Check
-  if (userRole && userRole !== 'admin') {
-    return (
-      <div className="auth-page-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div className="auth-card-pro" style={{ padding: '40px', textAlign: 'center', maxWidth: '450px', boxSizing: 'border-box' }}>
-          <h2 style={{ color: '#f43f5e', marginBottom: '10px' }}>Access Denied</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '20px' }}>
-            You do not have administrative privileges to access this portal.
-          </p>
-          <button className="submit-btn" onClick={onLogout} style={{ padding: '10px 20px', width: '100%', cursor: 'pointer' }}>
-            Back to Login / Logout
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // --- DATABASE API FUNCTIONS (CRUD) ---
 
-  const handleAddEvent = (e) => {
+  // 1. READ: Kunin ang lahat ng events mula sa database
+  const fetchEvents = async () => {
+    try {
+      setIsPageLoading(true);
+      // Palitan ang URL na 'http://localhost:5000/api/events' depende sa backend API endpoint ninyo
+      const response = await fetch('http://localhost:5000/api/events');
+      if (!response.ok) throw new Error('Failed to fetch events from database.');
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      // Fallback sample data sakaling offline muna ang backend habang nagte-test kayo
+      setEvents([
+        { id: 1, title: 'React Workshop & UI Design (DB)', type: 'Workshop', date: '2026-08-25', venue: 'Lab 301', description: 'Hands-on session connected to database.', status: 'Active' }
+      ]);
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  // Open modal para sa pag-CREATE
+  const handleOpenCreateModal = () => {
+    setIsEditing(false);
+    setFormData({ title: '', type: 'Workshop', date: '', venue: '', description: '', status: 'Active' });
+    setIsModalOpen(true);
+  };
+
+  // Open modal para sa pag-UPDATE
+  const handleOpenEditModal = (event) => {
+    setIsEditing(true);
+    setCurrentEventId(event.id);
+    setFormData({
+      title: event.title,
+      type: event.type,
+      date: event.date,
+      venue: event.venue,
+      description: event.description,
+      status: event.status
+    });
+    setIsModalOpen(true);
+  };
+
+  // Handle Form Submit (2. CREATE o 3. UPDATE papuntang Database)
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!newEvent.title || !newEvent.date || !newEvent.time || !newEvent.venue) {
-      alert("Please fill in all required event details!");
+    if (!formData.title || !formData.date || !formData.venue) {
+      alert('Please fill out all required fields.');
       return;
     }
-    setEvents([...events, { id: Date.now(), ...newEvent }]);
-    setNewEvent({ title: '', date: '', time: '', venue: '', notes: '' });
-    alert("Event Added Successfully with Notes!");
+
+    try {
+      if (isEditing) {
+        // UPDATE Operation (PUT)
+        const response = await fetch(`http://localhost:5000/api/events/${currentEventId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error('Failed to update event.');
+        
+        alert('Event successfully updated in the database!');
+      } else {
+        // CREATE Operation (POST)
+        const response = await fetch('http://localhost:5000/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error('Failed to create event.');
+
+        alert('New event successfully created and saved to the database!');
+      }
+
+      setIsModalOpen(false);
+      fetchEvents(); // Refresh ang listahan mula sa database
+    } catch (error) {
+      console.error('Error saving event:', error);
+      alert('Database action failed. Please check your backend connection.');
+    }
+  };
+
+  // 4. DELETE Operation (DELETE papuntang Database)
+  const handleDeleteEvent = async (id) => {
+    if (window.confirm('Are you sure you want to delete this event from the database?')) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+          method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Failed to delete event.');
+
+        alert('Event deleted successfully from the database.');
+        fetchEvents(); // Refresh ang listahan
+      } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Failed to delete from database.');
+      }
+    }
   };
 
   return (
     <div className="auth-page-wrapper">
+      {/* Navbar */}
       <nav className="auth-navbar-centered">
-        <div className="nav-pill-container" style={{ gap: '16px', padding: '10px 24px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--auth-text-main)' }}>
-              Syntax <span style={{ color: '#f43f5e' }}>4</span> 
-              <span style={{ fontSize: '0.75rem', color: 'var(--auth-text-muted)', fontWeight: '400', marginLeft: '8px' }}>| Admin Portal</span>
+        <div className="nav-pill-container" style={{ gap: '14px', padding: '10px 24px', flexWrap: 'wrap' }}>
+          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onNavigateHome}>
+            <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
+              Syntax <span style={{ color: '#ff0000' }}>4</span> <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#ff0000', padding: '2px 8px', borderRadius: '4px' }}>Admin</span>
             </span>
           </div>
-          
+
+          <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
+
+          <span 
+            onClick={() => setActiveTab('manage-events')} 
+            className="nav-item" 
+            style={{ color: activeTab === 'manage-events' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'manage-events' ? '600' : '400', cursor: 'pointer' }}
+          >
+            Manage Events
+          </span>
+          <span 
+            onClick={() => setActiveTab('analytics')} 
+            className="nav-item" 
+            style={{ color: activeTab === 'analytics' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'analytics' ? '600' : '400', cursor: 'pointer' }}
+          >
+            System Overview
+          </span>
+
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
-          {/* Theme Toggle Button */}
           <button
             className="nav-pill-btn"
             onClick={toggleTheme}
-            style={{ 
-              border: '1px solid rgba(244, 63, 94, 0.3)', 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.85rem'
-            }}
+            style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer', fontSize: '0.85rem' }}
           >
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          {/* Logout Button */}
           <button 
             className="nav-pill-btn register" 
             onClick={onLogout} 
@@ -103,123 +191,252 @@ export default function AdminDashboard({ onLogout, userRole }) {
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1100px', width: '92%', margin: '40px auto', display: 'flex', flexDirection: 'column', gap: '30px', boxSizing: 'border-box' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', marginBottom: '6px' }}>Dashboard Overview</h1>
-            <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)' }}>Manage institutional events, schedules, and participant guidelines.</p>
+      {/* Main Container */}
+      <div style={{ maxWidth: '1200px', width: '95%', margin: '40px auto', flex: 1, boxSizing: 'border-box' }}>
+        {isPageLoading ? (
+          <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px' }}>
+            <div className="skeleton-loader" style={{ height: '35px', width: '25%', marginBottom: '20px' }}></div>
+            <div className="skeleton-loader" style={{ height: '200px', borderRadius: '12px' }}></div>
           </div>
-          <div style={{ background: 'rgba(244, 63, 94, 0.1)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
-            <span style={{ fontSize: '0.85rem', color: '#f43f5e', fontWeight: '600' }}>● Administrator Mode</span>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', alignItems: 'start' }}>
-          
-          <div className="auth-card-pro" style={{ padding: '30px', margin: 0, width: '100%', boxSizing: 'border-box' }}>
-            <h3 style={{ color: 'var(--auth-text-main)', fontSize: '1.25rem', marginBottom: '8px', fontWeight: '600' }}>Create New Event</h3>
-            <p style={{ color: 'var(--auth-text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>Publish events along with instructions or things to bring.</p>
+        ) : (
+          <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px', boxSizing: 'border-box' }}>
             
-            <form onSubmit={handleAddEvent} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {/* TAB 1: MANAGE EVENTS (CRUD) */}
+            {activeTab === 'manage-events' && (
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Event Title</label>
-                <input 
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+                  <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '0 0 6px 0' }}>Admin Control</h1>
+                    <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Campus Events</p>
+                  </div>
+                  <button
+                    onClick={handleOpenCreateModal}
+                    style={{
+                      background: '#38bdf8',
+                      color: '#0f172a',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '0.9rem',
+                      boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)'
+                    }}
+                  >
+                    + Create New Event
+                  </button>
+                </div>
+
+                {/* Events Grid List */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+                  {events.length > 0 ? (
+                    events.map((evt) => (
+                      <div key={evt.id} style={{ 
+                        background: 'var(--auth-input-bg)', 
+                        padding: '24px', 
+                        borderRadius: '12px', 
+                        border: '1px solid var(--auth-border-color)', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box'
+                      }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
+                              {evt.type}
+                            </span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>📅 {evt.date}</span>
+                          </div>
+                          <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '600' }}>{evt.title}</h3>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue}</p>
+                          <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                          <button
+                            onClick={() => handleOpenEditModal(evt)}
+                            style={{
+                              background: 'rgba(56, 189, 248, 0.15)',
+                              color: '#38bdf8',
+                              border: '1px solid rgba(56, 189, 248, 0.3)',
+                              padding: '6px 14px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                              fontSize: '0.8rem'
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEvent(evt.id)}
+                            style={{
+                              background: 'rgba(244, 63, 94, 0.15)',
+                              color: '#f43f5e',
+                              border: '1px solid rgba(244, 63, 94, 0.3)',
+                              padding: '6px 14px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                              fontSize: '0.8rem'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ gridColumn: '1 / -1', padding: '50px', textAlign: 'center', background: 'var(--auth-input-bg)', borderRadius: '12px', border: '1px dashed var(--auth-border-color)' }}>
+                      <p style={{ color: 'var(--auth-text-muted)', margin: 0 }}>No records found in the database.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: SYSTEM OVERVIEW */}
+            {activeTab === 'analytics' && (
+              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                  <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '0 0 8px 0' }}>System Overview</h1>
+                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Real-time metrics queried from your server.</p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+                  <div style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', textAlign: 'center' }}>
+                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Registered Events</h3>
+                    <p style={{ fontSize: '2rem', fontWeight: '700', color: '#38bdf8', margin: 0 }}>{events.length}</p>
+                  </div>
+                  <div style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', textAlign: 'center' }}>
+                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Server Status</h3>
+                    <p style={{ fontSize: '1.2rem', fontWeight: '700', color: '#10b981', margin: '10px 0 0 0' }}>🟢 Connected</p>
+                  </div>
+                  <div style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', textAlign: 'center' }}>
+                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Institution</h3>
+                    <p style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '10px 0 0 0' }}>National University MOA</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+      </div>
+
+      {/* CREATE / EDIT MODAL */}
+      {isModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{
+            background: 'var(--auth-card-bg, #1e293b)',
+            border: '1px solid var(--auth-border-color)',
+            padding: '30px',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '500px',
+            boxSizing: 'border-box',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          }}>
+            <h2 style={{ color: 'var(--auth-text-main)', fontSize: '1.4rem', marginBottom: '20px', fontWeight: '600' }}>
+              {isEditing ? 'Edit Event (Database)' : 'Create Event (Database)'}
+            </h2>
+
+            <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Event Title *</label>
+                <input
                   type="text"
-                  placeholder="e.g. Annual IT Symposium" 
-                  value={newEvent.title} 
-                  onChange={e => setNewEvent({...newEvent, title: e.target.value})} 
-                  style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} 
+                  required
+                  placeholder="e.g. Web Development Bootcamp"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Date</label>
-                  <input 
-                    type="date" 
-                    value={newEvent.date} 
-                    onChange={e => setNewEvent({...newEvent, date: e.target.value})} 
-                    style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} 
-                  />
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Type</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
+                  >
+                    <option value="Workshop">Workshop</option>
+                    <option value="Seminar">Seminar</option>
+                    <option value="Competition">Competition</option>
+                    <option value="Meeting">Meeting</option>
+                  </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Time</label>
-                  <input 
-                    type="time" 
-                    value={newEvent.time} 
-                    onChange={e => setNewEvent({...newEvent, time: e.target.value})} 
-                    style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} 
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Venue / Location</label>
-                <input 
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Venue *</label>
+                <input
                   type="text"
-                  placeholder="e.g. NU MOA Room 402" 
-                  value={newEvent.venue} 
-                  onChange={e => setNewEvent({...newEvent, venue: e.target.value})} 
-                  style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} 
+                  required
+                  placeholder="e.g. Lab 402 / Main Auditorium"
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Notes / Things to Bring / Reminders</label>
-                <textarea 
-                  placeholder="e.g. Bring valid ID, laptop, and wear formal attire." 
-                  value={newEvent.notes} 
-                  onChange={e => setNewEvent({...newEvent, notes: e.target.value})} 
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Description</label>
+                <textarea
                   rows="3"
-                  style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} 
+                  placeholder="Short description of the event..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none', resize: 'vertical' }}
                 />
               </div>
 
-              <button 
-                type="submit" 
-                className="submit-btn"
-                style={{ padding: '12px', marginTop: '5px', width: '100%', fontWeight: '600', cursor: 'pointer' }}
-              >
-                Publish Event
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  style={{ background: 'transparent', color: 'var(--auth-text-muted)', border: '1px solid var(--auth-border-color)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ background: '#38bdf8', color: '#0f172a', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  {isEditing ? 'Save to Database' : 'Insert to Database'}
+                </button>
+              </div>
             </form>
           </div>
-
-          <div className="auth-card-pro" style={{ padding: '30px', margin: 0, width: '100%', boxSizing: 'border-box' }}>
-            <h3 style={{ color: 'var(--auth-text-main)', fontSize: '1.25rem', marginBottom: '8px', fontWeight: '600' }}>Active System Events</h3>
-            <p style={{ color: 'var(--auth-text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>Currently scheduled events and guidelines.</p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '520px', overflowY: 'auto', paddingRight: '4px' }}>
-              {events.length === 0 ? (
-                <p style={{ color: 'var(--auth-text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '20px' }}>No active events found.</p>
-              ) : (
-                events.map(evt => (
-                  <div key={evt.id} style={{ padding: '16px', background: 'var(--auth-input-bg)', borderRadius: '10px', border: '1px solid var(--auth-border-color)', display: 'flex', flexDirection: 'column', gap: '8px', boxSizing: 'border-box' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h4 style={{ fontSize: '1rem', color: 'var(--auth-text-main)', fontWeight: '600' }}>{evt.title}</h4>
-                      <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>Active</span>
-                    </div>
-                    <p style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)' }}>
-                      📅 {evt.date} at {evt.time}
-                    </p>
-                    <p style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)' }}>
-                      📍 {evt.venue}
-                    </p>
-                    {evt.notes && (
-                      <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '6px', borderLeft: '3px solid #38bdf8' }}>
-                        <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Reminders / Notes:</span>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', margin: 0 }}>{evt.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
         </div>
-      </div>
+      )}
     </div>
   );
 }

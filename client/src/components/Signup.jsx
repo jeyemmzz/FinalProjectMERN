@@ -1,34 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/Auth.css';
 
-export default function Signup({ 
-  onBackToHome, 
-  onSwitchToLogin, 
-  onNavigateAbout, 
-  onNavigateEvents, 
-  onRegisterSuccess 
-}) {
-  const [isPageLoading, setIsPageLoading] = useState(true);
+export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState('student');
+  
+  // State para sa mount animation trigger
+  const [animateIn, setAnimateIn] = useState(false);
+
+  // Form states
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
+    studentId: '',
+    program: '',
+    institution: 'National University MOA',
     email: '',
     password: '',
     confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Theme initialization and persistence (Katulad sa Home.jsx)
   useEffect(() => {
+    // I-trigger ang animation pagka-load/mount ng component
+    const timer = setTimeout(() => setAnimateIn(true), 10);
+    
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -40,196 +38,470 @@ export default function Signup({
     localStorage.setItem('theme', themeName);
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSignup = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
-
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
-      setErrorMessage('Please fill in all required fields.');
-      return;
-    }
-
-    if (!formData.email.includes('@') || !formData.email.includes('.')) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
-      return;
-    }
 
     if (formData.password !== formData.confirmPassword) {
-      setErrorMessage('Passwords do not match.');
+      console.warn('Passwords do not match!');
       return;
     }
 
-    if (onRegisterSuccess) {
-      onRegisterSuccess();
+    try {
+      setIsLoading(true);
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: userType === 'student' ? 'student' : 'user',
+        studentId: userType === 'student' ? formData.studentId : 'N/A',
+        program: userType === 'student' ? formData.program : 'N/A',
+        institution: userType === 'student' ? formData.institution : 'General Public'
+      };
+
+      const response = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to register account.');
+      }
+
+      console.log('Account successfully created:', data);
+      
+      if (onSignupSuccess) {
+        onSignupSuccess(data.user);
+      } else if (onSwitchToLogin) {
+        onSwitchToLogin();
+      }
+
+    } catch (error) {
+      console.error('Signup error:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 18px',
+    borderRadius: '12px',
+    border: '1px solid rgba(56, 189, 248, 0.3)',
+    background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
+    color: isDarkMode ? '#ffffff' : '#0f172a',
+    boxSizing: 'border-box',
+    outline: 'none',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease'
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: isDarkMode ? '#94a3b8' : '#64748b',
+    marginBottom: '6px'
   };
 
   return (
-    <div className="auth-page-wrapper">
-      <nav className="auth-navbar-centered">
-        <div className="nav-pill-container" style={{ gap: '16px', padding: '10px 24px', flexWrap: 'wrap' }}>
-          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onBackToHome}>
-            <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
-              Syntax <span style={{ color: '#38bdf8' }}>4</span>
-            </span>
+    <div style={{
+      minHeight: '100vh',
+      width: '100vw',
+      background: isDarkMode 
+        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)' 
+        : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      boxSizing: 'border-box',
+      overflowX: 'hidden',
+      transition: 'background 0.5s ease',
+      paddingBottom: '60px'
+    }}>
+      
+      {/* Inline Styles para sa Entry Animations & Loading Spinner */}
+      <style>{`
+        @keyframes fadeInSlide {
+          0% {
+            opacity: 0;
+            transform: translateY(30px) scale(0.97);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animated-wrapper {
+          opacity: 0;
+          transform: translateY(30px) scale(0.97);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animated-wrapper.active {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        .nav-link {
+          transition: all 0.25s ease;
+        }
+        .nav-link:hover {
+          color: #38bdf8 !important;
+          transform: translateY(-2px);
+        }
+        .interactive-btn {
+          transition: all 0.25s ease;
+        }
+        .interactive-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+        .loading-spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(15, 23, 42, 0.3);
+          border-top: 2px solid #0f172a;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          display: inline-block;
+        }
+      `}</style>
+
+      {/* Pill Navbar with Glassmorphism */}
+      <nav style={{
+        width: '100%',
+        padding: '20px 40px',
+        display: 'flex',
+        justifyContent: 'center',
+        boxSizing: 'border-box'
+      }}>
+        <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          padding: '10px 24px',
+          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(16px)',
+          borderRadius: '9999px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.05)',
+          flexWrap: 'nowrap'
+        }}>
+          {/* Logo */}
+          <span 
+            onClick={onNavigateHome}
+            className="nav-link"
+            style={{ fontSize: '1rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            Syntax <span style={{ color: '#38bdf8' }}>4</span>
+          </span>
+
+          <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }}>|</span>
+
+          {/* Links */}
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+            {[
+              { name: 'Home', action: onNavigateHome },
+              { name: 'Events', action: onNavigateEvents },
+              { name: 'About', action: onNavigateAbout }
+            ].map((link) => (
+              <span 
+                key={link.name}
+                onClick={link.action}
+                className="nav-link"
+                style={{ color: '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+              >
+                {link.name}
+              </span>
+            ))}
           </div>
 
-          <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
-
-          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <span onClick={onBackToHome} className="nav-item" style={{ cursor: 'pointer' }}>Home</span>
-            <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>Events</span>
-            <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>About</span>
-          </div>
-
-          <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
-
-          {/* Theme Toggle Button gamit ang shared button style */}
+          {/* Theme Toggle Button */}
           <button
-            className="nav-pill-btn"
+            type="button"
             onClick={toggleTheme}
-            style={{ 
-              border: '1px solid rgba(56, 189, 248, 0.3)', 
+            className="nav-link"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94a3b8',
               cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.85rem'
+              gap: '4px',
+              whiteSpace: 'nowrap'
             }}
           >
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          <button 
+          {/* Login Button Pill */}
+          <button
+            type="button"
             onClick={onSwitchToLogin}
-            style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
+            className="interactive-btn"
+            style={{
+              background: isDarkMode ? 'rgba(31, 41, 55, 0.8)' : '#e2e8f0',
+              color: isDarkMode ? '#ffffff' : '#0f172a',
+              border: 'none',
+              padding: '8px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              whiteSpace: 'nowrap'
+            }}
           >
             Login
           </button>
 
-          <button 
-            className="nav-pill-btn register" 
-            onClick={() => {}}
-            style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'default' }}
+          {/* Register Button Pill */}
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className="interactive-btn"
+            style={{
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 20px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 15px rgba(29, 78, 216, 0.4)',
+              whiteSpace: 'nowrap'
+            }}
           >
             Register
           </button>
         </div>
       </nav>
 
-      <div className="auth-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
-        <div className="auth-card-pro" style={{ maxWidth: '420px', width: '100%', padding: '40px', boxSizing: 'border-box' }}>
-          {isPageLoading ? (
+      {/* Animated Glassmorphism Form Container */}
+      <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
+        maxWidth: '920px',
+        width: '92%',
+        margin: '30px auto 50px auto',
+        flex: 1,
+        boxSizing: 'border-box',
+        transitionDelay: '0.1s'
+      }}>
+        <div style={{
+          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(24px)',
+          padding: '50px 60px',
+          borderRadius: '24px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+          border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+          boxSizing: 'border-box',
+          width: '100%'
+        }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Create Account</h1>
+            <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Register your profile credentials directly to the database</p>
+          </div>
+
+          <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            
+            {/* User Type Selection */}
             <div>
-              <div className="skeleton-loader" style={{ height: '30px', width: '60%', marginBottom: '15px' }}></div>
-              <div className="skeleton-loader" style={{ height: '16px', width: '80%', marginBottom: '30px' }}></div>
-              <div className="skeleton-loader" style={{ height: '45px', width: '100%', marginBottom: '20px' }}></div>
-              <div className="skeleton-loader" style={{ height: '45px', width: '100%', marginBottom: '20px' }}></div>
-              <div className="skeleton-loader" style={{ height: '45px', width: '100%' }}></div>
+              <label style={labelStyle}>Are you registering as a Student? *</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setUserType('student')}
+                  style={{
+                    padding: '14px',
+                    borderRadius: '12px',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    border: userType === 'student' ? '1px solid #38bdf8' : '1px solid rgba(56, 189, 248, 0.2)',
+                    background: userType === 'student' ? 'rgba(56, 189, 248, 0.15)' : (isDarkMode ? 'rgba(11, 19, 41, 0.4)' : '#f8fafc'),
+                    color: userType === 'student' ? '#38bdf8' : '#94a3b8',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Yes, I am a Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserType('other')}
+                  style={{
+                    padding: '14px',
+                    borderRadius: '12px',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    border: userType === 'other' ? '1px solid #38bdf8' : '1px solid rgba(56, 189, 248, 0.2)',
+                    background: userType === 'other' ? 'rgba(56, 189, 248, 0.15)' : (isDarkMode ? 'rgba(11, 19, 41, 0.4)' : '#f8fafc'),
+                    color: userType === 'other' ? '#38bdf8' : '#94a3b8',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Not a student
+                </button>
+              </div>
             </div>
-          ) : (
-            <>
-              <h2 style={{ fontSize: '1.8rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '700' }}>Create Account</h2>
-              <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', marginBottom: '25px' }}>Join Syntax 4 to manage and register for campus events.</p>
 
-              {errorMessage && (
-                <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f43f5e', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '20px' }}>
-                  {errorMessage}
-                </div>
-              )}
+            {/* Row 1: Full Name & Email */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={labelStyle}>Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter your Full Name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
 
-              {successMessage && (
-                <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '20px' }}>
-                  {successMessage}
-                </div>
-              )}
-
-              <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-sub)', marginBottom: '6px' }}>Full Name</label>
-                  <input 
-                    type="text" 
-                    name="fullName"
-                    placeholder="Juan Dela Cruz"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-sub)', marginBottom: '6px' }}>Email Address</label>
-                  <input 
-                    type="email" 
-                    name="email"
-                    placeholder="name@example.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-sub)', marginBottom: '6px' }}>Password</label>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    name="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-sub)', marginBottom: '6px' }}>Confirm Password</label>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    name="confirmPassword"
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '11px 14px', background: 'var(--auth-input-bg)', border: '1px solid var(--auth-border-color)', borderRadius: '8px', color: 'var(--auth-text-main)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                  
-                  {/* Show Password Checkbox */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                    <input 
-                      type="checkbox" 
-                      id="showPassSignup" 
-                      checked={showPassword} 
-                      onChange={(e) => setShowPassword(e.target.checked)}
-                      style={{ cursor: 'pointer', accentColor: '#38bdf8' }}
+            {/* CONDITIONAL STUDENT FIELDS */}
+            {userType === 'student' && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px',
+                background: 'rgba(56, 189, 248, 0.04)',
+                padding: '24px',
+                borderRadius: '16px',
+                border: '1px solid rgba(56, 189, 248, 0.15)'
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={labelStyle}>Student ID *</label>
+                    <input
+                      type="text"
+                      required={userType === 'student'}
+                      placeholder="Enter your Student ID"
+                      value={formData.studentId}
+                      onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                      style={inputStyle}
                     />
-                    <label htmlFor="showPassSignup" style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', cursor: 'pointer', userSelect: 'none' }}>
-                      Show passwords
-                    </label>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Program / Course *</label>
+                    <input
+                      type="text"
+                      required={userType === 'student'}
+                      placeholder="Enter your Program / Course"
+                      value={formData.program}
+                      onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                      style={inputStyle}
+                    />
                   </div>
                 </div>
 
-                <button type="submit" className="submit-btn" style={{ padding: '12px', marginTop: '5px', cursor: 'pointer' }}>
-                  Create Account
-                </button>
-              </form>
+                <div>
+                  <label style={labelStyle}>Institution / School *</label>
+                  <input
+                    type="text"
+                    required={userType === 'student'}
+                    placeholder="Enter your University / School"
+                    value={formData.institution}
+                    onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            )}
 
-              <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginTop: '20px' }}>
+            {/* Row 2: Passwords */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={labelStyle}>Password *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Confirm Password *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="interactive-btn"
+              style={{
+                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                color: '#0f172a',
+                border: 'none',
+                padding: '16px',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '1rem',
+                marginTop: '10px',
+                boxShadow: '0 6px 20px rgba(56, 189, 248, 0.4)',
+                opacity: isLoading ? 0.8 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading-spinner"></span>
+                  Registering to Database...
+                </>
+              ) : (
+                'Register Account'
+              )}
+            </button>
+
+            <div style={{ textAlign: 'center', marginTop: '12px' }}>
+              <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
                 Already have an account?{' '}
-                <span onClick={onSwitchToLogin} style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
-                  Sign in here
+                <span 
+                  onClick={onSwitchToLogin} 
+                  className="nav-link"
+                  style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  Log in here
                 </span>
-              </p>
-            </>
-          )}
+              </span>
+            </div>
+
+          </form>
+
         </div>
       </div>
     </div>
