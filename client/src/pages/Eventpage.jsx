@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// 1. MOCK DATA (Pekeng datos muna para sa mga campus events)
+// 1. MOCK DATA (Pekeng datos para sa mga campus events)
 const initialEvents = [
   { id: 1, title: 'React Workshop', type: 'Workshop', date: 'Aug 25, 2026', status: 'Upcoming', description: 'Hands-on session on React hooks and UI components.' },
   { id: 2, title: 'Annual Hackathon', type: 'Competition', date: 'Sept 10, 2026', status: 'Upcoming', description: '24-hour coding challenge for aspiring developers.' },
@@ -12,15 +12,11 @@ const initialEvents = [
 const eventTypes = ['All', 'Seminar', 'Competition', 'Workshop', 'Meeting'];
 
 const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNavigateAbout }) => {
-  // 2. STATES (Para sa interactivity at filters)
   const [events, setEvents] = useState(initialEvents);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Role Switcher para makita ang Student vs Admin view batay sa usapan ninyo sa chat
   const [userRole, setUserRole] = useState('Student'); 
 
-  // 3. LOGIC (Pag-filter at pag-search ng events)
   const filteredEvents = events.filter(event => {
     const matchesType = activeFilter === 'All' || event.type === activeFilter;
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -37,10 +33,9 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
     }
   };
 
-  // 4. RENDER UI
   return (
     <div style={pageStyle}>
-      {/* Top Navbar / Navigation Buttons */}
+      {/* Top Navigation Bar (Pareho sa Home at About) */}
       <div style={navBarStyle}>
         <div style={logoStyle}>Syntax 4</div>
         <div style={navLinksStyle}>
@@ -59,7 +54,6 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
           <p style={subtitleStyle}>Explore upcoming university activities, workshops, and seminars.</p>
         </div>
         
-        {/* Role Switcher (Student vs Admin view) */}
         <div style={roleSwitcherStyle}>
           <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>View as: </span>
           <button onClick={() => setUserRole('Student')} style={roleButtonStyle(userRole === 'Student')}>Student</button>
@@ -67,7 +61,7 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
         </div>
       </div>
 
-      {/* Controls Section (Filter Buttons & Search Bar) */}
+      {/* Controls Section (Filter & Search) */}
       <div style={controlsStyle}>
         <div style={filterGroupStyle}>
           {eventTypes.map(type => (
@@ -89,7 +83,6 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
           style={searchInputStyle}
         />
         
-        {/* Admin Control: Add Event Button */}
         {userRole === 'Admin' && (
           <button onClick={handleAddEvent} style={addButtonStyle}>
             + Add New Event
@@ -97,7 +90,7 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
         )}
       </div>
 
-      {/* Events Grid / Cards Section */}
+      {/* Events Grid Cards */}
       <div style={gridStyle}>
         {filteredEvents.length > 0 ? (
           filteredEvents.map(event => (
@@ -111,7 +104,6 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
                 <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.4' }}>{event.description}</p>
               </div>
               
-              {/* Card Footer: Role-Specific Actions */}
               <div style={cardFooterStyle}>
                 <span style={statusStyle(event.status)}>{event.status}</span>
                 
@@ -137,7 +129,7 @@ const Eventpage = ({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNaviga
 };
 
 // ==============================
-// STYLES (Moody Dark Theme matching your preferences)
+// STYLES
 // ==============================
 const pageStyle = {
   padding: '30px 40px',
@@ -151,9 +143,9 @@ const navBarStyle = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginBottom: '40px',
+  marginBottom: '35px',
   borderBottom: '1px solid #1e293b',
-  paddingBottom: '20px',
+  paddingBottom: '15px',
 };
 
 const logoStyle = {

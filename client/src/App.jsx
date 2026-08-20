@@ -3,16 +3,14 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import About from './components/About';
-import Event from './components/Event';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
-import EventsPage from './pages/Eventpage'; // <--- Naka-import na ang bagong Events page mo
+import EventsPage from './pages/Eventpage';
 import './styles/Auth.css';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
 
-  // This function alerts the user and redirects them to the login page
   const handleRegisterSuccess = () => {
     alert("Account registered");
     setCurrentView('login');
@@ -59,7 +57,6 @@ export default function App() {
         />
       )}
 
-      {/* DITO NATIN GINAMIT ANG BAGONG EVENTS PAGE MO */}
       {currentView === 'event' && (
         <EventsPage 
           onNavigateHome={() => setCurrentView('home')} 
