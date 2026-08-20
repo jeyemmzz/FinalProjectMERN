@@ -6,6 +6,7 @@ import About from './components/About';
 import Event from './components/Event';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import EventsPage from './pages/Eventpage'; // <--- Naka-import na ang bagong Events page mo
 import './styles/Auth.css';
 
 export default function App() {
@@ -45,7 +46,7 @@ export default function App() {
           onSwitchToLogin={() => setCurrentView('login')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
-          onRegisterSuccess={handleRegisterSuccess} /* Passed the function here */
+          onRegisterSuccess={handleRegisterSuccess}
         />
       )}
       
@@ -58,8 +59,9 @@ export default function App() {
         />
       )}
 
+      {/* DITO NATIN GINAMIT ANG BAGONG EVENTS PAGE MO */}
       {currentView === 'event' && (
-        <Event 
+        <EventsPage 
           onNavigateHome={() => setCurrentView('home')} 
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={() => setCurrentView('signup')}
