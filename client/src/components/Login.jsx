@@ -5,6 +5,9 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
   const [isLoading, setIsLoading] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
+  // State para sa Show/Hide Password toggle
+  const [showPassword, setShowPassword] = useState(false);
+
   // Login form states
   const [formData, setFormData] = useState({
     email: '',
@@ -67,7 +70,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
   const inputStyle = {
     width: '100%',
-    padding: '14px 18px',
+    padding: '14px 45px 14px 18px', // Dinagdagan ng right padding para hindi magsapawan sa toggle button
     borderRadius: '12px',
     border: '1px solid rgba(56, 189, 248, 0.3)',
     background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
@@ -293,16 +296,38 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
               />
             </div>
 
+            {/* Password Field with Show/Hide Button */}
             <div>
               <label style={labelStyle}>Password *</label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                style={inputStyle}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  style={inputStyle}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    padding: '4px 8px'
+                  }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <button
