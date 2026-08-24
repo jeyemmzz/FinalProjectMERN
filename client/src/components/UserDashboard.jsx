@@ -6,17 +6,31 @@ const eventTypes = ['All', 'Seminar', 'Competition', 'Workshop', 'Meeting'];
 export default function UserDashboard({ onLogout, onNavigateHome, currentUser }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Confirmed');
-  
-  // Active navigation view: 'registered', 'browse', o kaya 'profile'
   const [activeNavView, setActiveNavView] = useState('registered'); 
   const [isDarkMode, setIsDarkMode] = useState(true);
   
-  // Search and filter states para sa event browsing
   const [eventSearch, setEventSearch] = useState('');
   const [selectedType, setSelectedType] = useState('All');
-  
-  // Available events na kukunin direkta mula sa database via API
   const [availableEvents, setAvailableEvents] = useState([]);
+
+  // Awtomatikong kukunin ang user mula sa props o sa localStorage (galing sa MongoDB signup/login)
+  const [currentUserData, setCurrentUserData] = useState(() => {
+    console.log("Initial currentUser prop:", currentUser);
+    if (currentUser) return currentUser;
+    try {
+      const savedUser = localStorage.getItem('currentUser') || 
+                        localStorage.getItem('user') || 
+                        localStorage.getItem('userInfo');
+      console.log("Found in localStorage:", savedUser);
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        return parsed.user || parsed.existingUser || parsed;
+      }
+    } catch (e) {
+      console.error('Error parsing stored user:', e);
+    }
+    return null;
+  });
 
   const [registeredEvents, setRegisteredEvents] = useState([
     { id: 1, title: 'Tech Summit 2026', date: 'Oct 12, 2026', venue: 'NU MOA Main Auditorium', status: 'Confirmed' },
@@ -24,36 +38,52 @@ export default function UserDashboard({ onLogout, onNavigateHome, currentUser })
     { id: 3, title: 'AI & Robotics Expo', date: 'Nov 05, 2026', venue: 'Multipurpose Hall', status: 'Declined' }
   ]);
 
-  // Profile data configuration
+  // I-log sa console para makita natin ang mismong laman ng loaded user data
+  useEffect(() => {
+    console.log("Current User Data loaded in Dashboard:", currentUserData);
+  }, [currentUserData]);
+
+  // Dynamic na kukunin ang mga detalye mula sa database/localStorage na may mas malawak na fallback keys
   const userProfile = {
-    name: currentUser?.name || 'Student',
-    email: currentUser?.email || 'Student@syntax4.com',
-    studentId: currentUser?.studentId || '202610482',
-    program: currentUser?.program || 'BS Information Technology',
-    institution: currentUser?.institution || 'National University MOA'
+    name: currentUserData?.name || currentUserData?.fullName || currentUserData?.username || currentUserData?.firstName || currentUserData?.studentName || 'Student',
+    email: currentUserData?.email || currentUserData?.userEmail || currentUserData?.mail || 'Student@syntax4.com',
+    studentId: currentUserData?.studentId || currentUserData?.id || currentUserData?.studentNumber || currentUserData?._id || currentUserData?.studentID || '202610482',
+    program: currentUserData?.program || currentUserData?.course || currentUserData?.degree || 'BS Information Technology',
+    institution: currentUserData?.institution || currentUserData?.school || 'National University MOA'
   };
 
-  // Theme initialization, persistence, at pag-fetch ng events mula sa database
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // Fetch available events mula sa Database API
+    // Kung walang currentUser prop, subukan basahin ulit sa localStorage sakaling nag-update
+    if (!currentUser && !currentUserData) {
+      const storedUser = localStorage.getItem('currentUser') || 
+                         localStorage.getItem('user') || 
+                         localStorage.getItem('userInfo');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          setCurrentUserData(parsed.user || parsed.existingUser || parsed);
+        } catch (e) {
+          console.error('Error parsing stored user data:', e);
+        }
+      }
+    }
+
     fetchAvailableEvents();
-  }, []);
+  }, [currentUser]);
 
   const fetchAvailableEvents = async () => {
     try {
       setIsPageLoading(true);
-      // Palitan ang URL na 'http://localhost:5000/api/events' kung iba ang port o endpoint ng backend ninyo
       const response = await fetch('http://localhost:5000/api/events');
       if (!response.ok) throw new Error('Failed to fetch database events.');
       const data = await response.json();
       setAvailableEvents(data);
     } catch (error) {
       console.error('Error fetching database events:', error);
-      // Fallback data sakaling offline ang backend
       setAvailableEvents([
         { id: 101, title: 'React Workshop & UI Design', type: 'Workshop', date: '2026-08-25', venue: 'Lab 301', description: 'Hands-on session connected to database.' }
       ]);
@@ -76,7 +106,6 @@ export default function UserDashboard({ onLogout, onNavigateHome, currentUser })
     ? registeredEvents
     : registeredEvents.filter(event => event.status === activeTab);
 
-  // Filter logic para sa pag-browse ng bagong database events
   const filteredAvailableEvents = availableEvents.filter(event => {
     const matchesType = selectedType === 'All' || event.type === selectedType;
     const matchesSearch = event.title.toLowerCase().includes(eventSearch.toLowerCase());
@@ -204,7 +233,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, currentUser })
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px', gap: '12px' }}>
                   <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: 0 }}>My Registered Events</h1>
-                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Track the approval status of your campus event applications.</p>
+                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Welcome back, <strong style={{ color: '#38bdf8' }}>{userProfile.name}</strong>!</p>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '30px', flexWrap: 'wrap' }}>
@@ -294,7 +323,6 @@ export default function UserDashboard({ onLogout, onNavigateHome, currentUser })
                   <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Explore live university activities fetched from the database.</p>
                 </div>
 
-                {/* Filters & Search Input */}
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {eventTypes.map((type) => (

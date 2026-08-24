@@ -6,7 +6,7 @@ import About from './components/About';
 import Event from './components/Event';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
-import EventsPage from './pages/Eventpage'; // <--- Naka-import na ang bagong Events page mo
+import EventsPage from './pages/Eventpage';
 import './styles/Auth.css';
 
 export default function App() {
@@ -16,6 +16,15 @@ export default function App() {
   const handleRegisterSuccess = () => {
     alert("Account registered");
     setCurrentView('login');
+  };
+
+  // Function to handle login success based on user role (admin or student/user)
+  const handleLoginSuccess = (role) => {
+    if (role === 'admin') {
+      setCurrentView('admin-dashboard');
+    } else {
+      setCurrentView('user-dashboard');
+    }
   };
 
   return (
@@ -35,6 +44,7 @@ export default function App() {
           onSwitchToSignup={() => setCurrentView('signup')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
+          onLoginSuccess={handleLoginSuccess}
           onNavigateUserDashboard={() => setCurrentView('user-dashboard')}
           onNavigateAdminDashboard={() => setCurrentView('admin-dashboard')}
         />
@@ -46,7 +56,7 @@ export default function App() {
           onSwitchToLogin={() => setCurrentView('login')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
-          onRegisterSuccess={handleRegisterSuccess}
+          onSignupSuccess={handleRegisterSuccess}
         />
       )}
       
@@ -59,7 +69,6 @@ export default function App() {
         />
       )}
 
-      {/* DITO NATIN GINAMIT ANG BAGONG EVENTS PAGE MO */}
       {currentView === 'event' && (
         <EventsPage 
           onNavigateHome={() => setCurrentView('home')} 

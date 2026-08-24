@@ -12,7 +12,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
   // State para sa mount animation trigger
   const [animateIn, setAnimateIn] = useState(false);
 
-  // Form states
+  // Form states na may naka-default nang programa at unibersidad
   const [formData, setFormData] = useState({
     name: '',
     studentId: '',
@@ -46,7 +46,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      console.warn('Passwords do not match!');
+      alert('Passwords do not match!');
       return;
     }
 
@@ -77,14 +77,30 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
 
       console.log('Account successfully created:', data);
       
+      // I-FORCE NA GAMITIN ANG TINYPE SA FORM (formData) PARA HINDI MA-OVERWRITE NG LUMANG BACKEND DATA
+      const registeredUser = {
+        fullName: formData.name,
+        studentId: userType === 'student' ? formData.studentId : 'N/A',
+        program: userType === 'student' ? formData.program : 'N/A',
+        institution: userType === 'student' ? formData.institution : 'General Public',
+        email: formData.email
+      };
+
+      // I-save agad sa localStorage para sakto ang bagsak at pag-attach sa UserDashboard
+      localStorage.setItem('currentUser', JSON.stringify(registeredUser));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       if (onSignupSuccess) {
-        onSignupSuccess(data.user);
+        onSignupSuccess(registeredUser);
       } else if (onSwitchToLogin) {
         onSwitchToLogin();
       }
 
     } catch (error) {
       console.error('Signup error:', error);
+      alert(error.message || 'An error occurred during registration.');
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +108,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
 
   const inputStyle = {
     width: '100%',
-    padding: '14px 45px 14px 18px', // Dinagdagan ng right padding para hindi magsapawan sa toggle button
+    padding: '14px 45px 14px 18px',
     borderRadius: '12px',
     border: '1px solid rgba(56, 189, 248, 0.3)',
     background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
@@ -126,7 +142,6 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
       paddingBottom: '60px'
     }}>
       
-      {/* Inline Styles para sa Entry Animations & Loading Spinner */}
       <style>{`
         @keyframes fadeInSlide {
           0% {
@@ -411,7 +426,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     <input
                       type="text"
                       required={userType === 'student'}
-                      placeholder="Enter your Program / Course"
+                      placeholder="Program / Course"
                       value={formData.program}
                       onChange={(e) => setFormData({ ...formData, program: e.target.value })}
                       style={inputStyle}
@@ -424,7 +439,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                   <input
                     type="text"
                     required={userType === 'student'}
-                    placeholder="Enter your University / School"
+                    placeholder="Institution / School"
                     value={formData.institution}
                     onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
                     style={inputStyle}

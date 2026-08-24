@@ -54,10 +54,33 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         throw new Error(data.message || 'Failed to log in. Please check your credentials.');
       }
 
-      console.log('Successfully logged in:', data);
+      console.log('Successfully logged in response:', data);
+
+      // Kunin ang user object mula sa response ng backend
+      const rawUser = data.user || data.existingUser || data.account || data;
+
+      // Kunin ang dati nang nakatago sa localStorage (kung saan naka-save ang studentId mula sa Signup)
+      const existingStoredUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+      const loggedInUser = {
+        ...existingStoredUser,
+        ...rawUser,
+        // Sinisigurong hindi magiging MongoDB ID ang studentId kundi ang nakatago mula sa Signup o fallback
+        fullName: rawUser.fullName || rawUser.name || existingStoredUser.fullName || formData.fullname,
+        studentId: rawUser.studentId || rawUser.studentID || existingStoredUser.studentId || formData.studentId,
+        program: rawUser.program || rawUser.course || existingStoredUser.program || formData.program,
+        institution: rawUser.institution || rawUser.school || existingStoredUser.institution || formData.institution,
+        email: rawUser.email || formData.email
+      };
+
+      // I-save sa localStorage para mabasa nang maayos ng UserDashboard
+      localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
 
       if (onLoginSuccess) {
-        onLoginSuccess(data.user || data);
+        onLoginSuccess(loggedInUser);
       }
 
     } catch (error) {
@@ -70,7 +93,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
   const inputStyle = {
     width: '100%',
-    padding: '14px 45px 14px 18px', // Dinagdagan ng right padding para hindi magsapawan sa toggle button
+    padding: '14px 45px 14px 18px',
     borderRadius: '12px',
     border: '1px solid rgba(56, 189, 248, 0.3)',
     background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
@@ -104,7 +127,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
       paddingBottom: '60px'
     }}>
       
-      {/* Inline Styles para sa Entry Animations & Loading Spinner */}
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
