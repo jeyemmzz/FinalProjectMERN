@@ -1,15 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Auth.css';
 
-export default function About({ onNavigateHome, onNavigateLogin, onNavigateSignup, onNavigateEvents }) {
+export default function About({ 
+  onNavigateHome, 
+  onNavigateLogin, 
+  onNavigateSignup, 
+  onNavigateEvents,
+  onNavigateDashboard,
+  onLogout 
+}) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Theme initialization and persistence
+  // Theme initialization, persistence, and session check
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
+
+    // Retrieve active logged-in user session
+    const storedUserData = localStorage.getItem('currentUser');
+    if (storedUserData) {
+      try {
+        setCurrentUser(JSON.parse(storedUserData));
+      } catch (e) {
+        console.error("Error parsing currentUser from localStorage:", e);
+      }
+    }
 
     const timer = setTimeout(() => {
       setIsPageLoading(false);
@@ -25,11 +43,31 @@ export default function About({ onNavigateHome, onNavigateLogin, onNavigateSignu
     localStorage.setItem('theme', themeName);
   };
 
+  const handleLogoutClick = () => {
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    if (onLogout) {
+      onLogout();
+    } else if (onNavigateHome) {
+      onNavigateHome();
+    }
+  };
+
+  const handleDashboardOrHome = () => {
+    if (currentUser && onNavigateDashboard) {
+      onNavigateDashboard();
+    } else if (onNavigateHome) {
+      onNavigateHome();
+    }
+  };
+
   return (
     <div className="auth-page-wrapper">
       <nav className="auth-navbar-centered">
         <div className="nav-pill-container" style={{ gap: '16px', padding: '10px 24px', flexWrap: 'wrap' }}>
-          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onNavigateHome}>
+          
+          {/* Logo / Title */}
+          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={handleDashboardOrHome}>
             <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
               Syntax <span style={{ color: '#38bdf8' }}>4</span>
             </span>
@@ -37,10 +75,25 @@ export default function About({ onNavigateHome, onNavigateLogin, onNavigateSignu
 
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
 
+          {/* Dynamic Nav Links */}
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>Home</span>
-            <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>Events</span>
-            <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>About</span>
+            {currentUser ? (
+              <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
+                Dashboard
+              </span>
+            ) : (
+              <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
+                Home
+              </span>
+            )}
+
+            <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>
+              Events
+            </span>
+
+            <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
+              About
+            </span>
           </div>
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
@@ -61,20 +114,44 @@ export default function About({ onNavigateHome, onNavigateLogin, onNavigateSignu
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          <button 
-            onClick={onNavigateLogin}
-            style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
-          >
-            Login
-          </button>
+          {/* Conditional Actions */}
+          {currentUser ? (
+            <button 
+              className="interactive-btn"
+              onClick={handleLogoutClick}
+              style={{ 
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
+                color: '#ffffff', 
+                border: 'none', 
+                padding: '6px 18px', 
+                borderRadius: '9999px',
+                cursor: 'pointer', 
+                fontSize: '0.85rem', 
+                fontWeight: '700',
+                boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={onNavigateLogin}
+                style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
+              >
+                Login
+              </button>
 
-          <button 
-            className="nav-pill-btn register" 
-            onClick={onNavigateSignup}
-            style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
-          >
-            Register
-          </button>
+              <button 
+                className="nav-pill-btn register" 
+                onClick={onNavigateSignup}
+                style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Register
+              </button>
+            </>
+          )}
+
         </div>
       </nav>
 
@@ -122,8 +199,8 @@ export default function About({ onNavigateHome, onNavigateLogin, onNavigateSignu
               </div>
 
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                <button onClick={onNavigateHome} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', cursor: 'pointer' }}>
-                  Back to Home
+                <button onClick={handleDashboardOrHome} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', cursor: 'pointer' }}>
+                  {currentUser ? 'Back to Dashboard' : 'Back to Home'}
                 </button>
                 <button onClick={onNavigateEvents} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer' }}>
                   Explore Events

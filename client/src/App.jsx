@@ -6,7 +6,6 @@ import About from './components/About';
 import Event from './components/Event';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
-import EventsPage from './pages/Eventpage';
 import './styles/Auth.css';
 
 export default function App() {
@@ -65,20 +64,23 @@ export default function App() {
       
       {currentView === 'about' && (
         <About 
-          onNavigateHome={() => setCurrentView('home')} 
+          onNavigateHome={() => setCurrentView(currentUser ? 'user-dashboard' : 'home')} 
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={() => setCurrentView('signup')} 
           onNavigateEvents={() => setCurrentView('event')}
+          onNavigateDashboard={() => setCurrentView('user-dashboard')}
+          onLogout={() => setCurrentView('home')}
         />
       )}
 
       {currentView === 'event' && (
-        <EventsPage 
+        <Event 
           onNavigateHome={() => setCurrentView(currentUser ? 'user-dashboard' : 'home')} 
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={() => setCurrentView('signup')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateDashboard={() => setCurrentView('user-dashboard')}
+          onLogout={() => setCurrentView('home')}
         />
       )}
 

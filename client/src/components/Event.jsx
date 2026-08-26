@@ -1,21 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Auth.css';
 
-export default function EventPage({ 
+export default function Event({ 
   onNavigateHome, 
   onNavigateLogin, 
   onNavigateSignup, 
-  onNavigateAbout 
+  onNavigateAbout,
+  onNavigateDashboard,
+  onLogout 
 }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Theme initialization and persistence
+  // Theme initialization, persistence, and user session check
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
+
+    // Retrieve active logged-in user from localStorage
+    const storedUserData = localStorage.getItem('currentUser');
+    if (storedUserData) {
+      try {
+        setCurrentUser(JSON.parse(storedUserData));
+      } catch (e) {
+        console.error("Error parsing currentUser from localStorage:", e);
+      }
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -24,6 +37,24 @@ export default function EventPage({
     const themeName = nextMode ? 'dark' : 'light';
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('theme', themeName);
+  };
+
+  const handleLogoutClick = () => {
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    if (onLogout) {
+      onLogout();
+    } else if (onNavigateHome) {
+      onNavigateHome();
+    }
+  };
+
+  const handleDashboardOrHome = () => {
+    if (currentUser && onNavigateDashboard) {
+      onNavigateDashboard();
+    } else if (onNavigateHome) {
+      onNavigateHome();
+    }
   };
 
   const eventsList = [
@@ -67,7 +98,9 @@ export default function EventPage({
     <div className="auth-page-wrapper">
       <nav className="auth-navbar-centered">
         <div className="nav-pill-container" style={{ gap: '16px', padding: '10px 24px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={onNavigateHome}>
+          
+          {/* Logo / Title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={handleDashboardOrHome}>
             <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
               Syntax <span style={{ color: '#38bdf8' }}>4</span>
             </span>
@@ -75,15 +108,30 @@ export default function EventPage({
 
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
 
+          {/* Dynamic Nav Links */}
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>Home</span>
-            <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>Events</span>
-            <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>About</span>
+            {currentUser ? (
+              <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
+                Dashboard
+              </span>
+            ) : (
+              <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
+                Home
+              </span>
+            )}
+
+            <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
+              Events
+            </span>
+            
+            <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>
+              About
+            </span>
           </div>
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
-          {/* Light/Dark Toggle Button */}
+          {/* Theme Toggle Button */}
           <button
             className="nav-pill-btn"
             onClick={toggleTheme}
@@ -99,20 +147,44 @@ export default function EventPage({
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          <button 
-            onClick={onNavigateLogin}
-            style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
-          >
-            Login
-          </button>
+          {/* Conditional Actions */}
+          {currentUser ? (
+            <button 
+              className="interactive-btn"
+              onClick={handleLogoutClick}
+              style={{ 
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
+                color: '#ffffff', 
+                border: 'none', 
+                padding: '6px 18px', 
+                borderRadius: '9999px',
+                cursor: 'pointer', 
+                fontSize: '0.85rem', 
+                fontWeight: '700',
+                boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={onNavigateLogin}
+                style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
+              >
+                Login
+              </button>
 
-          <button 
-            className="nav-pill-btn register" 
-            onClick={onNavigateSignup}
-            style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
-          >
-            Register
-          </button>
+              <button 
+                className="nav-pill-btn register" 
+                onClick={onNavigateSignup}
+                style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Register
+              </button>
+            </>
+          )}
+
         </div>
       </nav>
 
