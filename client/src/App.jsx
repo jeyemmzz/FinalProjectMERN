@@ -80,7 +80,8 @@ export default function App() {
 
       {currentView === 'user-dashboard' && (
         <UserDashboard 
-          onLogout={() => setCurrentView('home')} 
+          onLogout={() => setCurrentView('home')}
+          onNavigateEvents={() => setCurrentView('event')}  
         />
       )}
 

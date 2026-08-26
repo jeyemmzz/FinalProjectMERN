@@ -1,96 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/Auth.css';
 
-const eventTypes = ['All', 'Seminar', 'Competition', 'Workshop', 'Meeting'];
-
-export default function UserDashboard({ onLogout, onNavigateHome, currentUser }) {
-  const [isPageLoading, setIsPageLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Confirmed');
-  const [activeNavView, setActiveNavView] = useState('registered'); 
+export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEvents }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
-  const [eventSearch, setEventSearch] = useState('');
-  const [selectedType, setSelectedType] = useState('All');
-  const [availableEvents, setAvailableEvents] = useState([]);
-
-  // Awtomatikong kukunin ang user mula sa props o sa localStorage (galing sa MongoDB signup/login)
-  const [currentUserData, setCurrentUserData] = useState(() => {
-    console.log("Initial currentUser prop:", currentUser);
-    if (currentUser) return currentUser;
-    try {
-      const savedUser = localStorage.getItem('currentUser') || 
-                        localStorage.getItem('user') || 
-                        localStorage.getItem('userInfo');
-      console.log("Found in localStorage:", savedUser);
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        return parsed.user || parsed.existingUser || parsed;
-      }
-    } catch (e) {
-      console.error('Error parsing stored user:', e);
-    }
-    return null;
-  });
-
-  const [registeredEvents, setRegisteredEvents] = useState([
-    { id: 1, title: 'Tech Summit 2026', date: 'Oct 12, 2026', venue: 'NU MOA Main Auditorium', status: 'Confirmed' },
-    { id: 2, title: 'Syntax 4 Hackathon', date: 'Oct 25, 2026', venue: 'Computer Lab 402', status: 'Pending Approval' },
-    { id: 3, title: 'AI & Robotics Expo', date: 'Nov 05, 2026', venue: 'Multipurpose Hall', status: 'Declined' }
-  ]);
-
-  // I-log sa console para makita natin ang mismong laman ng loaded user data
-  useEffect(() => {
-    console.log("Current User Data loaded in Dashboard:", currentUserData);
-  }, [currentUserData]);
-
-  // Dynamic na kukunin ang mga detalye mula sa database/localStorage na may mas malawak na fallback keys
-  const userProfile = {
-    name: currentUserData?.name || currentUserData?.fullName || currentUserData?.username || currentUserData?.firstName || currentUserData?.studentName || 'Student',
-    email: currentUserData?.email || currentUserData?.userEmail || currentUserData?.mail || 'Student@syntax4.com',
-    studentId: currentUserData?.studentId || currentUserData?.id || currentUserData?.studentNumber || currentUserData?._id || currentUserData?.studentID || '202610482',
-    program: currentUserData?.program || currentUserData?.course || currentUserData?.degree || 'BS Information Technology',
-    institution: currentUserData?.institution || currentUserData?.school || 'National University MOA'
-  };
+  const [user, setUser] = useState(null);
+  const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
+    // 1. Initial animation trigger
+    const timer = setTimeout(() => setAnimateIn(true), 10);
+
+    // 2. Load at apply ang saved theme
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // Kung walang currentUser prop, subukan basahin ulit sa localStorage sakaling nag-update
-    if (!currentUser && !currentUserData) {
-      const storedUser = localStorage.getItem('currentUser') || 
-                         localStorage.getItem('user') || 
-                         localStorage.getItem('userInfo');
-      if (storedUser) {
-        try {
-          const parsed = JSON.parse(storedUser);
-          setCurrentUserData(parsed.user || parsed.existingUser || parsed);
-        } catch (e) {
-          console.error('Error parsing stored user data:', e);
-        }
+    // 3. Kunin ang kasalukuyang user mula sa localStorage
+    const storedUserData = localStorage.getItem('currentUser');
+    let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
+
+    if (currentUser) {
+      // PERMANENT STUDENT ID CHECK:
+      // Kung walang studentId o nakalagay ay 'N/A', mag-generate ng FIX ID ONCE para sa account na ito.
+      if (!currentUser.studentId || currentUser.studentId === 'N/A') {
+        const generatedId = '2026-' + Math.floor(100000 + Math.random() * 900000);
+        currentUser = { ...currentUser, studentId: generatedId };
+
+        // Save pabalik sa currentUser
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        // Sync pabalik sa allUsers list
+        const existingUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+        const updatedUsers = existingUsers.map(u => 
+          (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) 
+            ? currentUser 
+            : u
+        );
+        localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
       }
+
+      setUser(currentUser);
+    } else {
+      // Fallback kung walang user na nakita sa storage
+      setUser({
+        name: 'User Account',
+        email: 'user@example.com',
+        studentId: '2026-102948',
+      });
     }
 
-    fetchAvailableEvents();
-  }, [currentUser]);
-
-  const fetchAvailableEvents = async () => {
-    try {
-      setIsPageLoading(true);
-      const response = await fetch('http://localhost:5000/api/events');
-      if (!response.ok) throw new Error('Failed to fetch database events.');
-      const data = await response.json();
-      setAvailableEvents(data);
-    } catch (error) {
-      console.error('Error fetching database events:', error);
-      setAvailableEvents([
-        { id: 101, title: 'React Workshop & UI Design', type: 'Workshop', date: '2026-08-25', venue: 'Lab 301', description: 'Hands-on session connected to database.' }
-      ]);
-    } finally {
-      setIsPageLoading(false);
-    }
-  };
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleTheme = () => {
     const nextMode = !isDarkMode;
@@ -100,111 +59,146 @@ export default function UserDashboard({ onLogout, onNavigateHome, currentUser })
     localStorage.setItem('theme', themeName);
   };
 
-  const tabs = ['All', 'Confirmed', 'Pending Approval', 'Declined'];
-
-  const filteredRegisteredEvents = activeTab === 'All'
-    ? registeredEvents
-    : registeredEvents.filter(event => event.status === activeTab);
-
-  const filteredAvailableEvents = availableEvents.filter(event => {
-    const matchesType = selectedType === 'All' || event.type === selectedType;
-    const matchesSearch = event.title.toLowerCase().includes(eventSearch.toLowerCase());
-    return matchesType && matchesSearch;
-  });
-
-  const handleJoinEvent = (eventToJoin) => {
-    const alreadyExists = registeredEvents.some(e => e.title === eventToJoin.title);
-    if (alreadyExists) {
-      alert('You are already registered or applied for this event.');
-      return;
-    }
-
-    const newEntry = {
-      id: Date.now(),
-      title: eventToJoin.title,
-      date: eventToJoin.date,
-      venue: eventToJoin.venue,
-      status: 'Pending Approval'
-    };
-
-    setRegisteredEvents([newEntry, ...registeredEvents]);
-    alert('Successfully registered for the event! Status is now Pending Approval.');
-  };
-
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'Confirmed':
-        return { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' };
-      case 'Pending Approval':
-        return { background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' };
-      case 'Declined':
-        return { background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' };
-      default:
-        return { background: 'rgba(148, 163, 184, 0.15)', color: 'var(--auth-text-muted)', border: '1px solid var(--auth-border-color)' };
+  const handleLogoutClick = () => {
+    localStorage.removeItem('currentUser');
+    if (onLogout) {
+      onLogout();
+    } else if (onNavigateHome) {
+      onNavigateHome();
     }
   };
 
   return (
-    <div className="auth-page-wrapper">
-      <nav className="auth-navbar-centered">
-        <div className="nav-pill-container" style={{ gap: '14px', padding: '10px 24px', flexWrap: 'wrap' }}>
-          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onNavigateHome}>
-            <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
-              Syntax <span style={{ color: '#38bdf8' }}>4</span> 
+    <div style={{
+      minHeight: '100vh',
+      width: '100vw',
+      background: isDarkMode 
+        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)' 
+        : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      boxSizing: 'border-box',
+      overflowX: 'hidden',
+      transition: 'background 0.5s ease',
+      paddingBottom: '60px'
+    }}>
+      
+      <style>{`
+        .animated-wrapper {
+          opacity: 0;
+          transform: translateY(20px) scale(0.98);
+          transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animated-wrapper.active {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        .nav-link {
+          transition: all 0.25s ease;
+        }
+        .nav-link:hover {
+          color: #38bdf8 !important;
+          transform: translateY(-2px);
+        }
+        .interactive-btn {
+          transition: all 0.25s ease;
+        }
+        .interactive-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+        .info-card {
+          transition: all 0.3s ease;
+        }
+        .info-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(56, 189, 248, 0.4) !important;
+        }
+      `}</style>
+
+      {/* Navbar */}
+      <nav style={{
+        width: '100%',
+        padding: '20px 40px',
+        display: 'flex',
+        justifyContent: 'center',
+        boxSizing: 'border-box'
+      }}>
+        <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          padding: '10px 24px',
+          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(16px)',
+          borderRadius: '9999px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.05)',
+          flexWrap: 'nowrap'
+        }}>
+          {/* Logo / Title */}
+          <span 
+            onClick={onNavigateHome}
+            className="nav-link"
+            style={{ fontSize: '1rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            Syntax <span style={{ color: '#38bdf8' }}>4</span>
+          </span>
+
+          <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }}>|</span>
+
+          {/* Nav Link - Events Only */}
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+            <span 
+              onClick={onNavigateEvents}
+              className="nav-link"
+              style={{ 
+                color: '#94a3b8', 
+                cursor: 'pointer', 
+                fontWeight: '600', 
+                fontSize: '0.9rem', 
+                whiteSpace: 'nowrap' 
+              }}
+            >
+              Events
             </span>
           </div>
 
-          <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
-
-          <span 
-            onClick={() => setActiveNavView('registered')} 
-            className="nav-item" 
-            style={{ color: activeNavView === 'registered' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeNavView === 'registered' ? '600' : '400', cursor: 'pointer' }}
-          >
-            My Registrations
-          </span>
-          <span 
-            onClick={() => setActiveNavView('browse')} 
-            className="nav-item" 
-            style={{ color: activeNavView === 'browse' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeNavView === 'browse' ? '600' : '400', cursor: 'pointer' }}
-          >
-            Events
-          </span>
-          <span 
-            onClick={() => setActiveNavView('profile')} 
-            className="nav-item" 
-            style={{ color: activeNavView === 'profile' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeNavView === 'profile' ? '600' : '400', cursor: 'pointer' }}
-          >
-            Profile
-          </span>
-
-          <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
-
           <button
-            className="nav-pill-btn"
+            type="button"
             onClick={toggleTheme}
-            style={{ 
-              border: '1px solid rgba(56, 189, 248, 0.3)', 
+            className="nav-link"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94a3b8',
               cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.85rem'
+              gap: '4px',
+              whiteSpace: 'nowrap'
             }}
           >
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          <button 
-            className="nav-pill-btn register" 
-            onClick={onLogout} 
-            style={{ 
-              background: 'rgba(244, 63, 94, 0.15)', 
-              color: '#f43f5e', 
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              padding: '6px 16px',
-              fontSize: '0.85rem',
-              cursor: 'pointer'
+          <button
+            type="button"
+            onClick={handleLogoutClick}
+            className="interactive-btn"
+            style={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 20px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
+              whiteSpace: 'nowrap'
             }}
           >
             Logout
@@ -212,269 +206,117 @@ export default function UserDashboard({ onLogout, onNavigateHome, currentUser })
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1200px', width: '95%', margin: '40px auto', flex: 1, boxSizing: 'border-box' }}>
-        {isPageLoading ? (
-          <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '40px' }}>
-              <div className="skeleton-loader" style={{ height: '35px', width: '25%', marginBottom: '15px' }}></div>
-              <div className="skeleton-loader" style={{ height: '18px', width: '40%' }}></div>
+      {/* Main Dashboard Layout */}
+      <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
+        maxWidth: '960px',
+        width: '92%',
+        margin: '30px auto 50px auto',
+        flex: 1,
+        boxSizing: 'border-box'
+      }}>
+        
+        {/* Profile Banner */}
+        <div style={{
+          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(24px)',
+          padding: '40px 50px',
+          borderRadius: '24px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+          border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+          marginBottom: '30px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '30px',
+          flexWrap: 'wrap'
+        }}>
+          {/* Avatar Circle */}
+          <div style={{
+            width: '90px',
+            height: '90px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '2.5rem',
+            fontWeight: '800',
+            color: '#ffffff',
+            boxShadow: '0 8px 25px rgba(56, 189, 248, 0.4)'
+          }}>
+            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: 0 }}>
+                {user?.name || user?.fullName || 'User Profile'}
+              </h1>
+              <span style={{
+                background: 'rgba(56, 189, 248, 0.15)',
+                color: '#38bdf8',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                padding: '4px 12px',
+                borderRadius: '9999px',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                textTransform: 'uppercase'
+              }}>
+                {user?.role || 'Member'}
+              </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-              <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
-              <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
-              <div className="skeleton-loader" style={{ height: '160px', borderRadius: '12px' }}></div>
+            <p style={{ fontSize: '1rem', color: '#94a3b8', margin: '6px 0 0 0' }}>
+              {user?.email || 'No email provided'}
+            </p>
+          </div>
+        </div>
+
+        {/* Dashboard Details Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '20px'
+        }}>
+          
+          {/* Fixed Student ID Card */}
+          <div className="info-card" style={{
+            background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(16px)',
+            padding: '24px 28px',
+            borderRadius: '20px',
+            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+          }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Account ID
+            </span>
+            <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#38bdf8', marginTop: '8px' }}>
+              {user?.studentId || 'Loading...'}
             </div>
           </div>
-        ) : (
-          <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px', boxSizing: 'border-box' }}>
-            
-            {/* VIEW 1: MY REGISTERED EVENTS */}
-            {activeNavView === 'registered' && (
-              <div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px', gap: '12px' }}>
-                  <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: 0 }}>My Registered Events</h1>
-                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Welcome back, <strong style={{ color: '#38bdf8' }}>{userProfile.name}</strong>!</p>
-                </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '30px', flexWrap: 'wrap' }}>
-                  {tabs.map((tab) => {
-                    const isActive = activeTab === tab;
-                    return (
-                      <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        style={{
-                          padding: '8px 18px',
-                          borderRadius: '8px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          border: isActive ? '1px solid #38bdf8' : '1px solid var(--auth-border-color)',
-                          background: isActive ? 'rgba(56, 189, 248, 0.15)' : 'var(--auth-input-bg)',
-                          color: isActive ? '#38bdf8' : 'var(--auth-text-muted)',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {tab}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
-                  {filteredRegisteredEvents.length > 0 ? (
-                    filteredRegisteredEvents.map((item) => (
-                      <div key={item.id} style={{ 
-                        background: 'var(--auth-input-bg)', 
-                        padding: '24px', 
-                        borderRadius: '12px', 
-                        border: '1px solid var(--auth-border-color)', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center',
-                        textAlign: 'center',
-                        justifyContent: 'space-between',
-                        minHeight: '160px',
-                        boxSizing: 'border-box',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                      }}>
-                        <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <h4 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '12px', letterSpacing: '-0.01em', fontWeight: '600' }}>{item.title}</h4>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', margin: 0 }}>📅 {item.date}</p>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', margin: 0 }}>📍 {item.venue}</p>
-                          </div>
-                        </div>
-                        <div>
-                          <span style={{ 
-                            fontSize: '0.8rem', 
-                            padding: '6px 14px', 
-                            borderRadius: '6px', 
-                            fontWeight: '600',
-                            display: 'inline-block',
-                            ...getStatusStyle(item.status) 
-                          }}>
-                            {item.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ 
-                      gridColumn: '1 / -1', 
-                      padding: '50px 30px', 
-                      textAlign: 'center', 
-                      background: 'var(--auth-input-bg)', 
-                      borderRadius: '12px', 
-                      border: '1px dashed var(--auth-border-color)' 
-                    }}>
-                      <p style={{ color: 'var(--auth-text-muted)', fontSize: '1rem', margin: 0 }}>No events found under "{activeTab}".</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* VIEW 2: BROWSE & JOIN DATABASE EVENTS */}
-            {activeNavView === 'browse' && (
-              <div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px', gap: '12px' }}>
-                  <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: 0 }}>Campus Events Directory</h1>
-                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Explore live university activities fetched from the database.</p>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {eventTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedType(type)}
-                        style={{
-                          padding: '7px 14px',
-                          borderRadius: '20px',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          fontWeight: selectedType === type ? '600' : '400',
-                          border: selectedType === type ? '1px solid #38bdf8' : '1px solid var(--auth-border-color)',
-                          background: selectedType === type ? 'rgba(56, 189, 248, 0.15)' : 'var(--auth-input-bg)',
-                          color: selectedType === type ? '#38bdf8' : 'var(--auth-text-muted)',
-                        }}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-
-                  <input
-                    type="text"
-                    placeholder="Search database events..."
-                    value={eventSearch}
-                    onChange={(e) => setEventSearch(e.target.value)}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      border: '1px solid var(--auth-border-color)',
-                      background: 'var(--auth-input-bg)',
-                      color: 'var(--auth-text-main)',
-                      outline: 'none',
-                      fontSize: '0.9rem',
-                      minWidth: '220px',
-                      flex: '1',
-                      maxWidth: '300px'
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-                  {filteredAvailableEvents.length > 0 ? (
-                    filteredAvailableEvents.map((evt) => (
-                      <div key={evt.id} style={{ 
-                        background: 'var(--auth-input-bg)', 
-                        padding: '24px', 
-                        borderRadius: '12px', 
-                        border: '1px solid var(--auth-border-color)', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        justifyContent: 'space-between',
-                        boxSizing: 'border-box',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                      }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
-                              {evt.type}
-                            </span>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>{evt.date}</span>
-                          </div>
-                          <h4 style={{ fontSize: '1.1rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '600' }}>{evt.title}</h4>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue}</p>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
-                        </div>
-
-                        <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
-                          <button
-                            onClick={() => handleJoinEvent(evt)}
-                            style={{
-                              background: '#38bdf8',
-                              color: '#0f172a',
-                              border: 'none',
-                              padding: '7px 16px',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              fontSize: '0.85rem',
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            Join Event
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ 
-                      gridColumn: '1 / -1', 
-                      padding: '40px', 
-                      textAlign: 'center', 
-                      background: 'var(--auth-input-bg)', 
-                      borderRadius: '12px', 
-                      border: '1px dashed var(--auth-border-color)' 
-                    }}>
-                      <p style={{ color: 'var(--auth-text-muted)', fontSize: '0.95rem', margin: 0 }}>No database events match your search.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* VIEW 3: USER PROFILE */}
-            {activeNavView === 'profile' && (
-              <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px', gap: '12px' }}>
-                  <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: 0 }}>Student Profile</h1>
-                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>View your registered student credentials and account info.</p>
-                </div>
-
-                <div style={{ 
-                  background: 'var(--auth-input-bg)', 
-                  padding: '30px', 
-                  borderRadius: '12px', 
-                  border: '1px solid var(--auth-border-color)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '20px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--auth-border-color)', paddingBottom: '12px' }}>
-                    <span style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem' }}>Full Name</span>
-                    <span style={{ color: 'var(--auth-text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{userProfile.name}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--auth-border-color)', paddingBottom: '12px' }}>
-                    <span style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem' }}>Student ID</span>
-                    <span style={{ color: 'var(--auth-text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{userProfile.studentId}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--auth-border-color)', paddingBottom: '12px' }}>
-                    <span style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem' }}>Email Address</span>
-                    <span style={{ color: 'var(--auth-text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{userProfile.email}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--auth-border-color)', paddingBottom: '12px' }}>
-                    <span style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem' }}>Program</span>
-                    <span style={{ color: 'var(--auth-text-main)', fontWeight: '600', fontSize: '0.95rem' }}>{userProfile.program}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '4px' }}>
-                    <span style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem' }}>Institution</span>
-                    <span style={{ color: '#38bdf8', fontWeight: '600', fontSize: '0.95rem' }}>{userProfile.institution}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
+          {/* Program Card */}
+          <div className="info-card" style={{
+            background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(16px)',
+            padding: '24px 28px',
+            borderRadius: '20px',
+            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+          }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Email
+            </span>
+            <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#38bdf8', marginTop: '8px' }}>
+              {user?.email || 'Loading...'}
+            </div>
           </div>
-        )}
+
+          {/* Institution Card */}
+
+        </div>
+
       </div>
+
     </div>
   );
 }
