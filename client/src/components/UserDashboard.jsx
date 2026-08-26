@@ -5,30 +5,32 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
   const [user, setUser] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
 
+  // Sample Events Data
+  const sampleEvents = [
+    { id: 'evt-1', title: 'Syntax 4 Hackathon 2026', date: 'March 15, 2026', location: 'Tech Hall A' },
+    { id: 'evt-2', title: 'Web3 & AI Workshop', date: 'April 02, 2026', location: 'Online' },
+  ];
+
   useEffect(() => {
     // 1. Initial animation trigger
     const timer = setTimeout(() => setAnimateIn(true), 10);
 
-    // 2. Load at apply ang saved theme
+    // 2. Load and apply saved theme
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // 3. Kunin ang kasalukuyang user mula sa localStorage
+    // 3. Get current user from localStorage
     const storedUserData = localStorage.getItem('currentUser');
     let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
 
     if (currentUser) {
-      // PERMANENT STUDENT ID CHECK:
-      // Kung walang studentId o nakalagay ay 'N/A', mag-generate ng FIX ID ONCE para sa account na ito.
       if (!currentUser.studentId || currentUser.studentId === 'N/A') {
         const generatedId = '2026-' + Math.floor(100000 + Math.random() * 900000);
         currentUser = { ...currentUser, studentId: generatedId };
 
-        // Save pabalik sa currentUser
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-        // Sync pabalik sa allUsers list
         const existingUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
         const updatedUsers = existingUsers.map(u => 
           (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) 
@@ -40,7 +42,6 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
 
       setUser(currentUser);
     } else {
-      // Fallback kung walang user na nakita sa storage
       setUser({
         name: 'User Account',
         email: 'user@example.com',
@@ -57,6 +58,18 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     const themeName = nextMode ? 'dark' : 'light';
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('theme', themeName);
+  };
+
+  // Navigates to event while preserving logged-in user state
+  const handleEventClick = (eventData = null) => {
+    // Re-verify/ensure user session is stored
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+    
+    if (onNavigateEvents) {
+      onNavigateEvents(eventData);
+    }
   };
 
   const handleLogoutClick = () => {
@@ -114,6 +127,15 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
           transform: translateY(-4px);
           border-color: rgba(56, 189, 248, 0.4) !important;
         }
+        .event-card {
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .event-card:hover {
+          transform: translateY(-4px);
+          border-color: #38bdf8 !important;
+          box-shadow: 0 12px 30px rgba(56, 189, 248, 0.2);
+        }
       `}</style>
 
       {/* Navbar */}
@@ -150,7 +172,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
           {/* Nav Link - Events Only */}
           <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
             <span 
-              onClick={onNavigateEvents}
+              onClick={() => handleEventClick()}
               className="nav-link"
               style={{ 
                 color: '#94a3b8', 
@@ -274,10 +296,11 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '20px'
+          gap: '20px',
+          marginBottom: '30px'
         }}>
           
-          {/* Fixed Student ID Card */}
+          {/* Account ID Card */}
           <div className="info-card" style={{
             background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
             backdropFilter: 'blur(16px)',
@@ -294,7 +317,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             </div>
           </div>
 
-          {/* Program Card */}
+          {/* Email Card */}
           <div className="info-card" style={{
             background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
             backdropFilter: 'blur(16px)',
@@ -311,8 +334,51 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             </div>
           </div>
 
-          {/* Institution Card */}
+        </div>
 
+        {/* Clickable Events Section */}
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', marginBottom: '16px' }}>
+          Upcoming Events
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '20px'
+        }}>
+          {sampleEvents.map((evt) => (
+            <div
+              key={evt.id}
+              className="event-card"
+              onClick={() => handleEventClick(evt)}
+              style={{
+                background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(16px)',
+                padding: '24px 28px',
+                borderRadius: '20px',
+                border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+              }}
+            >
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
+                {evt.title}
+              </h3>
+              <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
+                📅 {evt.date}
+              </p>
+              <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
+                📍 {evt.location}
+              </p>
+              <span style={{
+                display: 'inline-block',
+                marginTop: '12px',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                color: '#38bdf8'
+              }}>
+                View Event →
+              </span>
+            </div>
+          ))}
         </div>
 
       </div>

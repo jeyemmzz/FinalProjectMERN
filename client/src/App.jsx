@@ -12,13 +12,16 @@ import './styles/Auth.css';
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
 
-  // This function alerts the user and redirects them to the login page
+  // Check if a session exists in localStorage
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+  // Redirects to login page after successful registration
   const handleRegisterSuccess = () => {
     alert("Account registered");
     setCurrentView('login');
   };
 
-  // Function to handle login success based on user role (admin or student/user)
+  // Handles login routing based on role
   const handleLoginSuccess = (role) => {
     if (role === 'admin') {
       setCurrentView('admin-dashboard');
@@ -71,16 +74,18 @@ export default function App() {
 
       {currentView === 'event' && (
         <EventsPage 
-          onNavigateHome={() => setCurrentView('home')} 
+          onNavigateHome={() => setCurrentView(currentUser ? 'user-dashboard' : 'home')} 
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={() => setCurrentView('signup')}
           onNavigateAbout={() => setCurrentView('about')}
+          onNavigateDashboard={() => setCurrentView('user-dashboard')}
         />
       )}
 
       {currentView === 'user-dashboard' && (
         <UserDashboard 
           onLogout={() => setCurrentView('home')}
+          onNavigateHome={() => setCurrentView('user-dashboard')}
           onNavigateEvents={() => setCurrentView('event')}  
         />
       )}

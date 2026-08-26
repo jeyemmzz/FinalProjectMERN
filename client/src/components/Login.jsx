@@ -319,7 +319,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         }}>
           
           <div style={{ textAlign: 'center', marginBottom: '35px' }}>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Welcome Back</h1>
+            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Welcome User</h1>
             <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Log in to access your account credentials</p>
           </div>
 
