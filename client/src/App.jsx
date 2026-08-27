@@ -42,7 +42,7 @@ export default function App() {
       
       {currentView === 'login' && (
         <Login 
-          onBackToHome={() => setCurrentView('home')} 
+          onNavigateHome={() => setCurrentView('home')} 
           onSwitchToSignup={() => setCurrentView('signup')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
@@ -54,7 +54,7 @@ export default function App() {
       
       {currentView === 'signup' && (
         <Signup 
-          onBackToHome={() => setCurrentView('home')} 
+          onNavigateHome={() => setCurrentView('home')} 
           onSwitchToLogin={() => setCurrentView('login')}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
