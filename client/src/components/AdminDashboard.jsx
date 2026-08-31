@@ -4,11 +4,12 @@ import '../styles/Auth.css';
 export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState('manage-events');
+  const [activeTab, setActiveTab] = useState('manage-events'); // 'manage-events' | 'manage-registrations' | 'analytics'
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Database events state
+  // Database states
   const [events, setEvents] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
 
   // Modal & Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     document.body.setAttribute('data-theme', savedTheme);
 
     fetchEvents();
+    fetchRegistrations();
   }, []);
 
   const toggleTheme = () => {
@@ -43,7 +45,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     localStorage.setItem('theme', themeName);
   };
 
-  // --- API CRUD OPERATIONS ---
+  // --- API CRUD OPERATIONS (EVENTS) ---
 
   const fetchEvents = async () => {
     try {
@@ -54,10 +56,9 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
-      // Fallback sample data
       setEvents([
         {
-          id: 1,
+          id: 101,
           title: 'React Workshop & UI Design (DB)',
           type: 'Workshop',
           date: '2026-08-25',
@@ -149,6 +150,36 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     }
   };
 
+  // --- API OPERATIONS (REGISTRATIONS) ---
+
+  const fetchRegistrations = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/registrations');
+      if (!response.ok) throw new Error('Failed to fetch registrations.');
+      const data = await response.json();
+      setRegistrations(data);
+    } catch (error) {
+      console.error('Error fetching registrations:', error);
+      setRegistrations([]);
+    }
+  };
+
+  // 🛠️ NA-FIX: Binago ang endpoint para tumugma sa server.js (`/approve` at `PUT`)
+  const handleConfirmRegistration = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/registrations/${id}/approve`, {
+        method: 'PUT'
+      });
+      if (!response.ok) throw new Error('Failed to confirm registration.');
+
+      alert('Registration confirmed successfully!');
+      await fetchRegistrations();
+    } catch (error) {
+      console.error('Error confirming registration:', error);
+      alert('Failed to update registration status.');
+    }
+  };
+
   return (
     <div className="auth-page-wrapper">
       {/* Navbar */}
@@ -176,6 +207,19 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
           >
             Manage Events
           </span>
+
+          <span
+            onClick={() => setActiveTab('manage-registrations')}
+            className="nav-item"
+            style={{
+              color: activeTab === 'manage-registrations' ? '#38bdf8' : 'var(--auth-text-muted)',
+              fontWeight: activeTab === 'manage-registrations' ? '600' : '400',
+              cursor: 'pointer'
+            }}
+          >
+            Registrations ({registrations.filter(r => r.status === 'Pending').length})
+          </span>
+
           <span
             onClick={() => setActiveTab('analytics')}
             className="nav-item"
@@ -224,6 +268,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
           </div>
         ) : (
           <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px', boxSizing: 'border-box' }}>
+            
             {/* TAB 1: MANAGE EVENTS */}
             {activeTab === 'manage-events' && (
               <div>
@@ -255,7 +300,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                   {events.length > 0 ? (
                     events.map((evt) => (
                       <div
-                        key={evt.id}
+                        key={evt.id || evt._id}
                         style={{
                           background: 'var(--auth-input-bg)',
                           padding: '24px',
@@ -263,19 +308,19 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                           border: '1px solid var(--auth-border-color)',
                           display: 'flex',
                           flexDirection: 'column',
-                          justify: 'space-between',
+                          justifyContent: 'space-between',
                           boxSizing: 'border-box'
                         }}
                       >
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
-                              {evt.type}
+                              {evt.type || 'Workshop'}
                             </span>
                             <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>📅 {evt.date}</span>
                           </div>
                           <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '600' }}>{evt.title}</h3>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue}</p>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue || evt.location}</p>
                           <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
                         </div>
 
@@ -323,7 +368,93 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
               </div>
             )}
 
-            {/* TAB 2: SYSTEM OVERVIEW */}
+            {/* TAB 2: MANAGE REGISTRATIONS */}
+            {activeTab === 'manage-registrations' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+                  <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '0 0 6px 0' }}>Student Approvals</h1>
+                    <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Review and confirm event participation requests.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+                  {registrations.length > 0 ? (
+                    registrations.map((reg) => {
+                      const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
+                      return (
+                        <div
+                          key={reg._id || reg.id}
+                          style={{
+                            background: 'var(--auth-input-bg)',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            border: '1px solid var(--auth-border-color)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <span style={{ 
+                                backgroundColor: isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)', 
+                                color: isConfirmed ? '#10b981' : '#eab308', 
+                                padding: '3px 10px', 
+                                borderRadius: '6px', 
+                                fontSize: '0.75rem', 
+                                fontWeight: '600' 
+                              }}>
+                                {reg.status || 'Pending'}
+                              </span>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>🆔 {reg.studentId || 'N/A'}</span>
+                            </div>
+                            
+                            {/* 🛠️ NA-FIX: Binasa ang tamang property galing sa UserDashboard (name, email) */}
+                            <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '4px', fontWeight: '600' }}>
+                              {reg.name || reg.studentName || 'Student'}
+                            </h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>✉️ {reg.email || reg.studentEmail}</p>
+                            <p style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '500', marginBottom: '4px' }}>Event: {reg.eventTitle || reg.title}</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px' }}>📅 Date: {reg.eventDate || reg.date} | 📍 Venue: {reg.venue}</p>
+                          </div>
+
+                          {/* Action Button */}
+                          <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
+                            {!isConfirmed ? (
+                              <button
+                                onClick={() => handleConfirmRegistration(reg._id || reg.id)}
+                                style={{
+                                  background: 'rgba(16, 185, 129, 0.15)',
+                                  color: '#10b981',
+                                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                                  padding: '6px 16px',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontWeight: '600',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                ✅ Confirm Registration
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: '600' }}>Already Confirmed</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div style={{ gridColumn: '1 / -1', padding: '50px', textAlign: 'center', background: 'var(--auth-input-bg)', borderRadius: '12px', border: '1px dashed var(--auth-border-color)' }}>
+                      <p style={{ color: 'var(--auth-text-muted)', margin: 0 }}>No pending registrations found.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: SYSTEM OVERVIEW */}
             {activeTab === 'analytics' && (
               <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
@@ -337,12 +468,12 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                     <p style={{ fontSize: '2rem', fontWeight: '700', color: '#38bdf8', margin: 0 }}>{events.length}</p>
                   </div>
                   <div style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', textAlign: 'center' }}>
-                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Server Status</h3>
-                    <p style={{ fontSize: '1.2rem', fontWeight: '700', color: '#10b981', margin: '10px 0 0 0' }}>🟢 Connected</p>
+                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Total Bookings</h3>
+                    <p style={{ fontSize: '2rem', fontWeight: '700', color: '#f59e0b', margin: 0 }}>{registrations.length}</p>
                   </div>
                   <div style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', textAlign: 'center' }}>
-                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Institution</h3>
-                    <p style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '10px 0 0 0' }}>National University MOA</p>
+                    <h3 style={{ color: 'var(--auth-text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Server Status</h3>
+                    <p style={{ fontSize: '1.2rem', fontWeight: '700', color: '#10b981', margin: '10px 0 0 0' }}>🟢 Connected</p>
                   </div>
                 </div>
               </div>
@@ -351,7 +482,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
         )}
       </div>
 
-      {/* CREATE / EDIT MODAL */}
+      {/* CREATE / EDIT EVENT MODAL */}
       {isModalOpen && (
         <div
           onClick={handleCloseModal}
@@ -363,7 +494,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
             height: '100%',
             background: 'rgba(0, 0, 0, 0.7)',
             display: 'flex',
-            justify: 'center',
+            justifyContent: 'center',
             alignItems: 'center',
             zIndex: 1000,
             padding: '20px',

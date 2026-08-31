@@ -33,6 +33,9 @@ let eventsList = [
   }
 ];
 
+// --- IN-MEMORY REGISTRATIONS ARRAY (BAGONG DAGDAG) ---
+let registrationsList = [];
+
 // 1. GET (Read All Events)
 app.get('/api/events', (req, res) => {
   res.json(eventsList);
@@ -82,7 +85,55 @@ app.delete('/api/events/:id', (req, res) => {
   }
 });
 
-// --- SERVER START (NO MONGODB REQUIRED) ---
+
+// --- REGISTRATION ROUTES (BAGONG DAGDAG) ---
+
+// A. POST: I-save ang booking ng user (Pending status)
+app.post('/api/registrations', (req, res) => {
+  const newRegistration = {
+    _id: 'reg_' + Date.now(),
+    ...req.body,
+    createdAt: new Date()
+  };
+  
+  registrationsList.push(newRegistration);
+  res.status(201).json({ 
+    message: 'Registration saved successfully!', 
+    registration: newRegistration 
+  });
+});
+
+// B. GET: Kunin ang mga registrations (Pwede i-filter by email para sa user, o lahat para sa admin)
+app.get('/api/registrations', (req, res) => {
+  const { email } = req.query;
+  
+  if (email) {
+    const userRegs = registrationsList.filter(r => r.email && r.email.toLowerCase() === email.toLowerCase());
+    return res.json(userRegs);
+  }
+  
+  // Kung walang email query, ibalik lahat (para sa Admin Dashboard)
+  res.json(registrationsList);
+});
+
+// C. PUT: I-approve ng Admin ang pending registration
+app.put('/api/registrations/:id/approve', (req, res) => {
+  const regId = req.params.id;
+  const index = registrationsList.findIndex(r => r._id === regId || r.id == regId);
+  
+  if (index !== -1) {
+    registrationsList[index].status = 'Confirmed';
+    res.json({ 
+      message: 'Registration approved successfully!', 
+      registration: registrationsList[index] 
+    });
+  } else {
+    res.status(404).json({ error: 'Registration not found' });
+  }
+});
+
+
+// --- SERVER START ---
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

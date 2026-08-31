@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEvents }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -8,6 +8,25 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
   // Dynamic Events State galing sa Server
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // REGISTRATIONS STATE: Para sa mga nirehistro ng user (Pending / Confirmed Receipts)
+  const [myRegistrations, setMyRegistrations] = useState([]);
+  const [isRegLoading, setIsRegLoading] = useState(true);
+
+  // Function para i-fetch ang registrations ng user gamit ang email
+  const fetchRegistrations = useCallback((email) => {
+    if (!email) return;
+    fetch(`http://localhost:5000/api/registrations?email=${email}`)
+      .then(res => res.json())
+      .then(regData => {
+        setMyRegistrations(regData);
+        setIsRegLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch user registrations:', err);
+        setIsRegLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     // 1. Initial animation trigger
@@ -30,7 +49,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         setIsLoading(false);
       });
 
-    // 4. Get current user from localStorage
+    // 4. Get current user from localStorage at i-fetch ang kaniyang mga registrations
     const storedUserData = localStorage.getItem('currentUser');
     let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
 
@@ -51,16 +70,36 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
       }
 
       setUser(currentUser);
+      fetchRegistrations(currentUser.email);
+
     } else {
-      setUser({
+      const defaultUser = {
         name: 'User Account',
         email: 'user@example.com',
         studentId: '2026-102948',
-      });
+      };
+      setUser(defaultUser);
+      setIsRegLoading(false);
     }
 
-    return () => clearTimeout(timer);
-  }, []);
+    // 5. FIX: I-refetch ang registrations kapag bumalik ang focus sa window/tab o galing ibang page
+    const handleWindowFocus = () => {
+      const currentStored = localStorage.getItem('currentUser');
+      if (currentStored) {
+        const parsed = JSON.parse(currentStored);
+        if (parsed && parsed.email) {
+          fetchRegistrations(parsed.email);
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [fetchRegistrations]);
 
   const toggleTheme = () => {
     const nextMode = !isDarkMode;
@@ -345,6 +384,83 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
 
         </div>
 
+        {/* My Registered Events & Receipts */}
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', marginBottom: '16px' }}>
+          My Registered Events & Receipts
+        </h2>
+
+        {isRegLoading ? (
+          <p style={{ color: '#94a3b8', marginBottom: '30px' }}>Loading your registrations...</p>
+        ) : myRegistrations.length === 0 ? (
+          <p style={{ color: '#94a3b8', marginBottom: '30px' }}>You haven't registered for any events yet. Check out the upcoming events below!</p>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '20px',
+            marginBottom: '40px'
+          }}>
+            {myRegistrations.map((reg) => {
+              const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
+              return (
+                <div
+                  key={reg._id || reg.id}
+                  style={{
+                    background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+                    backdropFilter: 'blur(16px)',
+                    padding: '24px 28px',
+                    borderRadius: '20px',
+                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '10px' }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: 0 }}>
+                      {reg.eventTitle || reg.title}
+                    </h3>
+                    
+                    {/* Status Badge */}
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      whiteSpace: 'nowrap',
+                      background: isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      color: isConfirmed ? '#10b981' : '#f59e0b',
+                      border: `1px solid ${isConfirmed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                    }}>
+                      {isConfirmed ? '✅ Confirmed' : '⏳ Pending Approval'}
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>📅 Date: {reg.eventDate || reg.date}</p>
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>📍 Venue: {reg.venue || reg.location}</p>
+
+                  {/* Official Digital Event Pass / Receipt */}
+                  {isConfirmed ? (
+                    <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '12px', border: '1px dashed rgba(16, 185, 129, 0.3)' }}>
+                      <p style={{ fontSize: '0.75rem', color: '#10b981', margin: '0 0 4px 0', fontWeight: '700', textTransform: 'uppercase' }}>
+                        🎟️ Official Digital Event Pass / Receipt
+                      </p>
+                      <p style={{ fontSize: '0.8rem', color: isDarkMode ? '#e2e8f0' : '#334155', margin: 0, fontWeight: '600' }}>
+                        Registration ID: #{reg._id ? reg._id.slice(-6).toUpperCase() : 'SYN-404'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: '16px', padding: '10px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '12px', border: '1px dashed rgba(245, 158, 11, 0.3)' }}>
+                      <p style={{ fontSize: '0.78rem', color: '#f59e0b', margin: 0, fontWeight: '500' }}>
+                        Awaiting admin confirmation before this converts to your official receipt.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Dynamic Events Section */}
         <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', marginBottom: '16px' }}>
           Upcoming Events
@@ -362,7 +478,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
           }}>
             {events.map((evt) => (
               <div
-                key={evt.id}
+                key={evt.id || evt._id}
                 className="event-card"
                 onClick={() => handleEventClick(evt)}
                 style={{
