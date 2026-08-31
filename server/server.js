@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -14,7 +13,7 @@ app.use(cors());
 // Routes
 app.use('/api/auth', authRoutes);
 
-// --- IN-MEMORY EVENTS ARRAY (Dito na ise-save ang mga pagbabago pansamantala) ---
+// --- IN-MEMORY EVENTS ARRAY ---
 let eventsList = [
   { 
     id: 101, 
@@ -34,88 +33,58 @@ let eventsList = [
   }
 ];
 
-// 1. GET (Read All Events) - Binabalik ang kasalukuyang listahan
-app.get('/api/events', async (req, res) => {
-  try {
-    res.json(eventsList);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch events' });
-  }
+// 1. GET (Read All Events)
+app.get('/api/events', (req, res) => {
+  res.json(eventsList);
 });
 
-// 2. POST (Create New Event) - Nagdaragdag sa listahan
-app.post('/api/events', async (req, res) => {
-  try {
-    const newEvent = { 
-      id: Date.now(), // Gumagawa ng unique ID base sa oras
-      ...req.body 
-    };
-    eventsList.push(newEvent);
-    
-    res.status(201).json({ 
-      message: 'Event created successfully!', 
-      data: newEvent 
+// 2. POST (Create New Event)
+app.post('/api/events', (req, res) => {
+  const newEvent = { 
+    id: Date.now(), 
+    ...req.body 
+  };
+  eventsList.push(newEvent);
+  
+  res.status(201).json({ 
+    message: 'Event created successfully!', 
+    data: newEvent 
+  });
+});
+
+// 3. PUT (Update Event)
+app.put('/api/events/:id', (req, res) => {
+  const eventId = Number(req.params.id);
+  const updateData = req.body;
+  
+  const index = eventsList.findIndex(e => e.id === eventId);
+  if (index !== -1) {
+    eventsList[index] = { ...eventsList[index], ...updateData };
+    res.json({ 
+      message: `Event ${eventId} updated successfully!`, 
+      data: eventsList[index] 
     });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create event' });
+  } else {
+    res.status(404).json({ error: 'Event not found' });
   }
 });
 
-// 3. PUT (Update Event) - Binabago ang eksaktong event gamit ang ID
-app.put('/api/events/:id', async (req, res) => {
-  try {
-    const eventId = Number(req.params.id);
-    const updateData = req.body;
-    
-    const index = eventsList.findIndex(e => e.id === eventId);
-    if (index !== -1) {
-      // I-update ang item sa array
-      eventsList[index] = { ...eventsList[index], ...updateData };
-      res.json({ 
-        message: `Event ${eventId} updated successfully!`, 
-        data: eventsList[index] 
-      });
-    } else {
-      res.status(404).json({ error: 'Event not found' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update event' });
+// 4. DELETE (Delete Event)
+app.delete('/api/events/:id', (req, res) => {
+  const eventId = Number(req.params.id);
+  const exists = eventsList.some(e => e.id === eventId);
+  
+  if (exists) {
+    eventsList = eventsList.filter(e => e.id !== eventId);
+    res.json({ message: `Event ${eventId} deleted successfully!` });
+  } else {
+    res.status(404).json({ error: 'Event not found' });
   }
 });
 
-// 4. DELETE (Delete Event) - Tinatanggal ang event sa listahan gamit ang ID
-app.delete('/api/events/:id', async (req, res) => {
-  try {
-    const eventId = Number(req.params.id);
-    const exists = eventsList.some(e => e.id === eventId);
-    
-    if (exists) {
-      eventsList = eventsList.filter(e => e.id !== eventId);
-      res.json({ message: `Event ${eventId} deleted successfully!` });
-    } else {
-      res.status(404).json({ error: 'Event not found' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete event' });
-  }
-});
-
-
-// --- DATABASE CONNECTION & SERVER START ---
+// --- SERVER START (NO MONGODB REQUIRED) ---
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/syntax4_db';
 
-async function startServer() {
-  try {
-    await mongoose.connect(MONGO_URI);
-    console.log('Connected to MongoDB successfully!');
-    
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('Database connection error:', err);
-  }
-}
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

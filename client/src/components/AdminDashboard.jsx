@@ -3,34 +3,35 @@ import '../styles/Auth.css';
 
 export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('manage-events'); // 'manage-events' o 'analytics'
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('manage-events');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Main state para sa Events na manggagaling sa Database via API
+  // Database events state
   const [events, setEvents] = useState([]);
 
-  // Modal / Form States para sa Create at Update
+  // Modal & Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentEventId, setCurrentEventId] = useState(null);
 
-  // Form input fields
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     title: '',
     type: 'Workshop',
     date: '',
     venue: '',
     description: '',
     status: 'Active'
-  });
+  };
 
-  // Theme initialization and persistence
+  const [formData, setFormData] = useState(initialFormState);
+
+  // Theme initialization and data fetching
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // Fetch events mula sa Database (Backend API) kapag nag-load ang page
     fetchEvents();
   }, []);
 
@@ -42,51 +43,61 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     localStorage.setItem('theme', themeName);
   };
 
-  // --- DATABASE API FUNCTIONS (CRUD) ---
+  // --- API CRUD OPERATIONS ---
 
-  // 1. READ: Kunin ang lahat ng events mula sa database
   const fetchEvents = async () => {
     try {
       setIsPageLoading(true);
-      // Palitan ang URL na 'http://localhost:5000/api/events' depende sa backend API endpoint ninyo
       const response = await fetch('http://localhost:5000/api/events');
-      if (!response.ok) throw new Error('Failed to fetch events from database.');
+      if (!response.ok) throw new Error('Failed to fetch events.');
       const data = await response.json();
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
-      // Fallback sample data sakaling offline muna ang backend habang nagte-test kayo
+      // Fallback sample data
       setEvents([
-        { id: 1, title: 'React Workshop & UI Design (DB)', type: 'Workshop', date: '2026-08-25', venue: 'Lab 301', description: 'Hands-on session connected to database.', status: 'Active' }
+        {
+          id: 1,
+          title: 'React Workshop & UI Design (DB)',
+          type: 'Workshop',
+          date: '2026-08-25',
+          venue: 'Lab 301',
+          description: 'Hands-on session connected to database.',
+          status: 'Active'
+        }
       ]);
     } finally {
       setIsPageLoading(false);
     }
   };
 
-  // Open modal para sa pag-CREATE
   const handleOpenCreateModal = () => {
     setIsEditing(false);
-    setFormData({ title: '', type: 'Workshop', date: '', venue: '', description: '', status: 'Active' });
+    setCurrentEventId(null);
+    setFormData(initialFormState);
     setIsModalOpen(true);
   };
 
-  // Open modal para sa pag-UPDATE
   const handleOpenEditModal = (event) => {
     setIsEditing(true);
     setCurrentEventId(event.id);
     setFormData({
-      title: event.title,
-      type: event.type,
-      date: event.date,
-      venue: event.venue,
-      description: event.description,
-      status: event.status
+      title: event.title || '',
+      type: event.type || 'Workshop',
+      date: event.date || '',
+      venue: event.venue || '',
+      description: event.description || '',
+      status: event.status || 'Active'
     });
     setIsModalOpen(true);
   };
 
-  // Handle Form Submit (2. CREATE o 3. UPDATE papuntang Database)
+  const handleCloseModal = () => {
+    if (isSubmitting) return;
+    setIsModalOpen(false);
+    setFormData(initialFormState);
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.date || !formData.venue) {
@@ -95,51 +106,46 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     }
 
     try {
-      if (isEditing) {
-        // UPDATE Operation (PUT)
-        const response = await fetch(`http://localhost:5000/api/events/${currentEventId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-        if (!response.ok) throw new Error('Failed to update event.');
-        
-        alert('Event successfully updated in the database!');
-      } else {
-        // CREATE Operation (POST)
-        const response = await fetch('http://localhost:5000/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-        if (!response.ok) throw new Error('Failed to create event.');
+      setIsSubmitting(true);
+      const url = isEditing
+        ? `http://localhost:5000/api/events/${currentEventId}`
+        : 'http://localhost:5000/api/events';
 
-        alert('New event successfully created and saved to the database!');
-      }
+      const method = isEditing ? 'PUT' : 'POST';
 
-      setIsModalOpen(false);
-      fetchEvents(); // Refresh ang listahan mula sa database
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) throw new Error(`Failed to ${isEditing ? 'update' : 'create'} event.`);
+
+      alert(`Event successfully ${isEditing ? 'updated' : 'created'}!`);
+      handleCloseModal();
+      await fetchEvents();
     } catch (error) {
       console.error('Error saving event:', error);
-      alert('Database action failed. Please check your backend connection.');
+      alert('Database action failed. Please check backend API server.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // 4. DELETE Operation (DELETE papuntang Database)
   const handleDeleteEvent = async (id) => {
-    if (window.confirm('Are you sure you want to delete this event from the database?')) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/events/${id}`, {
-          method: 'DELETE'
-        });
-        if (!response.ok) throw new Error('Failed to delete event.');
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
 
-        alert('Event deleted successfully from the database.');
-        fetchEvents(); // Refresh ang listahan
-      } catch (error) {
-        console.error('Error deleting event:', error);
-        alert('Failed to delete from database.');
-      }
+    try {
+      const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to delete event.');
+
+      alert('Event deleted successfully.');
+      await fetchEvents();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event from database.');
     }
   };
 
@@ -150,23 +156,34 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
         <div className="nav-pill-container" style={{ gap: '14px', padding: '10px 24px', flexWrap: 'wrap' }}>
           <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={onNavigateHome}>
             <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
-              Syntax <span style={{ color: '#ff0000' }}>4</span> <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#ff0000', padding: '2px 8px', borderRadius: '4px' }}>Admin</span>
+              Syntax <span style={{ color: '#ff0000' }}>4</span>{' '}
+              <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#ff0000', padding: '2px 8px', borderRadius: '4px' }}>
+                Admin
+              </span>
             </span>
           </div>
 
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
 
-          <span 
-            onClick={() => setActiveTab('manage-events')} 
-            className="nav-item" 
-            style={{ color: activeTab === 'manage-events' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'manage-events' ? '600' : '400', cursor: 'pointer' }}
+          <span
+            onClick={() => setActiveTab('manage-events')}
+            className="nav-item"
+            style={{
+              color: activeTab === 'manage-events' ? '#38bdf8' : 'var(--auth-text-muted)',
+              fontWeight: activeTab === 'manage-events' ? '600' : '400',
+              cursor: 'pointer'
+            }}
           >
             Manage Events
           </span>
-          <span 
-            onClick={() => setActiveTab('analytics')} 
-            className="nav-item" 
-            style={{ color: activeTab === 'analytics' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'analytics' ? '600' : '400', cursor: 'pointer' }}
+          <span
+            onClick={() => setActiveTab('analytics')}
+            className="nav-item"
+            style={{
+              color: activeTab === 'analytics' ? '#38bdf8' : 'var(--auth-text-muted)',
+              fontWeight: activeTab === 'analytics' ? '600' : '400',
+              cursor: 'pointer'
+            }}
           >
             System Overview
           </span>
@@ -181,10 +198,17 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
             {isDarkMode ? '🌙 Dark' : '☀️ Light'}
           </button>
 
-          <button 
-            className="nav-pill-btn register" 
-            onClick={onLogout} 
-            style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
+          <button
+            className="nav-pill-btn register"
+            onClick={onLogout}
+            style={{
+              background: 'rgba(244, 63, 94, 0.15)',
+              color: '#f43f5e',
+              border: '1px solid rgba(244, 63, 94, 0.3)',
+              padding: '6px 16px',
+              fontSize: '0.85rem',
+              cursor: 'pointer'
+            }}
           >
             Logout
           </button>
@@ -200,8 +224,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
           </div>
         ) : (
           <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px', boxSizing: 'border-box' }}>
-            
-            {/* TAB 1: MANAGE EVENTS (CRUD) */}
+            {/* TAB 1: MANAGE EVENTS */}
             {activeTab === 'manage-events' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
@@ -227,20 +250,23 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                   </button>
                 </div>
 
-                {/* Events Grid List */}
+                {/* Events Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                   {events.length > 0 ? (
                     events.map((evt) => (
-                      <div key={evt.id} style={{ 
-                        background: 'var(--auth-input-bg)', 
-                        padding: '24px', 
-                        borderRadius: '12px', 
-                        border: '1px solid var(--auth-border-color)', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        justifyContent: 'space-between',
-                        boxSizing: 'border-box'
-                      }}>
+                      <div
+                        key={evt.id}
+                        style={{
+                          background: 'var(--auth-input-bg)',
+                          padding: '24px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--auth-border-color)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justify: 'space-between',
+                          boxSizing: 'border-box'
+                        }}
+                      >
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
@@ -321,39 +347,44 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                 </div>
               </div>
             )}
-
           </div>
         )}
       </div>
 
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '20px',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{
-            background: 'var(--auth-card-bg, #1e293b)',
-            border: '1px solid var(--auth-border-color)',
-            padding: '30px',
-            borderRadius: '16px',
+        <div
+          onClick={handleCloseModal}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
             width: '100%',
-            maxWidth: '500px',
-            boxSizing: 'border-box',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-          }}>
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justify: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            boxSizing: 'border-box'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--auth-card-bg, #1e293b)',
+              border: '1px solid var(--auth-border-color)',
+              padding: '30px',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '500px',
+              boxSizing: 'border-box',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+            }}
+          >
             <h2 style={{ color: 'var(--auth-text-main)', fontSize: '1.4rem', marginBottom: '20px', fontWeight: '600' }}>
-              {isEditing ? 'Edit Event (Database)' : 'Create Event (Database)'}
+              {isEditing ? 'Edit Event' : 'Create Event'}
             </h2>
 
             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -421,16 +452,18 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={handleCloseModal}
+                  disabled={isSubmitting}
                   style={{ background: 'transparent', color: 'var(--auth-text-muted)', border: '1px solid var(--auth-border-color)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ background: '#38bdf8', color: '#0f172a', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+                  disabled={isSubmitting}
+                  style={{ background: '#38bdf8', color: '#0f172a', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', opacity: isSubmitting ? 0.7 : 1 }}
                 >
-                  {isEditing ? 'Save to Database' : 'Insert to Database'}
+                  {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Event'}
                 </button>
               </div>
             </form>
