@@ -5,11 +5,9 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
   const [user, setUser] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
 
-  // Sample Events Data
-  const sampleEvents = [
-    { id: 'evt-1', title: 'Syntax 4 Hackathon 2026', date: 'March 15, 2026', location: 'Tech Hall A' },
-    { id: 'evt-2', title: 'Web3 & AI Workshop', date: 'April 02, 2026', location: 'Online' },
-  ];
+  // Dynamic Events State galing sa Server
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // 1. Initial animation trigger
@@ -20,7 +18,19 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // 3. Get current user from localStorage
+    // 3. Fetch Events mula sa Backend Server
+    fetch('http://localhost:5000/api/events')
+      .then(res => res.json())
+      .then(data => {
+        setEvents(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch events:', err);
+        setIsLoading(false);
+      });
+
+    // 4. Get current user from localStorage
     const storedUserData = localStorage.getItem('currentUser');
     let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
 
@@ -62,7 +72,6 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
 
   // Navigates to event while preserving logged-in user state
   const handleEventClick = (eventData = null) => {
-    // Re-verify/ensure user session is stored
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
     }
@@ -336,50 +345,62 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
 
         </div>
 
-        {/* Clickable Events Section */}
+        {/* Dynamic Events Section */}
         <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', marginBottom: '16px' }}>
           Upcoming Events
         </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px'
-        }}>
-          {sampleEvents.map((evt) => (
-            <div
-              key={evt.id}
-              className="event-card"
-              onClick={() => handleEventClick(evt)}
-              style={{
-                background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(16px)',
-                padding: '24px 28px',
-                borderRadius: '20px',
-                border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
-              }}
-            >
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
-                {evt.title}
-              </h3>
-              <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
-                📅 {evt.date}
-              </p>
-              <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
-                📍 {evt.location}
-              </p>
-              <span style={{
-                display: 'inline-block',
-                marginTop: '12px',
-                fontSize: '0.85rem',
-                fontWeight: '700',
-                color: '#38bdf8'
-              }}>
-                View Event →
-              </span>
-            </div>
-          ))}
-        </div>
+
+        {isLoading ? (
+          <p style={{ color: '#94a3b8' }}>Loading events...</p>
+        ) : events.length === 0 ? (
+          <p style={{ color: '#94a3b8' }}>No events available at the moment.</p>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '20px'
+          }}>
+            {events.map((evt) => (
+              <div
+                key={evt.id}
+                className="event-card"
+                onClick={() => handleEventClick(evt)}
+                style={{
+                  background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(16px)',
+                  padding: '24px 28px',
+                  borderRadius: '20px',
+                  border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                }}
+              >
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
+                  {evt.title}
+                </h3>
+                <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
+                  📅 {evt.date}
+                </p>
+                <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
+                  📍 {evt.venue || evt.location}
+                </p>
+                {evt.description && (
+                  <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '8px 0 0 0' }}>
+                    {evt.description}
+                  </p>
+                )}
+                <span style={{
+                  display: 'inline-block',
+                  marginTop: '12px',
+                  fontSize: '0.85rem',
+                  fontWeight: '700',
+                  color: '#38bdf8'
+                }}>
+                  View Event →
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
       </div>
 

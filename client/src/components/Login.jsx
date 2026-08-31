@@ -32,6 +32,29 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
+    // ==========================================
+    // 1. HARDCODED ADMIN CHECK
+    // ==========================================
+    const inputEmail = formData.email.toLowerCase().trim();
+    
+    if (inputEmail === 'admin@syntax4.com') {
+      if (formData.password === 'admin123') {
+        alert("Admin login successful!");
+        // Pinapasa natin ang 'admin' para saluhin ng App.jsx at pumunta sa admin-dashboard
+        if (onLoginSuccess) {
+          onLoginSuccess('admin');
+        }
+        return; // Ititigil na ang function dito para hindi na mag-check sa database
+      } else {
+        alert("Invalid admin credentials! Incorrect password.");
+        return; // Itigil ang login dahil mali ang admin password
+      }
+    }
+    // ==========================================
+    // END OF ADMIN CHECK
+    // ==========================================
+
+    // 2. REGULAR USER CHECK (API & LocalStorage Fallback)
     try {
       setIsLoading(true);
 
@@ -56,7 +79,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
       // Hanapin ang tamang local user mula sa allUsers base sa email para makuha ang kumpletong profile details
       const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-      const inputEmail = formData.email.toLowerCase().trim();
       const matchedLocalUser = allUsers.find(u => u.email && u.email.toLowerCase().trim() === inputEmail) || {};
 
       const loggedInUser = {
@@ -66,7 +88,8 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         studentId: rawUser.studentId || rawUser.studentID || matchedLocalUser.studentId || matchedLocalUser.studentID,
         program: rawUser.program || rawUser.course || matchedLocalUser.program || matchedLocalUser.course,
         institution: rawUser.institution || rawUser.school || matchedLocalUser.institution || matchedLocalUser.school,
-        email: formData.email
+        email: formData.email,
+        role: 'user' // I-set ang role as user
       };
 
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
@@ -82,33 +105,23 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
       console.error('Login error (using local storage fallback):', error);
 
       const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-      const inputEmail = formData.email.toLowerCase().trim();
-      const foundUser = allUsers.find(u => u.email && u.email.toLowerCase().trim() === inputEmail);
+      const foundUser = allUsers.find(u => u.email && u.email.toLowerCase().trim() === inputEmail && u.password === formData.password);
 
       if (foundUser) {
         const fallbackMatchedUser = {
           ...foundUser,
           studentId: foundUser.studentId || foundUser.studentID || '2026-102938',
           program: foundUser.program || foundUser.course || 'BS Information Technology',
-          institution: foundUser.institution || foundUser.school || 'National University MOA'
+          institution: foundUser.institution || foundUser.school || 'National University MOA',
+          role: 'user'
         };
         localStorage.setItem('currentUser', JSON.stringify(fallbackMatchedUser));
         if (onLoginSuccess) {
           onLoginSuccess(fallbackMatchedUser);
         }
       } else {
-        const fallbackUser = {
-          name: formData.email.split('@')[0],
-          email: formData.email,
-          studentId: '2026-102938',
-          program: 'BS Information Technology',
-          institution: 'National University MOA',
-          role: 'user'
-        };
-        localStorage.setItem('currentUser', JSON.stringify(fallbackUser));
-        if (onLoginSuccess) {
-          onLoginSuccess(fallbackUser);
-        }
+        // Kung pati sa localstorage ay hindi nag-match ang email at password
+        alert("Invalid email or password!");
       }
     } finally {
       setIsLoading(false);
