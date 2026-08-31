@@ -81,12 +81,12 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
 
   const handleOpenEditModal = (event) => {
     setIsEditing(true);
-    setCurrentEventId(event.id);
+    setCurrentEventId(event._id || event.id);
     setFormData({
       title: event.title || '',
       type: event.type || 'Workshop',
       date: event.date || '',
-      venue: event.venue || '',
+      venue: event.venue || event.location || '',
       description: event.description || '',
       status: event.status || 'Active'
     });
@@ -164,7 +164,6 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     }
   };
 
-  // 🛠️ NA-FIX: Binago ang endpoint para tumugma sa server.js (`/approve` at `PUT`)
   const handleConfirmRegistration = async (id) => {
     try {
       const response = await fetch(`http://localhost:5000/api/registrations/${id}/approve`, {
@@ -177,6 +176,23 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     } catch (error) {
       console.error('Error confirming registration:', error);
       alert('Failed to update registration status.');
+    }
+  };
+
+  const handleRejectRegistration = async (id) => {
+    if (!window.confirm('Are you sure you want to reject/remove this registration request?')) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/registrations/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to remove registration.');
+
+      alert('Registration request removed.');
+      await fetchRegistrations();
+    } catch (error) {
+      console.error('Error rejecting registration:', error);
+      alert('Failed to reject registration.');
     }
   };
 
@@ -298,67 +314,70 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                 {/* Events Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                   {events.length > 0 ? (
-                    events.map((evt) => (
-                      <div
-                        key={evt.id || evt._id}
-                        style={{
-                          background: 'var(--auth-input-bg)',
-                          padding: '24px',
-                          borderRadius: '12px',
-                          border: '1px solid var(--auth-border-color)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          boxSizing: 'border-box'
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
-                              {evt.type || 'Workshop'}
-                            </span>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>📅 {evt.date}</span>
+                    events.map((evt) => {
+                      const eventId = evt._id || evt.id;
+                      return (
+                        <div
+                          key={eventId}
+                          style={{
+                            background: 'var(--auth-input-bg)',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            border: '1px solid var(--auth-border-color)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justify: 'space-between',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
+                                {evt.type || 'Workshop'}
+                              </span>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>📅 {evt.date}</span>
+                            </div>
+                            <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '600' }}>{evt.title}</h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue || evt.location}</p>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
                           </div>
-                          <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '600' }}>{evt.title}</h3>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue || evt.location}</p>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
-                        </div>
 
-                        {/* Action Buttons */}
-                        <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                          <button
-                            onClick={() => handleOpenEditModal(evt)}
-                            style={{
-                              background: 'rgba(56, 189, 248, 0.15)',
-                              color: '#38bdf8',
-                              border: '1px solid rgba(56, 189, 248, 0.3)',
-                              padding: '6px 14px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              fontSize: '0.8rem'
-                            }}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteEvent(evt.id)}
-                            style={{
-                              background: 'rgba(244, 63, 94, 0.15)',
-                              color: '#f43f5e',
-                              border: '1px solid rgba(244, 63, 94, 0.3)',
-                              padding: '6px 14px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              fontSize: '0.8rem'
-                            }}
-                          >
-                            Delete
-                          </button>
+                          {/* Action Buttons */}
+                          <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button
+                              onClick={() => handleOpenEditModal(evt)}
+                              style={{
+                                background: 'rgba(56, 189, 248, 0.15)',
+                                color: '#38bdf8',
+                                border: '1px solid rgba(56, 189, 248, 0.3)',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                fontSize: '0.8rem'
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEvent(eventId)}
+                              style={{
+                                background: 'rgba(244, 63, 94, 0.15)',
+                                color: '#f43f5e',
+                                border: '1px solid rgba(244, 63, 94, 0.3)',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                fontSize: '0.8rem'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div style={{ gridColumn: '1 / -1', padding: '50px', textAlign: 'center', background: 'var(--auth-input-bg)', borderRadius: '12px', border: '1px dashed var(--auth-border-color)' }}>
                       <p style={{ color: 'var(--auth-text-muted)', margin: 0 }}>No records found in the database.</p>
@@ -381,10 +400,11 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                   {registrations.length > 0 ? (
                     registrations.map((reg) => {
+                      const regId = reg._id || reg.id;
                       const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
                       return (
                         <div
-                          key={reg._id || reg.id}
+                          key={regId}
                           style={{
                             background: 'var(--auth-input-bg)',
                             padding: '24px',
@@ -392,7 +412,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                             border: '1px solid var(--auth-border-color)',
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'space-between',
+                            justify: 'space-between',
                             boxSizing: 'border-box'
                           }}
                         >
@@ -411,33 +431,49 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                               <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>🆔 {reg.studentId || 'N/A'}</span>
                             </div>
                             
-                            {/* 🛠️ NA-FIX: Binasa ang tamang property galing sa UserDashboard (name, email) */}
                             <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '4px', fontWeight: '600' }}>
                               {reg.name || reg.studentName || 'Student'}
                             </h3>
                             <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>✉️ {reg.email || reg.studentEmail}</p>
                             <p style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '500', marginBottom: '4px' }}>Event: {reg.eventTitle || reg.title}</p>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px' }}>📅 Date: {reg.eventDate || reg.date} | 📍 Venue: {reg.venue}</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px' }}>📅 Date: {reg.eventDate || reg.date} | 📍 Venue: {reg.venue || reg.location || 'N/A'}</p>
                           </div>
 
-                          {/* Action Button */}
-                          <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
+                          {/* Action Buttons */}
+                          <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                             {!isConfirmed ? (
-                              <button
-                                onClick={() => handleConfirmRegistration(reg._id || reg.id)}
-                                style={{
-                                  background: 'rgba(16, 185, 129, 0.15)',
-                                  color: '#10b981',
-                                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                                  padding: '6px 16px',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer',
-                                  fontWeight: '600',
-                                  fontSize: '0.8rem'
-                                }}
-                              >
-                                ✅ Confirm Registration
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleRejectRegistration(regId)}
+                                  style={{
+                                    background: 'rgba(244, 63, 94, 0.15)',
+                                    color: '#f43f5e',
+                                    border: '1px solid rgba(244, 63, 94, 0.3)',
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '0.8rem'
+                                  }}
+                                >
+                                  Reject
+                                </button>
+                                <button
+                                  onClick={() => handleConfirmRegistration(regId)}
+                                  style={{
+                                    background: 'rgba(16, 185, 129, 0.15)',
+                                    color: '#10b981',
+                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                    padding: '6px 16px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '0.8rem'
+                                  }}
+                                >
+                                  ✅ Confirm Registration
+                                </button>
+                              </>
                             ) : (
                               <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: '600' }}>Already Confirmed</span>
                             )}

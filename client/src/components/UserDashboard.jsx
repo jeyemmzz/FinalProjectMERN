@@ -5,21 +5,21 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
   const [user, setUser] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
 
-  // Dynamic Events State galing sa Server
+  // Dynamic Events State from Server
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // REGISTRATIONS STATE: Para sa mga nirehistro ng user (Pending / Confirmed Receipts)
+  // Registrations State (Pending / Confirmed Receipts)
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [isRegLoading, setIsRegLoading] = useState(true);
 
-  // Function para i-fetch ang registrations ng user gamit ang email
+  // Fetch user registrations using email
   const fetchRegistrations = useCallback((email) => {
     if (!email) return;
-    fetch(`http://localhost:5000/api/registrations?email=${email}`)
+    fetch(`http://localhost:5000/api/registrations?email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(regData => {
-        setMyRegistrations(regData);
+        setMyRegistrations(Array.isArray(regData) ? regData : []);
         setIsRegLoading(false);
       })
       .catch(err => {
@@ -37,11 +37,11 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // 3. Fetch Events mula sa Backend Server
+    // 3. Fetch Events from Backend Server
     fetch('http://localhost:5000/api/events')
       .then(res => res.json())
       .then(data => {
-        setEvents(data);
+        setEvents(Array.isArray(data) ? data : []);
         setIsLoading(false);
       })
       .catch(err => {
@@ -49,7 +49,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         setIsLoading(false);
       });
 
-    // 4. Get current user from localStorage at i-fetch ang kaniyang mga registrations
+    // 4. Retrieve current user from localStorage & fetch registrations
     const storedUserData = localStorage.getItem('currentUser');
     let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
 
@@ -82,7 +82,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
       setIsRegLoading(false);
     }
 
-    // 5. FIX: I-refetch ang registrations kapag bumalik ang focus sa window/tab o galing ibang page
+    // 5. Refetch registrations when window/tab regains focus
     const handleWindowFocus = () => {
       const currentStored = localStorage.getItem('currentUser');
       if (currentStored) {
@@ -109,7 +109,6 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     localStorage.setItem('theme', themeName);
   };
 
-  // Navigates to event while preserving logged-in user state
   const handleEventClick = (eventData = null) => {
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
@@ -191,7 +190,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         width: '100%',
         padding: '20px 40px',
         display: 'flex',
-        justifyContent: 'center',
+        justify: 'center',
         boxSizing: 'border-box'
       }}>
         <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
@@ -217,7 +216,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
 
           <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }}>|</span>
 
-          {/* Nav Link - Events Only */}
+          {/* Nav Links */}
           <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
             <span 
               onClick={() => handleEventClick()}
@@ -377,7 +376,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Email
             </span>
-            <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#38bdf8', marginTop: '8px' }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#38bdf8', marginTop: '8px', wordBreak: 'break-all' }}>
               {user?.email || 'Loading...'}
             </div>
           </div>
@@ -401,10 +400,14 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             marginBottom: '40px'
           }}>
             {myRegistrations.map((reg) => {
+              const regId = reg._id || reg.id;
               const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
+              const rawIdStr = String(regId || '');
+              const shortRegId = rawIdStr.length > 6 ? rawIdStr.slice(-6).toUpperCase() : rawIdStr || 'SYN-404';
+
               return (
                 <div
-                  key={reg._id || reg.id}
+                  key={regId}
                   style={{
                     background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
                     backdropFilter: 'blur(16px)',
@@ -417,7 +420,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '10px' }}>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: 0 }}>
-                      {reg.eventTitle || reg.title}
+                      {reg.eventTitle || reg.title || reg.eventName}
                     </h3>
                     
                     {/* Status Badge */}
@@ -445,7 +448,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                         🎟️ Official Digital Event Pass / Receipt
                       </p>
                       <p style={{ fontSize: '0.8rem', color: isDarkMode ? '#e2e8f0' : '#334155', margin: 0, fontWeight: '600' }}>
-                        Registration ID: #{reg._id ? reg._id.slice(-6).toUpperCase() : 'SYN-404'}
+                        Registration ID: #{shortRegId}
                       </p>
                     </div>
                   ) : (
@@ -476,45 +479,48 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '20px'
           }}>
-            {events.map((evt) => (
-              <div
-                key={evt.id || evt._id}
-                className="event-card"
-                onClick={() => handleEventClick(evt)}
-                style={{
-                  background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
-                  backdropFilter: 'blur(16px)',
-                  padding: '24px 28px',
-                  borderRadius: '20px',
-                  border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
-                }}
-              >
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
-                  {evt.title}
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
-                  📅 {evt.date}
-                </p>
-                <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
-                  📍 {evt.venue || evt.location}
-                </p>
-                {evt.description && (
-                  <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '8px 0 0 0' }}>
-                    {evt.description}
+            {events.map((evt) => {
+              const eventId = evt._id || evt.id;
+              return (
+                <div
+                  key={eventId}
+                  className="event-card"
+                  onClick={() => handleEventClick(evt)}
+                  style={{
+                    background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+                    backdropFilter: 'blur(16px)',
+                    padding: '24px 28px',
+                    borderRadius: '20px',
+                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
+                    {evt.title}
+                  </h3>
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
+                    📅 {evt.date}
                   </p>
-                )}
-                <span style={{
-                  display: 'inline-block',
-                  marginTop: '12px',
-                  fontSize: '0.85rem',
-                  fontWeight: '700',
-                  color: '#38bdf8'
-                }}>
-                  View Event →
-                </span>
-              </div>
-            ))}
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
+                    📍 {evt.venue || evt.location}
+                  </p>
+                  {evt.description && (
+                    <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '8px 0 0 0' }}>
+                      {evt.description}
+                    </p>
+                  )}
+                  <span style={{
+                    display: 'inline-block',
+                    marginTop: '12px',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    color: '#38bdf8'
+                  }}>
+                    View Event →
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 
