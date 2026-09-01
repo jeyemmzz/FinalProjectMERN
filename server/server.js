@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -9,6 +10,14 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+// --- MONGODB CONNECTION ---
+// Palitan ang URI kung gumagamit ka ng MongoDB Atlas o iba pang local connection string
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/campusevents';
+
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('Connected to MongoDB successfully!'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -33,7 +42,7 @@ let eventsList = [
   }
 ];
 
-// --- IN-MEMORY REGISTRATIONS ARRAY (BAGONG DAGDAG) ---
+// --- IN-MEMORY REGISTRATIONS ARRAY ---
 let registrationsList = [];
 
 // 1. GET (Read All Events)
@@ -86,9 +95,24 @@ app.delete('/api/events/:id', (req, res) => {
 });
 
 
-// --- REGISTRATION ROUTES (BAGONG DAGDAG) ---
+// --- REGISTRATION ROUTES ---
 
-// A. POST: I-save ang booking ng user (Pending status)
+// A. POST: Tinugma sa tinatawag ng Event.jsx (/api/register-event)
+app.post('/api/register-event', (req, res) => {
+  const newRegistration = {
+    _id: 'reg_' + Date.now(),
+    ...req.body,
+    createdAt: new Date()
+  };
+  
+  registrationsList.push(newRegistration);
+  res.status(201).json({ 
+    message: 'Registration saved successfully!', 
+    registration: newRegistration 
+  });
+});
+
+// Alternative endpoint
 app.post('/api/registrations', (req, res) => {
   const newRegistration = {
     _id: 'reg_' + Date.now(),
@@ -103,7 +127,7 @@ app.post('/api/registrations', (req, res) => {
   });
 });
 
-// B. GET: Kunin ang mga registrations (Pwede i-filter by email para sa user, o lahat para sa admin)
+// B. GET: Kunin ang mga registrations
 app.get('/api/registrations', (req, res) => {
   const { email } = req.query;
   
@@ -112,7 +136,6 @@ app.get('/api/registrations', (req, res) => {
     return res.json(userRegs);
   }
   
-  // Kung walang email query, ibalik lahat (para sa Admin Dashboard)
   res.json(registrationsList);
 });
 
