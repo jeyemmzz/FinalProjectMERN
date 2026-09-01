@@ -1,9 +1,6 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
-
-const authRoutes = require('./routes/authRoutes.js');
 
 const app = express();
 
@@ -11,43 +8,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// --- MONGODB CONNECTION ---
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/campusevents';
+// --- IN-MEMORY DATA STORAGE (Wala nang MongoDB na kailangan) ---
+let studentsList = [];
+let registrationsList = [];
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB successfully!'))
-  .catch((err) => console.error('MongoDB connection error:', err));
-
-// Routes
-app.use('/api/auth', authRoutes);
-
-// --- STUDENT SCHEMA & MODEL (Para sa Validation) ---
-const studentSchema = new mongoose.Schema({
-  studentId: { type: String, required: true, unique: true },
-  name: String,
-  email: String
-});
-
-const Student = mongoose.model('Student', studentSchema);
-
-// --- REGISTRATION SCHEMA & MODEL ---
-const registrationSchema = new mongoose.Schema({
-  eventId: String,
-  eventTitle: String,
-  eventDate: String,
-  eventVenue: String,
-  userType: String,
-  name: String,
-  email: String,
-  studentId: String,
-  userId: String,
-  status: { type: String, default: 'Pending' },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const Registration = mongoose.model('Registration', registrationSchema);
-
-// --- IN-MEMORY EVENTS ARRAY ---
 let eventsList = [
   { 
     id: 101, 
@@ -55,7 +19,7 @@ let eventsList = [
     type: 'Workshop', 
     date: '2026-08-25', 
     venue: 'Lab 301', 
-    description: 'Hands-on session connected to database.' 
+    description: 'Hands-on session using local memory.' 
   },
   { 
     id: 102, 
@@ -67,12 +31,11 @@ let eventsList = [
   }
 ];
 
-// 1. GET (Read All Events)
+// --- EVENT ROUTES ---
 app.get('/api/events', (req, res) => {
   res.json(eventsList);
 });
 
-// 2. POST (Create New Event)
 app.post('/api/events', (req, res) => {
   const newEvent = { 
     id: Date.now(), 
@@ -86,7 +49,6 @@ app.post('/api/events', (req, res) => {
   });
 });
 
-// 3. PUT (Update Event)
 app.put('/api/events/:id', (req, res) => {
   const eventId = Number(req.params.id);
   const updateData = req.body;
@@ -103,7 +65,6 @@ app.put('/api/events/:id', (req, res) => {
   }
 });
 
-// 4. DELETE (Delete Event)
 app.delete('/api/events/:id', (req, res) => {
   const eventId = Number(req.params.id);
   const exists = eventsList.some(e => e.id === eventId);
@@ -117,31 +78,28 @@ app.delete('/api/events/:id', (req, res) => {
 });
 
 
-// --- REGISTRATION ROUTES (MDB PERSISTENT WITH STUDENT ID VALIDATION) ---
+// --- REGISTRATION ROUTES ---
 
-// Helper function para sa Student ID validation logic
-const processRegistration = async (req, res) => {
+const processRegistration = (req, res) => {
   try {
-    const { studentId, userType } = req.body;
+    const { studentId, userType, name, email } = req.body;
 
-    // Kung ang nagre-register ay Student, i-validate natin kung existing ba ang studentId sa database
-    if (userType === 'Student' || studentId) {
-      if (!studentId) {
-        return res.status(400).json({ error: 'Student ID is required for student registration.' });
-      }
-
-      const validStudent = await Student.findOne({ studentId: studentId });
-      if (!validStudent) {
-        return res.status(400).json({ error: 'Invalid Student ID. Only authorized student IDs are allowed to register.' });
+    if (userType === 'Student' && studentId) {
+      const existingStudent = studentsList.find(s => s.studentId === studentId);
+      if (!existingStudent) {
+        studentsList.push({ studentId, name, email });
       }
     }
 
-    const newRegistration = new Registration({
+    const newRegistration = {
+      _id: Date.now().toString(),
+      id: Date.now(),
       ...req.body,
-      status: 'Pending'
-    });
+      status: 'Pending',
+      createdAt: new Date()
+    };
     
-    await newRegistration.save();
+    registrationsList.push(newRegistration);
     
     res.status(201).json({ 
       message: 'Registration saved successfully!', 
@@ -153,23 +111,18 @@ const processRegistration = async (req, res) => {
   }
 };
 
-// A. POST: Tinugma sa tinatawag ng Event.jsx (/api/register-event)
 app.post('/api/register-event', processRegistration);
-
-// Alternative endpoint
 app.post('/api/registrations', processRegistration);
 
-// B. GET: Kunin ang mga registrations mula sa Database
-app.get('/api/registrations', async (req, res) => {
+app.get('/api/registrations', (req, res) => {
   try {
     const { email } = req.query;
-    let query = {};
     
     if (email) {
-      query.email = { $regex: new RegExp('^' + email + '$', 'i') };
+      const filtered = registrationsList.filter(r => r.email && r.email.toLowerCase() === email.toLowerCase());
+      return res.json(filtered);
     }
     
-    const registrationsList = await Registration.find(query);
     res.json(registrationsList);
   } catch (error) {
     console.error('Error fetching registrations:', error);
@@ -177,20 +130,16 @@ app.get('/api/registrations', async (req, res) => {
   }
 });
 
-// C. PUT: I-approve ng Admin ang pending registration
-app.put('/api/registrations/:id/approve', async (req, res) => {
+app.put('/api/registrations/:id/approve', (req, res) => {
   try {
     const regId = req.params.id;
-    const updatedReg = await Registration.findByIdAndUpdate(
-      regId, 
-      { status: 'Confirmed' }, 
-      { new: true }
-    );
+    const reg = registrationsList.find(r => r._id == regId || r.id == regId);
     
-    if (updatedReg) {
+    if (reg) {
+      reg.status = 'Confirmed';
       res.json({ 
         message: 'Registration approved successfully!', 
-        registration: updatedReg 
+        registration: reg 
       });
     } else {
       res.status(404).json({ error: 'Registration not found' });
@@ -206,5 +155,5 @@ app.put('/api/registrations/:id/approve', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT} (In-Memory Mode)`);
 });
