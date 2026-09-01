@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import sunIcon from '../assets/sun-fill (1).png';
+import moonIcon from '../assets/moon-fill (2).png';
 import '../styles/Auth.css';
 
 export default function Event({ 
@@ -193,6 +195,7 @@ export default function Event({
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
+          {/* Theme Toggle Button with Asset Icons */}
           <button
             className="nav-pill-btn"
             onClick={toggleTheme}
@@ -205,7 +208,12 @@ export default function Event({
               fontSize: '0.85rem'
             }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={isDarkMode ? moonIcon : sunIcon} 
+              alt={isDarkMode ? 'Dark Mode' : 'Light Mode'} 
+              style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+            />
+            {isDarkMode ? 'Dark' : 'Light'}
           </button>
 
           {currentUser ? (
@@ -313,8 +321,27 @@ export default function Event({
 
                 <div>
                   <h3 style={{ fontSize: '1.2rem', color: 'var(--auth-text-main)', fontWeight: '700', marginBottom: '6px' }}>{ev.title}</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0' }}>📅 {ev.date}</p>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0' }}>📍 {ev.venue || ev.location}</p>
+                  
+                  {/* Calendar Icon + Date */}
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    {ev.date}
+                  </p>
+
+                  {/* Map Pin Icon + Venue */}
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {ev.venue || ev.location}
+                  </p>
+
                   {ev.description && (
                     <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', margin: '6px 0 0 0' }}>{ev.description}</p>
                   )}
@@ -386,8 +413,26 @@ export default function Event({
             <h2 style={{ fontSize: '1.5rem', color: 'var(--auth-text-main)', margin: '10px 0 6px 0', fontWeight: '800' }}>
               {selectedEvent.title}
             </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0' }}>📅 {selectedEvent.date}</p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0' }}>📍 {selectedEvent.venue || selectedEvent.location}</p>
+
+            {/* Modal Calendar Icon + Date */}
+            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              {selectedEvent.date}
+            </p>
+
+            {/* Modal Map Pin Icon + Venue */}
+            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              {selectedEvent.venue || selectedEvent.location}
+            </p>
             
             <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-main)', margin: '15px 0', lineHeight: '1.5' }}>
               {selectedEvent.description || 'No additional details provided for this event.'}

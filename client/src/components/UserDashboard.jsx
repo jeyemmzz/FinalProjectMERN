@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import calendarIcon from '../assets/calendar-2-line.png';
+import mapPinIcon from '../assets/map-pin-line.png';
+import couponIcon from '../assets/coupon-2-fill.png';
+import checkboxIcon from '../assets/checkbox-circle-fill.png';
+import moonIcon from '../assets/moon-fill (2).png';
+import sunIcon from '../assets/sun-fill (1).png';
 
 export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEvents }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -190,7 +196,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         width: '100%',
         padding: '20px 40px',
         display: 'flex',
-        justify: 'center',
+        justifyContent: 'center',
         boxSizing: 'border-box'
       }}>
         <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
@@ -246,11 +252,16 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
               fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
+              gap: '6px',
               whiteSpace: 'nowrap'
             }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={isDarkMode ? moonIcon : sunIcon} 
+              alt="Theme Icon" 
+              style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+            />
+            {isDarkMode ? 'Dark' : 'Light'}
           </button>
 
           <button
@@ -423,7 +434,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                       {reg.eventTitle || reg.title || reg.eventName}
                     </h3>
                     
-                    {/* Status Badge */}
+                    {/* Status Badge with Check Icon */}
                     <span style={{
                       padding: '4px 10px',
                       borderRadius: '8px',
@@ -432,20 +443,39 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                       whiteSpace: 'nowrap',
                       background: isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                       color: isConfirmed ? '#10b981' : '#f59e0b',
-                      border: `1px solid ${isConfirmed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                      border: `1px solid ${isConfirmed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
                     }}>
-                      {isConfirmed ? '✅ Confirmed' : '⏳ Pending Approval'}
+                      {isConfirmed ? (
+                        <>
+                          <img src={checkboxIcon} alt="Check" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
+                          Confirmed
+                        </>
+                      ) : (
+                        '⏳ Pending Approval'
+                      )}
                     </span>
                   </div>
 
-                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>📅 Date: {reg.eventDate || reg.date}</p>
-                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>📍 Venue: {reg.venue || reg.location}</p>
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src={calendarIcon} alt="Calendar" style={{ width: '15px', height: '15px', filter: isDarkMode ? 'invert(1)' : 'none', opacity: 0.7 }} /> 
+                    Date: {reg.eventDate || reg.date}
+                  </p>
+                  
+                  {/* Venue Field with Custom Map Pin Icon */}
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src={mapPinIcon} alt="Map Pin" style={{ width: '15px', height: '15px', filter: isDarkMode ? 'invert(1)' : 'none', opacity: 0.7 }} /> 
+                    Venue: {reg.venue || reg.location || reg.eventVenue || 'Not Specified'}
+                  </p>
 
-                  {/* Official Digital Event Pass / Receipt */}
+                  {/* Official Digital Event Pass / Receipt with Coupon/Ticket Icon */}
                   {isConfirmed ? (
                     <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '12px', border: '1px dashed rgba(16, 185, 129, 0.3)' }}>
-                      <p style={{ fontSize: '0.75rem', color: '#10b981', margin: '0 0 4px 0', fontWeight: '700', textTransform: 'uppercase' }}>
-                        🎟️ Official Digital Event Pass / Receipt
+                      <p style={{ fontSize: '0.75rem', color: '#10b981', margin: '0 0 4px 0', fontWeight: '700', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <img src={couponIcon} alt="Ticket" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
+                        Official Digital Event Pass / Receipt
                       </p>
                       <p style={{ fontSize: '0.8rem', color: isDarkMode ? '#e2e8f0' : '#334155', margin: 0, fontWeight: '600' }}>
                         Registration ID: #{shortRegId}
@@ -498,11 +528,13 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                   <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
                     {evt.title}
                   </h3>
-                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
-                    📅 {evt.date}
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src={calendarIcon} alt="Calendar" style={{ width: '15px', height: '15px', filter: isDarkMode ? 'invert(1)' : 'none', opacity: 0.7 }} />
+                    {evt.date}
                   </p>
-                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0' }}>
-                    📍 {evt.venue || evt.location}
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src={mapPinIcon} alt="Map Pin" style={{ width: '15px', height: '15px', filter: isDarkMode ? 'invert(1)' : 'none', opacity: 0.7 }} />
+                    {evt.venue || evt.location || 'Not Specified'}
                   </p>
                   {evt.description && (
                     <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '8px 0 0 0' }}>

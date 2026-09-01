@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Auth.css';
 
+// Asset Imports mula sa src/assets
+import infoDark from '../assets/information-fill (1).png';
+import infoLight from '../assets/information-fill.png';
+import userDark from '../assets/user-3-line.png';
+import userLight from '../assets/user-3-line (1).png';
+import calendarLight from '../assets/calendar-2-line (3).png';
+import calendarDark from '../assets/calendar-2-line (1).png';
+import mapPinDark from '../assets/map-pin-line (1).png';
+import mapPinLight from '../assets/map-pin-line.png';
+import moonIcon from '../assets/moon-fill (2).png';
+import sunIcon from '../assets/sun-fill (1).png';
+
 export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -253,9 +265,14 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
           <button
             className="nav-pill-btn"
             onClick={toggleTheme}
-            style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer', fontSize: '0.85rem' }}
+            style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={isDarkMode ? moonIcon : sunIcon} 
+              alt="Theme Icon" 
+              style={{ width: '14px', height: '14px', objectFit: 'contain' }} 
+            />
+            {isDarkMode ? 'Dark' : 'Light'}
           </button>
 
           <button
@@ -335,10 +352,16 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                               <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
                                 {evt.type || 'Workshop'}
                               </span>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>📅 {evt.date}</span>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <img src={isDarkMode ? calendarDark : calendarLight} alt="Date" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
+                                {evt.date}
+                              </span>
                             </div>
                             <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '8px', fontWeight: '600' }}>{evt.title}</h3>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>📍 {evt.venue || evt.location}</p>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <img src={isDarkMode ? mapPinDark : mapPinLight} alt="Venue" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
+                              {evt.venue || evt.location}
+                            </p>
                             <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
                           </div>
 
@@ -428,15 +451,31 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                               }}>
                                 {reg.status || 'Pending'}
                               </span>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>🆔 {reg.studentId || 'N/A'}</span>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <img src={isDarkMode ? infoDark : infoLight} alt="Student ID" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
+                                {reg.studentId || 'N/A'}
+                              </span>
                             </div>
                             
                             <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '4px', fontWeight: '600' }}>
                               {reg.name || reg.studentName || 'Student'}
                             </h3>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>✉️ {reg.email || reg.studentEmail}</p>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <img src={isDarkMode ? userDark : userLight} alt="Email" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
+                              {reg.email || reg.studentEmail}
+                            </p>
                             <p style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '500', marginBottom: '4px' }}>Event: {reg.eventTitle || reg.title}</p>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px' }}>📅 Date: {reg.eventDate || reg.date} | 📍 Venue: {reg.venue || reg.location || 'N/A'}</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <img src={isDarkMode ? calendarDark : calendarLight} alt="Date" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
+                                {reg.eventDate || reg.date}
+                              </span>
+                              <span>|</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <img src={isDarkMode ? mapPinDark : mapPinLight} alt="Venue" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
+                                {reg.venue || reg.location || 'N/A'}
+                              </span>
+                            </p>
                           </div>
 
                           {/* Action Buttons */}
@@ -588,7 +627,17 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
+                    style={{ 
+                      width: '100%', 
+                      padding: '10px 14px', 
+                      borderRadius: '8px', 
+                      border: '1px solid var(--auth-border-color)', 
+                      background: 'var(--auth-input-bg)', 
+                      color: 'var(--auth-text-main)', 
+                      boxSizing: 'border-box', 
+                      outline: 'none',
+                      colorScheme: isDarkMode ? 'dark' : 'light' 
+                    }}
                   />
                 </div>
               </div>
@@ -640,5 +689,3 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     </div>
   );
 }
-
-

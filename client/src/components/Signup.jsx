@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+// Asset mapping batay sa mga eksaktong filenames mo
+const fileUserDark = new URL('../assets/file-user-fill.png', import.meta.url).href;
+const fileUserLight = new URL('../assets/file-user-fill (1).png', import.meta.url).href;
+const userIconDark = new URL('../assets/user-3-line.png', import.meta.url).href;
+const userIconLight = new URL('../assets/user-3-line (1).png', import.meta.url).href;
+const lockIconDark = new URL('../assets/lock-line.png', import.meta.url).href;
+const lockIconLight = new URL('../assets/lock-line (1).png', import.meta.url).href;
+const moonIcon = new URL('../assets/moon-fill (2).png', import.meta.url).href;
+const sunIcon = new URL('../assets/sun-fill (1).png', import.meta.url).href;
+
 export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -9,7 +19,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
   
   const [animateIn, setAnimateIn] = useState(false);
 
-  // Form states - Tinanggal na ang studentId, program, at institution
+  // Form states
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,7 +54,6 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     try {
       setIsLoading(true);
 
-      // Default values na lang ang isesend sa backend para sa tinanggal na fields
       const payload = {
         name: formData.name,
         email: formData.email,
@@ -80,10 +89,8 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         role: 'user'
       };
 
-      // 1. I-save sa currentUser
       localStorage.setItem('currentUser', JSON.stringify(registeredUser));
 
-      // 2. I-save sa allUsers list
       const existingUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
       const filteredUsers = existingUsers.filter(u => u.email && u.email.toLowerCase() !== registeredUser.email.toLowerCase());
       localStorage.setItem('allUsers', JSON.stringify([...filteredUsers, registeredUser]));
@@ -129,7 +136,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
 
   const inputStyle = {
     width: '100%',
-    padding: '14px 18px',
+    padding: '14px 45px 14px 45px',
     borderRadius: '12px',
     border: '1px solid rgba(56, 189, 248, 0.3)',
     background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
@@ -147,6 +154,12 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     color: isDarkMode ? '#94a3b8' : '#64748b',
     marginBottom: '6px'
   };
+
+  // Dinamikong icon mapping batay sa kasalukuyang theme
+  const currentFileUserIcon = isDarkMode ? fileUserDark : fileUserLight;
+  const currentUserIcon = isDarkMode ? userIconDark : userIconLight;
+  const currentLockIcon = isDarkMode ? lockIconDark : lockIconLight;
+  const currentThemeIcon = isDarkMode ? moonIcon : sunIcon;
 
   return (
     <div style={{
@@ -190,6 +203,13 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         .interactive-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+        .theme-toggle-btn {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .theme-toggle-btn:hover {
+          transform: scale(1.05);
+          border-color: rgba(56, 189, 248, 0.5) !important;
         }
         .loading-spinner {
           width: 18px;
@@ -249,24 +269,37 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
             ))}
           </div>
 
+          {/* Theme Toggle Button */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="nav-link"
+            className="theme-toggle-btn"
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#94a3b8',
+              background: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.9)',
+              border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(2, 132, 199, 0.2)',
+              color: isDarkMode ? '#38bdf8' : '#0284c7',
               cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: '600',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              padding: '6px 14px',
+              borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              whiteSpace: 'nowrap'
+              gap: '6px',
+              whiteSpace: 'nowrap',
+              boxShadow: isDarkMode ? '0 2px 10px rgba(56, 189, 248, 0.15)' : '0 2px 10px rgba(2, 132, 199, 0.15)'
             }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={currentThemeIcon} 
+              alt="Theme Icon" 
+              style={{
+                width: '16px',
+                height: '16px',
+                objectFit: 'contain'
+              }} 
+            />
+            <span>{isDarkMode ? 'Dark' : 'Light'}</span>
           </button>
 
           <button
@@ -338,31 +371,72 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
           <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              
+              {/* Full Name Field with File-User Icon */}
               <div>
                 <label style={labelStyle}>Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter your Full Name" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  style={inputStyle}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter your Full Name" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <img 
+                    src={currentFileUserIcon} 
+                    alt="Full Name Icon" 
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      opacity: 0.85
+                    }}
+                  />
+                </div>
               </div>
+
+              {/* Email Field with User Icon */}
               <div>
                 <label style={labelStyle}>Email Address *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  style={inputStyle}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <img 
+                    src={currentUserIcon} 
+                    alt="Email Icon" 
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      opacity: 0.85
+                    }}
+                  />
+                </div>
               </div>
+
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              
+              {/* Password Field with Lock Icon */}
               <div>
                 <label style={labelStyle}>Password *</label>
                 <div style={{ position: 'relative' }}>
@@ -373,6 +447,21 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     style={{ ...inputStyle, paddingRight: '60px' }}
+                  />
+                  <img 
+                    src={currentLockIcon} 
+                    alt="Lock Icon" 
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      opacity: 0.85
+                    }}
                   />
                   <button
                     type="button"
@@ -396,6 +485,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                 </div>
               </div>
 
+              {/* Confirm Password Field with Lock Icon */}
               <div>
                 <label style={labelStyle}>Confirm Password *</label>
                 <div style={{ position: 'relative' }}>
@@ -406,6 +496,21 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     style={{ ...inputStyle, paddingRight: '60px' }}
+                  />
+                  <img 
+                    src={currentLockIcon} 
+                    alt="Lock Icon" 
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      opacity: 0.85
+                    }}
                   />
                   <button
                     type="button"
@@ -428,6 +533,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                   </button>
                 </div>
               </div>
+
             </div>
 
             <button

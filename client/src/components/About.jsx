@@ -1,4 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import sunIcon from '../assets/sun-fill (1).png';
+import moonIcon from '../assets/moon-fill (2).png';
+import flashlightIconLight from '../assets/flashlight-fill.png';
+import flashlightIconDark from '../assets/flashlight-fill (1).png';
+import calendarIconLight from '../assets/calendar-2-line.png';
+import calendarIconDark from '../assets/calendar-2-line (1).png';
+import lockIconLight from '../assets/lock-2-line.png';
+import lockIconDark from '../assets/lock-2-line (1).png';
+import brushIconLight from '../assets/brush-2-fill.png';
+import brushIconDark from '../assets/brush-2-fill (1).png';
 import '../styles/Auth.css';
 
 export default function About({ 
@@ -61,6 +71,12 @@ export default function About({
     }
   };
 
+  // Dynamic Icon Selection based on theme mode
+  const currentFlashlight = isDarkMode ? flashlightIconDark : flashlightIconLight;
+  const currentCalendar = isDarkMode ? calendarIconDark : calendarIconLight;
+  const currentLock = isDarkMode ? lockIconDark : lockIconLight;
+  const currentBrush = isDarkMode ? brushIconDark : brushIconLight;
+
   return (
     <div className="auth-page-wrapper">
       <nav className="auth-navbar-centered">
@@ -98,7 +114,7 @@ export default function About({
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle Button with Asset Icons */}
           <button
             className="nav-pill-btn"
             onClick={toggleTheme}
@@ -111,7 +127,12 @@ export default function About({
               fontSize: '0.85rem'
             }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={isDarkMode ? moonIcon : sunIcon} 
+              alt={isDarkMode ? 'Dark Mode' : 'Light Mode'} 
+              style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+            />
+            {isDarkMode ? 'Dark' : 'Light'}
           </button>
 
           {/* Conditional Actions */}
@@ -180,22 +201,43 @@ export default function About({
 
               <h3 style={{ fontSize: '1.2rem', color: 'var(--auth-text-main)', marginBottom: '16px', fontWeight: '600' }}>Core Capabilities</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '35px' }}>
+                
+                {/* Real-Time Attendance */}
                 <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600' }}>⚡ Real-Time Attendance</h4>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src={currentFlashlight} alt="Real-Time Attendance" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                    Real-Time Attendance
+                  </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Instantly log and verify participant check-ins with automated audit trails.</p>
                 </div>
+
+                {/* Institutional Calendars */}
                 <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600' }}>📅 Institutional Calendars</h4>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src={currentCalendar} alt="Institutional Calendars" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                    Institutional Calendars
+                  </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>View upcoming university milestones and seminars in an organized timeline.</p>
                 </div>
+
+                {/* Role-Based Security */}
                 <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600' }}>🔒 Role-Based Security</h4>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src={currentLock} alt="Role-Based Security" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                    Role-Based Security
+                  </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Restricted access levels ensuring complete safety for admin and student accounts.</p>
                 </div>
+
+                {/* Modern Glass UI */}
                 <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600' }}>🎨 Modern Glass UI</h4>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src={currentBrush} alt="Modern Glass UI" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                    Modern Glass UI
+                  </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Sleek, dark-themed frosted glass design optimized for any device screen.</p>
                 </div>
+
               </div>
 
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>

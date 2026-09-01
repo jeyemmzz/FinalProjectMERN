@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import sunIcon from '../assets/sun-fill (1).png';
+import moonIcon from '../assets/moon-fill (2).png';
 import '../styles/Auth.css';
 
 export default function Home({ 
@@ -89,7 +91,7 @@ export default function Home({
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle Button with Custom Assets Icons */}
           <button 
             className="nav-pill-btn" 
             onClick={toggleTheme}
@@ -102,7 +104,12 @@ export default function Home({
               fontSize: '0.85rem'
             }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={isDarkMode ? moonIcon : sunIcon} 
+              alt={isDarkMode ? 'Dark Mode' : 'Light Mode'} 
+              style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+            />
+            {isDarkMode ? 'Dark' : 'Light'}
           </button>
 
           {/* Conditional Actions based on Authentication */}

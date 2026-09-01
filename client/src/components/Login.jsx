@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
+// Tamang asset mapping batay sa eksaktong filenames mo
+const userIconDark = new URL('../assets/user-3-line.png', import.meta.url).href;
+const userIconLight = new URL('../assets/user-3-line (1).png', import.meta.url).href;
+const lockIconDark = new URL('../assets/lock-line.png', import.meta.url).href;
+const lockIconLight = new URL('../assets/lock-line (1).png', import.meta.url).href;
+const moonIcon = new URL('../assets/moon-fill (2).png', import.meta.url).href;
+const sunIcon = new URL('../assets/sun-fill (1).png', import.meta.url).href;
+
 export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -32,29 +39,21 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
-    // ==========================================
-    // 1. HARDCODED ADMIN CHECK
-    // ==========================================
     const inputEmail = formData.email.toLowerCase().trim();
     
     if (inputEmail === 'admin@syntax4.com') {
       if (formData.password === 'admin123') {
         alert("Admin login successful!");
-        // Pinapasa natin ang 'admin' para saluhin ng App.jsx at pumunta sa admin-dashboard
         if (onLoginSuccess) {
           onLoginSuccess('admin');
         }
-        return; // Ititigil na ang function dito para hindi na mag-check sa database
+        return;
       } else {
         alert("Invalid admin credentials! Incorrect password.");
-        return; // Itigil ang login dahil mali ang admin password
+        return;
       }
     }
-    // ==========================================
-    // END OF ADMIN CHECK
-    // ==========================================
 
-    // 2. REGULAR USER CHECK (API & LocalStorage Fallback)
     try {
       setIsLoading(true);
 
@@ -73,11 +72,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         throw new Error(data.message || 'Failed to log in. Please check your credentials.');
       }
 
-      console.log('Successfully logged in response:', data);
-
       const rawUser = data.user || data.existingUser || data.account || data;
-
-      // Hanapin ang tamang local user mula sa allUsers base sa email para makuha ang kumpletong profile details
       const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
       const matchedLocalUser = allUsers.find(u => u.email && u.email.toLowerCase().trim() === inputEmail) || {};
 
@@ -89,7 +84,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         program: rawUser.program || rawUser.course || matchedLocalUser.program || matchedLocalUser.course,
         institution: rawUser.institution || rawUser.school || matchedLocalUser.institution || matchedLocalUser.school,
         email: formData.email,
-        role: 'user' // I-set ang role as user
+        role: 'user'
       };
 
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
@@ -120,7 +115,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           onLoginSuccess(fallbackMatchedUser);
         }
       } else {
-        // Kung pati sa localstorage ay hindi nag-match ang email at password
         alert("Invalid email or password!");
       }
     } finally {
@@ -130,7 +124,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
   const inputStyle = {
     width: '100%',
-    padding: '14px 45px 14px 18px',
+    padding: '14px 45px 14px 45px',
     borderRadius: '12px',
     border: '1px solid rgba(56, 189, 248, 0.3)',
     background: isDarkMode ? 'rgba(11, 19, 41, 0.6)' : 'rgba(248, 250, 252, 0.8)',
@@ -148,6 +142,11 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
     color: isDarkMode ? '#94a3b8' : '#64748b',
     marginBottom: '6px'
   };
+
+  // Naka-align na ngayon sa kasalukuyang mode:
+  const currentUserIcon = isDarkMode ? userIconDark : userIconLight;
+  const currentLockIcon = isDarkMode ? lockIconDark : lockIconLight;
+  const currentThemeIcon = isDarkMode ? moonIcon : sunIcon; 
 
   return (
     <div style={{
@@ -191,6 +190,13 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         .interactive-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+        .theme-toggle-btn {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .theme-toggle-btn:hover {
+          transform: scale(1.05);
+          border-color: rgba(56, 189, 248, 0.5) !important;
         }
         .loading-spinner {
           width: 18px;
@@ -250,24 +256,38 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
             ))}
           </div>
 
+          {/* Theme Toggle Button */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="nav-link"
+            className="theme-toggle-btn"
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#94a3b8',
+              background: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.9)',
+              border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(2, 132, 199, 0.2)',
+              color: isDarkMode ? '#38bdf8' : '#0284c7',
               cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: '600',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              padding: '6px 14px',
+              borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              whiteSpace: 'nowrap'
+              gap: '6px',
+              whiteSpace: 'nowrap',
+              boxShadow: isDarkMode ? '0 2px 10px rgba(56, 189, 248, 0.15)' : '0 2px 10px rgba(2, 132, 199, 0.15)'
             }}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            <img 
+              src={currentThemeIcon} 
+              alt="Theme Icon" 
+              style={{
+                width: '16px',
+                height: '16px',
+                objectFit: 'contain'
+              }} 
+            />
+            {/* Kapag Dark mode, 'Dark' ang text. Kapag Light mode, 'Light' ang text. */}
+            <span>{isDarkMode ? 'Dark' : 'Light'}</span>
           </button>
 
           <button
@@ -338,18 +358,37 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
             
+            {/* Email Field with User Icon */}
             <div>
               <label style={labelStyle}>Email Address *</label>
-              <input
-                type="email"
-                required
-                placeholder="name@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                style={inputStyle}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="email"
+                  required
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  style={inputStyle}
+                />
+                <img 
+                  src={currentUserIcon} 
+                  alt="User Icon" 
+                  style={{
+                    position: 'absolute',
+                    left: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '18px',
+                    height: '18px',
+                    objectFit: 'contain',
+                    pointerEvents: 'none',
+                    opacity: 0.85
+                  }}
+                />
+              </div>
             </div>
 
+            {/* Password Field with Lock Icon & Show/Hide Button */}
             <div>
               <label style={labelStyle}>Password *</label>
               <div style={{ position: 'relative' }}>
@@ -360,6 +399,21 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   style={inputStyle}
+                />
+                <img 
+                  src={currentLockIcon} 
+                  alt="Lock Icon" 
+                  style={{
+                    position: 'absolute',
+                    left: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '18px',
+                    height: '18px',
+                    objectFit: 'contain',
+                    pointerEvents: 'none',
+                    opacity: 0.85
+                  }}
                 />
                 <button
                   type="button"
