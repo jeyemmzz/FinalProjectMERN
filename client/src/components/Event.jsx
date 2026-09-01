@@ -98,11 +98,47 @@ export default function Event({
     setSelectedEvent(null);
   };
 
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault();
-    // Handles registration logic
-    setIsRegistered(true);
-  };
+const [isSubmitting, setIsSubmitting] = useState(false); // Add this near your other state declarations
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // 1. Prepare the data payload
+    const payload = {
+      eventId: selectedEvent.id, // Ensure your event object has an 'id' or '_id'
+      userType: userType,
+      name: registrationData.name,
+      email: registrationData.email,
+      studentId: userType === 'student' ? registrationData.studentId : null,
+      userId: currentUser ? currentUser.id : null // Optional: link to logged-in user
+    };
+
+    try {
+      // 2. Send the POST request to your backend
+      // Note: Adjust the URL to match your actual backend endpoint for registrations
+      const response = await fetch('http://localhost:5000/api/register-event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      // 3. Handle the server response
+      if (response.ok) {
+        setIsRegistered(true); // Show success message
+      } else {
+        const errorData = await response.json();
+        alert(`Registration failed: ${errorData.message || 'Please try again.'}`);
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert('A network error occurred. Please make sure the server is running.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filteredEvents = eventsList.filter(ev => {
     const categoryMatch = ev.category || ev.type || 'Seminar';
@@ -474,18 +510,20 @@ export default function Event({
                 )}
 
                 <button
-                  type="submit"
-                  className="submit-btn"
-                  style={{
-                    padding: '10px',
-                    fontSize: '0.85rem',
-                    marginTop: '8px',
-                    fontWeight: '700',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Confirm Registration
-                </button>
+                  type="submit"
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                  style={{
+                    padding: '10px',
+                    fontSize: '0.85rem',
+                    marginTop: '8px',
+                    fontWeight: '700',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: isSubmitting ? 0.7 : 1
+                  }}
+                >
+                  {isSubmitting ? 'Confirming...' : 'Confirm Registration'}
+                </button>
               </form>
             )}
 
