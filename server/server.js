@@ -21,6 +21,15 @@ mongoose.connect(MONGO_URI)
 // Routes
 app.use('/api/auth', authRoutes);
 
+// --- STUDENT SCHEMA & MODEL (Para sa Validation) ---
+const studentSchema = new mongoose.Schema({
+  studentId: { type: String, required: true, unique: true },
+  name: String,
+  email: String
+});
+
+const Student = mongoose.model('Student', studentSchema);
+
 // --- REGISTRATION SCHEMA & MODEL ---
 const registrationSchema = new mongoose.Schema({
   eventId: String,
@@ -108,47 +117,47 @@ app.delete('/api/events/:id', (req, res) => {
 });
 
 
-// --- REGISTRATION ROUTES (MDB PERSISTENT) ---
+// --- REGISTRATION ROUTES (MDB PERSISTENT WITH STUDENT ID VALIDATION) ---
+
+// Helper function para sa Student ID validation logic
+const processRegistration = async (req, res) => {
+  try {
+    const { studentId, userType } = req.body;
+
+    // Kung ang nagre-register ay Student, i-validate natin kung existing ba ang studentId sa database
+    if (userType === 'Student' || studentId) {
+      if (!studentId) {
+        return res.status(400).json({ error: 'Student ID is required for student registration.' });
+      }
+
+      const validStudent = await Student.findOne({ studentId: studentId });
+      if (!validStudent) {
+        return res.status(400).json({ error: 'Invalid Student ID. Only authorized student IDs are allowed to register.' });
+      }
+    }
+
+    const newRegistration = new Registration({
+      ...req.body,
+      status: 'Pending'
+    });
+    
+    await newRegistration.save();
+    
+    res.status(201).json({ 
+      message: 'Registration saved successfully!', 
+      registration: newRegistration 
+    });
+  } catch (error) {
+    console.error('Error saving registration:', error);
+    res.status(500).json({ error: 'Server error while saving registration' });
+  }
+};
 
 // A. POST: Tinugma sa tinatawag ng Event.jsx (/api/register-event)
-app.post('/api/register-event', async (req, res) => {
-  try {
-    const newRegistration = new Registration({
-      ...req.body,
-      status: 'Pending'
-    });
-    
-    await newRegistration.save();
-    
-    res.status(201).json({ 
-      message: 'Registration saved successfully!', 
-      registration: newRegistration 
-    });
-  } catch (error) {
-    console.error('Error saving registration:', error);
-    res.status(500).json({ error: 'Server error while saving registration' });
-  }
-});
+app.post('/api/register-event', processRegistration);
 
 // Alternative endpoint
-app.post('/api/registrations', async (req, res) => {
-  try {
-    const newRegistration = new Registration({
-      ...req.body,
-      status: 'Pending'
-    });
-    
-    await newRegistration.save();
-    
-    res.status(201).json({ 
-      message: 'Registration saved successfully!', 
-      registration: newRegistration 
-    });
-  } catch (error) {
-    console.error('Error saving registration:', error);
-    res.status(500).json({ error: 'Server error while saving registration' });
-  }
-});
+app.post('/api/registrations', processRegistration);
 
 // B. GET: Kunin ang mga registrations mula sa Database
 app.get('/api/registrations', async (req, res) => {

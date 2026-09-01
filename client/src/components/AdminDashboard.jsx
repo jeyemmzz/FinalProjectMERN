@@ -179,31 +179,20 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     }
   };
 
-  // Fixed/Updated Reject/Decline Handler to match typical backend endpoints
   const handleRejectRegistration = async (id) => {
     if (!window.confirm('Are you sure you want to reject/remove this registration request?')) return;
 
     try {
-      // Trying the /reject route first; if your backend expects DELETE, change method to 'DELETE' and url to `http://localhost:5000/api/registrations/${id}`
-      let response = await fetch(`http://localhost:5000/api/registrations/${id}/reject`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await fetch(`http://localhost:5000/api/registrations/${id}`, {
+        method: 'DELETE'
       });
+      if (!response.ok) throw new Error('Failed to remove registration.');
 
-      // Fallback fallback if route uses DELETE
-      if (!response.ok) {
-        response = await fetch(`http://localhost:5000/api/registrations/${id}`, {
-          method: 'DELETE'
-        });
-      }
-
-      if (!response.ok) throw new Error('Failed to reject registration.');
-
-      alert('Registration request rejected successfully.');
+      alert('Registration request removed.');
       await fetchRegistrations();
     } catch (error) {
       console.error('Error rejecting registration:', error);
-      alert('Failed to reject registration from database.');
+      alert('Failed to reject registration.');
     }
   };
 
@@ -651,3 +640,5 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     </div>
   );
 }
+
+
