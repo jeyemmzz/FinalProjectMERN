@@ -19,6 +19,9 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
   
   const [animateIn, setAnimateIn] = useState(false);
 
+  // State para sa Navbar: true = nasa gitna (expanded), false = naka-collapse na bilog sa kaliwa na may ☰
+  const [isNavExpanded, setIsNavExpanded] = useState(true);
+
   // Form states
   const [formData, setFormData] = useState({
     name: '',
@@ -222,124 +225,181 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         }
       `}</style>
 
-      {/* Navbar */}
+      {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
       <nav style={{
         width: '100%',
         padding: '20px 40px',
+        boxSizing: 'border-box',
+        position: 'relative',
+        height: '70px',
         display: 'flex',
-        justifyContent: 'center',
-        boxSizing: 'border-box'
+        alignItems: 'center'
       }}>
-        <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '20px',
-          padding: '10px 24px',
-          background: isDarkMode ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(16px)',
-          borderRadius: '9999px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-          border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.05)',
-          flexWrap: 'nowrap'
-        }}>
-          <span 
-            onClick={onNavigateHome}
-            className="nav-link"
-            style={{ fontSize: '1rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            Syntax <span style={{ color: '#38bdf8' }}>4</span>
-          </span>
-
-          <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }}>|</span>
-
-          <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
-            {[
-              { name: 'Home', action: onNavigateHome },
-              { name: 'Events', action: onNavigateEvents },
-              { name: 'About', action: onNavigateAbout }
-            ].map((link) => (
+        <div 
+          className={`animated-wrapper ${animateIn ? 'active' : ''}`}
+          style={{
+            position: 'absolute',
+            left: isNavExpanded ? '50%' : '40px',
+            transform: isNavExpanded ? 'translateX(-50%)' : 'translateX(0)',
+            width: isNavExpanded ? 'auto' : '48px',
+            height: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isNavExpanded ? 'flex-start' : 'center',
+            gap: isNavExpanded ? '16px' : '0px',
+            padding: isNavExpanded ? '10px 24px' : '0px',
+            background: isDarkMode ? 'rgba(17, 24, 39, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: isNavExpanded ? '9999px' : '50%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(0,0,0,0.1)',
+            overflow: 'hidden',
+            transition: 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), width 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.6s cubic-bezier(0.16, 1, 0.3, 1), padding 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            cursor: !isNavExpanded ? 'pointer' : 'default',
+            zIndex: 10
+          }}
+          onClick={() => {
+            if (!isNavExpanded) setIsNavExpanded(true);
+          }}
+          title={!isNavExpanded ? "Click to open Navigation Menu" : ""}
+        >
+          {isNavExpanded ? (
+            <>
+              {/* Logo / Title */}
               <span 
-                key={link.name}
-                onClick={link.action}
+                onClick={onNavigateHome}
                 className="nav-link"
-                style={{ color: '#94a3b8', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                style={{ fontSize: '1rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
-                {link.name}
+                Syntax <span style={{ color: '#38bdf8' }}>4</span>
               </span>
-            ))}
-          </div>
 
-          {/* Theme Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="theme-toggle-btn"
-            style={{
-              background: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.9)',
-              border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(2, 132, 199, 0.2)',
-              color: isDarkMode ? '#38bdf8' : '#0284c7',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
+              <div style={{ width: '1px', height: '16px', background: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)', flexShrink: 0 }}></div>
+
+              {/* Nav Links */}
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span onClick={onNavigateHome} className="nav-link" style={{ cursor: 'pointer', color: '#94a3b8', fontWeight: '600', fontSize: '0.9rem' }}>
+                  Home
+                </span>
+                <span onClick={onNavigateEvents} className="nav-link" style={{ cursor: 'pointer', color: '#94a3b8', fontWeight: '600', fontSize: '0.9rem' }}>
+                  Events
+                </span>
+                <span onClick={onNavigateAbout} className="nav-link" style={{ cursor: 'pointer', color: '#94a3b8', fontWeight: '600', fontSize: '0.9rem' }}>
+                  About
+                </span>
+              </div>
+
+              <div style={{ width: '1px', height: '18px', background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', flexShrink: 0 }}></div>
+
+              {/* Theme Toggle Button */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="theme-toggle-btn"
+                style={{
+                  background: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.9)',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(2, 132, 199, 0.3)',
+                  color: isDarkMode ? '#38bdf8' : '#0284c7',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: '700',
+                  padding: '6px 14px',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: isDarkMode ? '0 2px 10px rgba(56, 189, 248, 0.15)' : '0 2px 10px rgba(2, 132, 199, 0.15)'
+                }}
+              >
+                <img 
+                  src={currentThemeIcon} 
+                  alt="Theme Icon" 
+                  style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+                />
+                <span>{isDarkMode ? 'Dark' : 'Light'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onSwitchToLogin}
+                className="interactive-btn"
+                style={{
+                  background: isDarkMode ? 'rgba(31, 41, 55, 0.8)' : '#e2e8f0',
+                  color: isDarkMode ? '#ffffff' : '#0f172a',
+                  border: 'none',
+                  padding: '6px 16px',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Login
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => e.preventDefault()}
+                className="interactive-btn"
+                style={{
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '6px 16px',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  boxShadow: '0 4px 15px rgba(29, 78, 216, 0.4)',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Register
+              </button>
+
+              {/* Collapse Button (✕) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsNavExpanded(false);
+                }}
+                title="Collapse menu"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  padding: '4px 8px',
+                  marginLeft: '4px',
+                  borderRadius: '50%',
+                  whiteSpace: 'nowrap'
+                }}
+                className="nav-link"
+              >
+                ✕
+              </button>
+            </>
+          ) : (
+            /* Tatlong linya (☰ Hamburger Menu) kapag naka-collapse */
+            <div style={{
+              fontSize: '1.25rem',
               fontWeight: '700',
-              padding: '6px 14px',
-              borderRadius: '9999px',
+              color: '#38bdf8',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap',
-              boxShadow: isDarkMode ? '0 2px 10px rgba(56, 189, 248, 0.15)' : '0 2px 10px rgba(2, 132, 199, 0.15)'
-            }}
-          >
-            <img 
-              src={currentThemeIcon} 
-              alt="Theme Icon" 
-              style={{
-                width: '16px',
-                height: '16px',
-                objectFit: 'contain'
-              }} 
-            />
-            <span>{isDarkMode ? 'Dark' : 'Light'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onSwitchToLogin}
-            className="interactive-btn"
-            style={{
-              background: isDarkMode ? 'rgba(31, 41, 55, 0.8)' : '#e2e8f0',
-              color: isDarkMode ? '#ffffff' : '#0f172a',
-              border: 'none',
-              padding: '8px 18px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.9rem',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Login
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => e.preventDefault()}
-            className="interactive-btn"
-            style={{
-              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-              color: '#ffffff',
-              border: 'none',
-              padding: '8px 20px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              fontWeight: '700',
-              fontSize: '0.9rem',
-              boxShadow: '0 4px 15px rgba(29, 78, 216, 0.4)',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Register
-          </button>
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
+              lineHeight: 1
+            }}>
+              ☰
+            </div>
+          )}
         </div>
       </nav>
 
