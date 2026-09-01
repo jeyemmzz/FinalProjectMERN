@@ -218,7 +218,7 @@ export default function Event({
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center', whiteSpace: 'nowrap' }}>
                 {currentUser ? (
                   <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
-                    Dashboard
+                    Profile
                   </span>
                 ) : (
                   <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
