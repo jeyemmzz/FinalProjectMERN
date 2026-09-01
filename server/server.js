@@ -12,7 +12,6 @@ app.use(express.json());
 app.use(cors());
 
 // --- MONGODB CONNECTION ---
-// Palitan ang URI kung gumagamit ka ng MongoDB Atlas o iba pang local connection string
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/campusevents';
 
 mongoose.connect(MONGO_URI)
@@ -21,6 +20,23 @@ mongoose.connect(MONGO_URI)
 
 // Routes
 app.use('/api/auth', authRoutes);
+
+// --- REGISTRATION SCHEMA & MODEL ---
+const registrationSchema = new mongoose.Schema({
+  eventId: String,
+  eventTitle: String,
+  eventDate: String,
+  eventVenue: String,
+  userType: String,
+  name: String,
+  email: String,
+  studentId: String,
+  userId: String,
+  status: { type: String, default: 'Pending' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Registration = mongoose.model('Registration', registrationSchema);
 
 // --- IN-MEMORY EVENTS ARRAY ---
 let eventsList = [
@@ -41,9 +57,6 @@ let eventsList = [
     description: 'Annual technology summit and networking.' 
   }
 ];
-
-// --- IN-MEMORY REGISTRATIONS ARRAY ---
-let registrationsList = [];
 
 // 1. GET (Read All Events)
 app.get('/api/events', (req, res) => {
@@ -95,63 +108,87 @@ app.delete('/api/events/:id', (req, res) => {
 });
 
 
-// --- REGISTRATION ROUTES ---
+// --- REGISTRATION ROUTES (MDB PERSISTENT) ---
 
 // A. POST: Tinugma sa tinatawag ng Event.jsx (/api/register-event)
-app.post('/api/register-event', (req, res) => {
-  const newRegistration = {
-    _id: 'reg_' + Date.now(),
-    ...req.body,
-    createdAt: new Date()
-  };
-  
-  registrationsList.push(newRegistration);
-  res.status(201).json({ 
-    message: 'Registration saved successfully!', 
-    registration: newRegistration 
-  });
+app.post('/api/register-event', async (req, res) => {
+  try {
+    const newRegistration = new Registration({
+      ...req.body,
+      status: 'Pending'
+    });
+    
+    await newRegistration.save();
+    
+    res.status(201).json({ 
+      message: 'Registration saved successfully!', 
+      registration: newRegistration 
+    });
+  } catch (error) {
+    console.error('Error saving registration:', error);
+    res.status(500).json({ error: 'Server error while saving registration' });
+  }
 });
 
 // Alternative endpoint
-app.post('/api/registrations', (req, res) => {
-  const newRegistration = {
-    _id: 'reg_' + Date.now(),
-    ...req.body,
-    createdAt: new Date()
-  };
-  
-  registrationsList.push(newRegistration);
-  res.status(201).json({ 
-    message: 'Registration saved successfully!', 
-    registration: newRegistration 
-  });
+app.post('/api/registrations', async (req, res) => {
+  try {
+    const newRegistration = new Registration({
+      ...req.body,
+      status: 'Pending'
+    });
+    
+    await newRegistration.save();
+    
+    res.status(201).json({ 
+      message: 'Registration saved successfully!', 
+      registration: newRegistration 
+    });
+  } catch (error) {
+    console.error('Error saving registration:', error);
+    res.status(500).json({ error: 'Server error while saving registration' });
+  }
 });
 
-// B. GET: Kunin ang mga registrations
-app.get('/api/registrations', (req, res) => {
-  const { email } = req.query;
-  
-  if (email) {
-    const userRegs = registrationsList.filter(r => r.email && r.email.toLowerCase() === email.toLowerCase());
-    return res.json(userRegs);
+// B. GET: Kunin ang mga registrations mula sa Database
+app.get('/api/registrations', async (req, res) => {
+  try {
+    const { email } = req.query;
+    let query = {};
+    
+    if (email) {
+      query.email = { $regex: new RegExp('^' + email + '$', 'i') };
+    }
+    
+    const registrationsList = await Registration.find(query);
+    res.json(registrationsList);
+  } catch (error) {
+    console.error('Error fetching registrations:', error);
+    res.status(500).json({ error: 'Server error while fetching registrations' });
   }
-  
-  res.json(registrationsList);
 });
 
 // C. PUT: I-approve ng Admin ang pending registration
-app.put('/api/registrations/:id/approve', (req, res) => {
-  const regId = req.params.id;
-  const index = registrationsList.findIndex(r => r._id === regId || r.id == regId);
-  
-  if (index !== -1) {
-    registrationsList[index].status = 'Confirmed';
-    res.json({ 
-      message: 'Registration approved successfully!', 
-      registration: registrationsList[index] 
-    });
-  } else {
-    res.status(404).json({ error: 'Registration not found' });
+app.put('/api/registrations/:id/approve', async (req, res) => {
+  try {
+    const regId = req.params.id;
+    const updatedReg = await Registration.findByIdAndUpdate(
+      regId, 
+      { status: 'Confirmed' }, 
+      { new: true }
+    );
+    
+    if (updatedReg) {
+      res.json({ 
+        message: 'Registration approved successfully!', 
+        registration: updatedReg 
+      });
+    } else {
+      res.status(404).json({ error: 'Registration not found' });
+    }
+  } catch (error) {
+    console.error('Error approving registration:', error);
+    res.status(500).json({ error: 'Server error while approving registration' });
   }
 });
 

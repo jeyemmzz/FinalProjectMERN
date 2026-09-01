@@ -179,20 +179,31 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     }
   };
 
+  // Fixed/Updated Reject/Decline Handler to match typical backend endpoints
   const handleRejectRegistration = async (id) => {
     if (!window.confirm('Are you sure you want to reject/remove this registration request?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/registrations/${id}`, {
-        method: 'DELETE'
+      // Trying the /reject route first; if your backend expects DELETE, change method to 'DELETE' and url to `http://localhost:5000/api/registrations/${id}`
+      let response = await fetch(`http://localhost:5000/api/registrations/${id}/reject`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
       });
-      if (!response.ok) throw new Error('Failed to remove registration.');
 
-      alert('Registration request removed.');
+      // Fallback fallback if route uses DELETE
+      if (!response.ok) {
+        response = await fetch(`http://localhost:5000/api/registrations/${id}`, {
+          method: 'DELETE'
+        });
+      }
+
+      if (!response.ok) throw new Error('Failed to reject registration.');
+
+      alert('Registration request rejected successfully.');
       await fetchRegistrations();
     } catch (error) {
       console.error('Error rejecting registration:', error);
-      alert('Failed to reject registration.');
+      alert('Failed to reject registration from database.');
     }
   };
 
@@ -326,7 +337,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                             border: '1px solid var(--auth-border-color)',
                             display: 'flex',
                             flexDirection: 'column',
-                            justify: 'space-between',
+                            justifyContent: 'space-between',
                             boxSizing: 'border-box'
                           }}
                         >
@@ -412,7 +423,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                             border: '1px solid var(--auth-border-color)',
                             display: 'flex',
                             flexDirection: 'column',
-                            justify: 'space-between',
+                            justifyContent: 'space-between',
                             boxSizing: 'border-box'
                           }}
                         >
