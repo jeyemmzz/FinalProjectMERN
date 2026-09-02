@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import sunIcon from '../assets/sun-fill (1).png';
 import moonIcon from '../assets/moon-fill (2).png';
+import couponIcon from '../assets/coupon-2-fill.png';
+import gradCapDark from '../assets/graduation-cap-line (1).png';
+import gradCapLight from '../assets/graduation-cap-line (2).png';
+import userIconDark from '../assets/user-3-line.png';
+import userIconLight from '../assets/user-3-line (1).png';
 import '../styles/Auth.css';
 
 export default function Event({ 
@@ -25,11 +30,14 @@ export default function Event({
 
   // Modal & Registration States
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
   const [userType, setUserType] = useState('student'); // 'student' or 'non-student'
   const [registrationData, setRegistrationData] = useState({ name: '', email: '', studentId: '' });
   const [isRegistered, setIsRegistered] = useState(false);
+  const [existingStatus, setExistingStatus] = useState(null); // tracks existing reg status
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationError, setRegistrationError] = useState('');
+  const [existingRegistrations, setExistingRegistrations] = useState([]); // user's registrations cache
 
   // Theme initialization, session check, at pag-fetch ng events
   useEffect(() => {
@@ -43,12 +51,18 @@ export default function Event({
       try {
         const parsedUser = JSON.parse(storedUserData);
         setCurrentUser(parsedUser);
-        // Pre-fill user data if logged in
         setRegistrationData(prev => ({
           ...prev,
           name: parsedUser.name || parsedUser.username || '',
           email: parsedUser.email || ''
         }));
+        // Fetch this user's existing registrations for duplicate/status checks
+        if (parsedUser.email) {
+          fetch(`http://localhost:5000/api/registrations?email=${encodeURIComponent(parsedUser.email)}`)
+            .then(r => r.json())
+            .then(data => { if (Array.isArray(data)) setExistingRegistrations(data); })
+            .catch(() => {});
+        }
       } catch (e) {
         console.error("Error parsing currentUser from localStorage:", e);
       }
@@ -97,26 +111,59 @@ export default function Event({
   const handleOpenModal = (event) => {
     setSelectedEvent(event);
     setIsRegistered(false);
+    setExistingStatus(null);
     setRegistrationError('');
     setUserType('student');
-    if (currentUser) {
-      setRegistrationData(prev => ({
-        ...prev,
-        name: currentUser.name || currentUser.username || '',
-        email: currentUser.email || '',
-        studentId: ''
-      }));
+    if (!currentUser) {
+      setShowGuestPrompt(true);
+      return;
     }
+    setShowGuestPrompt(false);
+
+    // Check if this user already has a registration for this event
+    const eventId = String(event.id || event._id);
+    const existing = existingRegistrations.find(r => String(r.eventId) === eventId);
+    if (existing && existing.status !== 'Declined') {
+      // Show status instead of form — no re-registration allowed for Pending/Confirmed
+      setIsRegistered(true);
+      setExistingStatus(existing.status || 'Pending');
+      return;
+    }
+
+    setRegistrationData(prev => ({
+      ...prev,
+      name: currentUser.name || currentUser.username || '',
+      email: currentUser.email || '',
+      studentId: ''
+    }));
   };
 
   const handleCloseModal = () => {
     setSelectedEvent(null);
+    setShowGuestPrompt(false);
     setRegistrationError('');
   };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!selectedEvent) return;
+
+    // ── Student ID Validation ──
+    // If the logged-in user is a student, the ID they type must exactly match their account's student number
+    if (userType === 'student' && currentUser && currentUser.userType === 'student') {
+      const storedId = (currentUser.studentId || '').trim();
+      const enteredId = (registrationData.studentId || '').trim();
+      if (!enteredId) {
+        setRegistrationError('Please enter your Student ID Number to register.');
+        return;
+      }
+      if (enteredId !== storedId) {
+        setRegistrationError(
+          `❌ Incorrect Student ID. The ID you entered does not match your account (${storedId}). Please check and try again.`
+        );
+        return;
+      }
+    }
 
     setIsSubmitting(true);
 
@@ -142,8 +189,14 @@ export default function Event({
       });
 
       if (response.ok) {
+        const data = await response.json();
         setIsRegistered(true);
+        setExistingStatus(null); // fresh registration = Pending
         setRegistrationError('');
+        // Add to local existing registrations so duplicate check works on next modal open
+        if (data.registration) {
+          setExistingRegistrations(prev => [...prev.filter(r => String(r.eventId) !== String(payload.eventId)), data.registration]);
+        }
       } else {
         const errorData = await response.json();
         setRegistrationError(errorData.error || errorData.message || 'Registration failed. Please try again.');
@@ -155,6 +208,7 @@ export default function Event({
       setIsSubmitting(false);
     }
   };
+
 
   const filteredEvents = eventsList.filter(ev => {
     const categoryMatch = ev.category || ev.type || 'Seminar';
@@ -504,7 +558,6 @@ export default function Event({
               {selectedEvent.title}
             </h2>
 
-            {/* Modal Calendar Icon + Date */}
             <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -515,7 +568,6 @@ export default function Event({
               {selectedEvent.date}
             </p>
 
-            {/* Modal Map Pin Icon + Venue */}
             <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -530,18 +582,132 @@ export default function Event({
 
             <div style={{ width: '100%', height: '1px', background: 'var(--auth-border-color)', margin: '20px 0' }}></div>
 
-            {isRegistered ? (
-              <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.2rem' }}>🎉 Registration Successful!</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
-                  You are registered for <strong>{selectedEvent.title}</strong> as a {userType === 'student' ? 'Student' : 'Non-Student / Guest'}.
+            {/* ── GUEST PROMPT (not logged in) ── */}
+            {showGuestPrompt ? (
+              <div style={{ textAlign: 'center' }}>
+                <img
+                  src={couponIcon}
+                  alt="Event ticket"
+                  style={{ width: '52px', height: '52px', objectFit: 'contain', marginBottom: '10px' }}
+                />
+                <h3 style={{ color: 'var(--auth-text-main)', fontSize: '1.1rem', marginBottom: '8px', fontWeight: '700' }}>
+                  Create an account to register
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '22px', lineHeight: '1.5' }}>
+                  You need a free account to sign up for events.<br />
+                  Choose your account type below to get started.
                 </p>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {/* Student sign-up */}
+                  <button
+                    onClick={() => { handleCloseModal(); onNavigateSignup && onNavigateSignup('student'); }}
+                    style={{
+                      flex: 1,
+                      minWidth: '140px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(56, 189, 248, 0.5)',
+                      background: 'linear-gradient(135deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.05) 100%)',
+                      color: '#38bdf8',
+                      fontSize: '0.9rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <img
+                      src={isDarkMode ? gradCapDark : gradCapLight}
+                      alt="Student"
+                      style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+                    />
+                    Student
+                    <span style={{ fontSize: '0.72rem', color: 'var(--auth-text-muted)', fontWeight: '400' }}>Sign up with Student ID</span>
+                  </button>
+
+                  {/* Non-Student / Guest sign-up */}
+                  <button
+                    onClick={() => { handleCloseModal(); onNavigateSignup && onNavigateSignup('guest'); }}
+                    style={{
+                      flex: 1,
+                      minWidth: '140px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(139, 92, 246, 0.5)',
+                      background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)',
+                      color: '#a78bfa',
+                      fontSize: '0.9rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <img
+                      src={isDarkMode ? userIconDark : userIconLight}
+                      alt="Guest"
+                      style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+                    />
+                    Non-Student / Guest
+                    <span style={{ fontSize: '0.72rem', color: 'var(--auth-text-muted)', fontWeight: '400' }}>Sign up as a visitor</span>
+                  </button>
+                </div>
+
+                <p style={{ marginTop: '18px', fontSize: '0.82rem', color: 'var(--auth-text-muted)' }}>
+                  Already have an account?{' '}
+                  <span
+                    onClick={() => { handleCloseModal(); onNavigateLogin && onNavigateLogin(); }}
+                    style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    Log in here
+                  </span>
+                </p>
+              </div>
+
+            ) : isRegistered ? (
+              <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                {existingStatus === 'Declined' ? (
+                  <>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>❌</div>
+                    <h3 style={{ color: '#f43f5e', marginBottom: '8px', fontSize: '1.15rem' }}>Registration Declined</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.6' }}>
+                      Your registration for <strong>{selectedEvent?.title}</strong> was <span style={{ color: '#f43f5e', fontWeight: '700' }}>declined by the admin</span>.
+                      <br />Please contact the event organizer for more information.
+                    </p>
+                    <div style={{ marginTop: '14px', padding: '10px 14px', background: 'rgba(244, 63, 94, 0.08)', borderRadius: '10px', border: '1px dashed rgba(244, 63, 94, 0.3)', fontSize: '0.8rem', color: '#f43f5e' }}>
+                      You cannot re-register for this event.
+                    </div>
+                  </>
+                ) : existingStatus === 'Confirmed' || existingStatus === 'Approved' ? (
+                  <>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>✅</div>
+                    <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.15rem' }}>Already Confirmed!</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
+                      Your registration for <strong>{selectedEvent?.title}</strong> has been <span style={{ color: '#10b981', fontWeight: '700' }}>confirmed</span>. Check your dashboard for your digital receipt.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🎉</div>
+                    <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.2rem' }}>Registration Submitted!</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
+                      You are registered for <strong>{selectedEvent?.title}</strong>. Awaiting admin confirmation — check your dashboard for updates.
+                    </p>
+                  </>
+                )}
                 <button
                   onClick={handleCloseModal}
                   className="submit-btn"
                   style={{ marginTop: '20px', padding: '8px 20px', fontSize: '0.85rem', cursor: 'pointer' }}
                 >
-                  Done
+                  Close
                 </button>
               </div>
             ) : (
@@ -595,15 +761,7 @@ export default function Event({
                   required
                   value={registrationData.name}
                   onChange={(e) => setRegistrationData({ ...registrationData, name: e.target.value })}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--auth-border-color)',
-                    background: 'var(--auth-input-bg)',
-                    color: 'var(--auth-text-main)',
-                    fontSize: '0.85rem',
-                    outline: 'none'
-                  }}
+                  style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', fontSize: '0.85rem', outline: 'none' }}
                 />
 
                 <input
@@ -612,15 +770,7 @@ export default function Event({
                   required
                   value={registrationData.email}
                   onChange={(e) => setRegistrationData({ ...registrationData, email: e.target.value })}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--auth-border-color)',
-                    background: 'var(--auth-input-bg)',
-                    color: 'var(--auth-text-main)',
-                    fontSize: '0.85rem',
-                    outline: 'none'
-                  }}
+                  style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', fontSize: '0.85rem', outline: 'none' }}
                 />
 
                 {userType === 'student' && (
@@ -630,33 +780,12 @@ export default function Event({
                     required
                     value={registrationData.studentId}
                     onChange={(e) => setRegistrationData({ ...registrationData, studentId: e.target.value })}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--auth-border-color)',
-                      background: 'var(--auth-input-bg)',
-                      color: 'var(--auth-text-main)',
-                      fontSize: '0.85rem',
-                      outline: 'none'
-                    }}
+                    style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', fontSize: '0.85rem', outline: 'none' }}
                   />
                 )}
 
-
-                {/* Inline error message */}
                 {registrationError && (
-                  <div style={{
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    color: '#f87171',
-                    fontSize: '0.82rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
+                  <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', fontSize: '0.82rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     ⚠️ {registrationError}
                   </div>
                 )}
@@ -665,14 +794,7 @@ export default function Event({
                   type="submit"
                   className="submit-btn"
                   disabled={isSubmitting}
-                  style={{
-                    padding: '10px',
-                    fontSize: '0.85rem',
-                    marginTop: '8px',
-                    fontWeight: '700',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    opacity: isSubmitting ? 0.7 : 1
-                  }}
+                  style={{ padding: '10px', fontSize: '0.85rem', marginTop: '8px', fontWeight: '700', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
                 >
                   {isSubmitting ? 'Confirming...' : 'Confirm Registration'}
                 </button>

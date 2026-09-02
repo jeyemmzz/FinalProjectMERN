@@ -177,34 +177,28 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
   };
 
   const handleConfirmRegistration = async (id) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/registrations/${id}/approve`, {
-        method: 'PUT'
-      });
-      if (!response.ok) throw new Error('Failed to confirm registration.');
+    // Remove card from admin list immediately
+    setRegistrations(prev => prev.filter(r => (r._id || r.id) != id));
 
-      alert('Registration confirmed successfully!');
-      await fetchRegistrations();
+    // Best-effort server sync — don't re-fetch (in-memory server resets on restart)
+    try {
+      await fetch(`http://localhost:5000/api/registrations/${id}/approve`, { method: 'PUT' });
     } catch (error) {
-      console.error('Error confirming registration:', error);
-      alert('Failed to update registration status.');
+      console.error('Error confirming registration on server:', error);
     }
   };
 
   const handleRejectRegistration = async (id) => {
-    if (!window.confirm('Are you sure you want to reject/remove this registration request?')) return;
+    if (!window.confirm('Are you sure you want to decline this registration request?')) return;
 
+    // Remove card from admin list immediately
+    setRegistrations(prev => prev.filter(r => (r._id || r.id) != id));
+
+    // Best-effort server sync — don't re-fetch (in-memory server resets on restart)
     try {
-      const response = await fetch(`http://localhost:5000/api/registrations/${id}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to remove registration.');
-
-      alert('Registration request removed.');
-      await fetchRegistrations();
+      await fetch(`http://localhost:5000/api/registrations/${id}/reject`, { method: 'PUT' });
     } catch (error) {
-      console.error('Error rejecting registration:', error);
-      alert('Failed to reject registration.');
+      console.error('Error declining registration on server:', error);
     }
   };
 
@@ -224,69 +218,26 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
 
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
 
-          <span
-            onClick={() => setActiveTab('manage-events')}
-            className="nav-item"
-            style={{
-              color: activeTab === 'manage-events' ? '#38bdf8' : 'var(--auth-text-muted)',
-              fontWeight: activeTab === 'manage-events' ? '600' : '400',
-              cursor: 'pointer'
-            }}
-          >
+          <span onClick={() => setActiveTab('manage-events')} className="nav-item" style={{ color: activeTab === 'manage-events' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'manage-events' ? '600' : '400', cursor: 'pointer' }}>
             Manage Events
           </span>
 
-          <span
-            onClick={() => setActiveTab('manage-registrations')}
-            className="nav-item"
-            style={{
-              color: activeTab === 'manage-registrations' ? '#38bdf8' : 'var(--auth-text-muted)',
-              fontWeight: activeTab === 'manage-registrations' ? '600' : '400',
-              cursor: 'pointer'
-            }}
-          >
-            Registrations ({registrations.filter(r => r.status === 'Pending').length})
+          <span onClick={() => setActiveTab('manage-registrations')} className="nav-item" style={{ color: activeTab === 'manage-registrations' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'manage-registrations' ? '600' : '400', cursor: 'pointer' }}>
+            Registrations ({registrations.filter(r => !r.status || r.status === 'Pending').length})
           </span>
 
-          <span
-            onClick={() => setActiveTab('analytics')}
-            className="nav-item"
-            style={{
-              color: activeTab === 'analytics' ? '#38bdf8' : 'var(--auth-text-muted)',
-              fontWeight: activeTab === 'analytics' ? '600' : '400',
-              cursor: 'pointer'
-            }}
-          >
+          <span onClick={() => setActiveTab('analytics')} className="nav-item" style={{ color: activeTab === 'analytics' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'analytics' ? '600' : '400', cursor: 'pointer' }}>
             System Overview
           </span>
 
           <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)' }}></div>
 
-          <button
-            className="nav-pill-btn"
-            onClick={toggleTheme}
-            style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <img 
-              src={isDarkMode ? moonIcon : sunIcon} 
-              alt="Theme Icon" 
-              style={{ width: '14px', height: '14px', objectFit: 'contain' }} 
-            />
+          <button className="nav-pill-btn" onClick={toggleTheme} style={{ border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <img src={isDarkMode ? moonIcon : sunIcon} alt="Theme Icon" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
             {isDarkMode ? 'Dark' : 'Light'}
           </button>
 
-          <button
-            className="nav-pill-btn register"
-            onClick={onLogout}
-            style={{
-              background: 'rgba(244, 63, 94, 0.15)',
-              color: '#f43f5e',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              padding: '6px 16px',
-              fontSize: '0.85rem',
-              cursor: 'pointer'
-            }}
-          >
+          <button className="nav-pill-btn register" onClick={onLogout} style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}>
             Logout
           </button>
         </div>
@@ -301,7 +252,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
           </div>
         ) : (
           <div className="auth-card-pro" style={{ maxWidth: '100%', padding: '40px', boxSizing: 'border-box' }}>
-            
+
             {/* TAB 1: MANAGE EVENTS */}
             {activeTab === 'manage-events' && (
               <div>
@@ -310,43 +261,17 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                     <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '0 0 6px 0' }}>Admin Control</h1>
                     <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Campus Events</p>
                   </div>
-                  <button
-                    onClick={handleOpenCreateModal}
-                    style={{
-                      background: '#38bdf8',
-                      color: '#0f172a',
-                      border: 'none',
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                      fontSize: '0.9rem',
-                      boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)'
-                    }}
-                  >
+                  <button onClick={handleOpenCreateModal} style={{ background: '#38bdf8', color: '#0f172a', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)' }}>
                     + Create New Event
                   </button>
                 </div>
 
-                {/* Events Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                   {events.length > 0 ? (
                     events.map((evt) => {
                       const eventId = evt._id || evt.id;
                       return (
-                        <div
-                          key={eventId}
-                          style={{
-                            background: 'var(--auth-input-bg)',
-                            padding: '24px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--auth-border-color)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            boxSizing: 'border-box'
-                          }}
-                        >
+                        <div key={eventId} style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                               <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
@@ -364,37 +289,11 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                             </p>
                             <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-muted)', lineHeight: '1.4', marginBottom: '20px' }}>{evt.description}</p>
                           </div>
-
-                          {/* Action Buttons */}
                           <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button
-                              onClick={() => handleOpenEditModal(evt)}
-                              style={{
-                                background: 'rgba(56, 189, 248, 0.15)',
-                                color: '#38bdf8',
-                                border: '1px solid rgba(56, 189, 248, 0.3)',
-                                padding: '6px 14px',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                fontSize: '0.8rem'
-                              }}
-                            >
+                            <button onClick={() => handleOpenEditModal(evt)} style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}>
                               Edit
                             </button>
-                            <button
-                              onClick={() => handleDeleteEvent(eventId)}
-                              style={{
-                                background: 'rgba(244, 63, 94, 0.15)',
-                                color: '#f43f5e',
-                                border: '1px solid rgba(244, 63, 94, 0.3)',
-                                padding: '6px 14px',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                fontSize: '0.8rem'
-                              }}
-                            >
+                            <button onClick={() => handleDeleteEvent(eventId)} style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}>
                               Delete
                             </button>
                           </div>
@@ -413,113 +312,73 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
             {/* TAB 2: MANAGE REGISTRATIONS */}
             {activeTab === 'manage-registrations' && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
-                  <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '0 0 6px 0' }}>Student Approvals</h1>
-                    <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Review and confirm event participation requests.</p>
-                  </div>
+                <div style={{ marginBottom: '30px' }}>
+                  <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--auth-text-main)', margin: '0 0 6px 0' }}>Event Registrations</h1>
+                  <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted)', margin: 0 }}>Review and confirm pending event participation requests.</p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-                  {registrations.length > 0 ? (
-                    registrations.map((reg) => {
-                      const regId = reg._id || reg.id;
-                      const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
-                      return (
-                        <div
-                          key={regId}
-                          style={{
-                            background: 'var(--auth-input-bg)',
-                            padding: '24px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--auth-border-color)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            boxSizing: 'border-box'
-                          }}
-                        >
-                          <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                              <span style={{ 
-                                backgroundColor: isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)', 
-                                color: isConfirmed ? '#10b981' : '#eab308', 
-                                padding: '3px 10px', 
-                                borderRadius: '6px', 
-                                fontSize: '0.75rem', 
-                                fontWeight: '600' 
-                              }}>
-                                {reg.status || 'Pending'}
-                              </span>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <img src={isDarkMode ? infoDark : infoLight} alt="Student ID" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
-                                {reg.studentId || 'N/A'}
-                              </span>
-                            </div>
-                            
-                            <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '4px', fontWeight: '600' }}>
-                              {reg.name || reg.studentName || 'Student'}
-                            </h3>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                              <img src={isDarkMode ? userDark : userLight} alt="Email" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
-                              {reg.email || reg.studentEmail}
-                            </p>
-                            <p style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '500', marginBottom: '4px' }}>Event: {reg.eventTitle || reg.title}</p>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <img src={isDarkMode ? calendarDark : calendarLight} alt="Date" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
-                                {reg.eventDate || reg.date}
-                              </span>
-                              <span>|</span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <img src={isDarkMode ? mapPinDark : mapPinLight} alt="Venue" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
-                                {reg.venue || reg.location || 'N/A'}
-                              </span>
-                            </p>
-                          </div>
+                  {registrations.filter(r => !r.status || r.status === 'Pending').length > 0 ? (
+                    registrations
+                      .filter(r => !r.status || r.status === 'Pending')
+                      .map((reg) => {
+                        const regId = reg._id || reg.id;
+                        return (
+                          <div key={regId} style={{ background: 'var(--auth-input-bg)', padding: '24px', borderRadius: '12px', border: '1px solid var(--auth-border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '6px' }}>
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                  <span style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', color: '#eab308', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
+                                    Pending
+                                  </span>
+                                  {reg.userType === 'student' ? (
+                                    <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.35)', padding: '3px 9px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700' }}>
+                                      🎓 Student
+                                    </span>
+                                  ) : (
+                                    <span style={{ backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#a78bfa', border: '1px solid rgba(139, 92, 246, 0.35)', padding: '3px 9px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700' }}>
+                                      👤 Non-Student / Guest
+                                    </span>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                  <img src={isDarkMode ? infoDark : infoLight} alt="ID" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
+                                  {reg.studentId || 'N/A'}
+                                </span>
+                              </div>
 
-                          {/* Action Buttons */}
-                          <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                            {!isConfirmed ? (
-                              <>
-                                <button
-                                  onClick={() => handleRejectRegistration(regId)}
-                                  style={{
-                                    background: 'rgba(244, 63, 94, 0.15)',
-                                    color: '#f43f5e',
-                                    border: '1px solid rgba(244, 63, 94, 0.3)',
-                                    padding: '6px 12px',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    fontSize: '0.8rem'
-                                  }}
-                                >
-                                  Reject
-                                </button>
-                                <button
-                                  onClick={() => handleConfirmRegistration(regId)}
-                                  style={{
-                                    background: 'rgba(16, 185, 129, 0.15)',
-                                    color: '#10b981',
-                                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                                    padding: '6px 16px',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    fontSize: '0.8rem'
-                                  }}
-                                >
-                                  ✅ Confirm Registration
-                                </button>
-                              </>
-                            ) : (
-                              <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: '600' }}>Already Confirmed</span>
-                            )}
+                              <h3 style={{ fontSize: '1.15rem', color: 'var(--auth-text-main)', marginBottom: '4px', fontWeight: '600' }}>
+                                {reg.name || reg.studentName || 'Student'}
+                              </h3>
+                              <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <img src={isDarkMode ? userDark : userLight} alt="Email" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
+                                {reg.email || reg.studentEmail}
+                              </p>
+                              <p style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '500', marginBottom: '4px' }}>Event: {reg.eventTitle || reg.title}</p>
+                              <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <img src={isDarkMode ? calendarDark : calendarLight} alt="Date" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
+                                  {reg.eventDate || reg.date}
+                                </span>
+                                <span>|</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <img src={isDarkMode ? mapPinDark : mapPinLight} alt="Venue" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
+                                  {reg.eventVenue || reg.venue || reg.location || 'N/A'}
+                                </span>
+                              </p>
+                            </div>
+
+                            <div style={{ borderTop: '1px solid var(--auth-border-color)', paddingTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                              <button onClick={() => handleRejectRegistration(regId)} style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}>
+                                Decline
+                              </button>
+                              <button onClick={() => handleConfirmRegistration(regId)} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}>
+                                ✅ Confirm Registration
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
                   ) : (
                     <div style={{ gridColumn: '1 / -1', padding: '50px', textAlign: 'center', background: 'var(--auth-input-bg)', borderRadius: '12px', border: '1px dashed var(--auth-border-color)' }}>
                       <p style={{ color: 'var(--auth-text-muted)', margin: 0 }}>No pending registrations found.</p>
@@ -559,36 +418,8 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
 
       {/* CREATE / EDIT EVENT MODAL */}
       {isModalOpen && (
-        <div
-          onClick={handleCloseModal}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-            padding: '20px',
-            boxSizing: 'border-box'
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'var(--auth-card-bg, #1e293b)',
-              border: '1px solid var(--auth-border-color)',
-              padding: '30px',
-              borderRadius: '16px',
-              width: '100%',
-              maxWidth: '500px',
-              boxSizing: 'border-box',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-            }}
-          >
+        <div onClick={handleCloseModal} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0, 0, 0, 0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--auth-card-bg, #1e293b)', border: '1px solid var(--auth-border-color)', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '500px', boxSizing: 'border-box', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
             <h2 style={{ color: 'var(--auth-text-main)', fontSize: '1.4rem', marginBottom: '20px', fontWeight: '600' }}>
               {isEditing ? 'Edit Event' : 'Create Event'}
             </h2>
@@ -596,24 +427,13 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Event Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Web Development Bootcamp"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
-                />
+                <input type="text" required placeholder="e.g. Web Development Bootcamp" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Type</label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
-                  >
+                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}>
                     <option value="Workshop">Workshop</option>
                     <option value="Seminar">Seminar</option>
                     <option value="Competition">Competition</option>
@@ -622,63 +442,25 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    style={{ 
-                      width: '100%', 
-                      padding: '10px 14px', 
-                      borderRadius: '8px', 
-                      border: '1px solid var(--auth-border-color)', 
-                      background: 'var(--auth-input-bg)', 
-                      color: 'var(--auth-text-main)', 
-                      boxSizing: 'border-box', 
-                      outline: 'none',
-                      colorScheme: isDarkMode ? 'dark' : 'light' 
-                    }}
-                  />
+                  <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none', colorScheme: isDarkMode ? 'dark' : 'light' }} />
                 </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Venue *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Lab 402 / Main Auditorium"
-                  value={formData.venue}
-                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }}
-                />
+                <input type="text" required placeholder="e.g. Lab 402 / Main Auditorium" value={formData.venue} onChange={(e) => setFormData({ ...formData, venue: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none' }} />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '6px' }}>Description</label>
-                <textarea
-                  rows="3"
-                  placeholder="Short description of the event..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none', resize: 'vertical' }}
-                />
+                <textarea rows="3" placeholder="Short description of the event..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', boxSizing: 'border-box', outline: 'none', resize: 'vertical' }} />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  disabled={isSubmitting}
-                  style={{ background: 'transparent', color: 'var(--auth-text-muted)', border: '1px solid var(--auth-border-color)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
-                >
+                <button type="button" onClick={handleCloseModal} disabled={isSubmitting} style={{ background: 'transparent', color: 'var(--auth-text-muted)', border: '1px solid var(--auth-border-color)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{ background: '#38bdf8', color: '#0f172a', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', opacity: isSubmitting ? 0.7 : 1 }}
-                >
+                <button type="submit" disabled={isSubmitting} style={{ background: '#38bdf8', color: '#0f172a', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', opacity: isSubmitting ? 0.7 : 1 }}>
                   {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Event'}
                 </button>
               </div>

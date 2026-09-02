@@ -60,6 +60,12 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+/* Home page: image background, gradient handled by overlay div */
+.auth-page-wrapper.home-bg {
+  background: none;
+  animation: pageSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Astig at Smooth Page Transition Animation */
 @keyframes pageSlideUp {
   0% {

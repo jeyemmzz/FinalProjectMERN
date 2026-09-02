@@ -10,7 +10,8 @@ const lockIconLight = new URL('../assets/lock-line (1).png', import.meta.url).hr
 const moonIcon = new URL('../assets/moon-fill (2).png', import.meta.url).href;
 const sunIcon = new URL('../assets/sun-fill (1).png', import.meta.url).href;
 
-export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
+export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout, signupType }) {
+  const isStudent = signupType === 'student';
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -26,6 +27,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    studentNumber: '',
     password: '',
     confirmPassword: ''
   });
@@ -61,10 +63,11 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: 'user', 
-        studentId: 'N/A',
+        role: 'user',
+        studentId: isStudent ? formData.studentNumber : 'N/A',
+        userType: isStudent ? 'student' : 'non-student',
         program: 'N/A',
-        institution: 'General Public'
+        institution: isStudent ? 'University' : 'General Public'
       };
 
       const response = await fetch('http://localhost:5000/api/auth/signup', {
@@ -85,9 +88,10 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         ...data,
         fullName: formData.name,
         name: formData.name,
-        studentId: 'N/A',
+        studentId: isStudent ? formData.studentNumber : (data.studentId || 'N/A'),
+        userType: isStudent ? 'student' : 'non-student',
         program: 'N/A',
-        institution: 'General Public',
+        institution: isStudent ? 'University' : 'General Public',
         email: formData.email,
         role: 'user'
       };
@@ -115,9 +119,10 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         ...formData,
         fullName: formData.name,
         name: formData.name,
-        studentId: 'N/A',
+        studentId: isStudent ? formData.studentNumber : 'N/A',
+        userType: isStudent ? 'student' : 'non-student',
         program: 'N/A',
-        institution: 'General Public',
+        institution: isStudent ? 'University' : 'General Public',
         email: formData.email,
         role: 'user'
       };
@@ -423,9 +428,16 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
           width: '100%'
         }}>
           
+          {/* Title — changes based on signup type */}
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Create Account</h1>
-            <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Register your profile credentials directly to the database</p>
+            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
+              {isStudent ? 'Student Sign Up' : 'Create Account'}
+            </h1>
+            <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>
+              {isStudent
+                ? 'Register with your student credentials'
+                : 'Register your profile credentials directly to the database'}
+            </p>
           </div>
 
           <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -493,6 +505,40 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
               </div>
 
             </div>
+
+            {/* Student Number Field — only shown for student signup */}
+            {isStudent && (
+              <div>
+                <label style={labelStyle}>Student Number *</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 2024-10234"
+                    value={formData.studentNumber}
+                    onChange={(e) => setFormData({ ...formData, studentNumber: e.target.value })}
+                    style={inputStyle}
+                  />
+                  <img
+                    src={isDarkMode
+                      ? new URL('../assets/graduation-cap-line (1).png', import.meta.url).href
+                      : new URL('../assets/graduation-cap-line (2).png', import.meta.url).href}
+                    alt="Student Number"
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      opacity: 0.85
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               

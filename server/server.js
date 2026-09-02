@@ -102,8 +102,14 @@ const processRegistration = (req, res) => {
     });
 
     if (alreadyRegisteredByEmail) {
-      console.log('[REGISTER] BLOCKED - duplicate email+event:', normalizedEmail, normalizedEventId);
-      return res.status(409).json({ error: 'You are already registered for this event.' });
+      // If the previous registration was Declined, remove it and allow re-registration
+      if (alreadyRegisteredByEmail.status === 'Declined') {
+        registrationsList = registrationsList.filter(r => r !== alreadyRegisteredByEmail);
+        console.log('[REGISTER] Removed old declined registration, allowing re-register.');
+      } else {
+        console.log('[REGISTER] BLOCKED - duplicate email+event:', normalizedEmail, normalizedEventId);
+        return res.status(409).json({ error: 'You are already registered for this event.' });
+      }
     }
 
     // Additional check by studentId
@@ -113,7 +119,7 @@ const processRegistration = (req, res) => {
         const rEventId = String(r.eventId).trim();
         return rStudentId === studentId.trim() && rEventId === normalizedEventId;
       });
-      if (alreadyRegisteredById) {
+      if (alreadyRegisteredById && alreadyRegisteredById.status !== 'Declined') {
         console.log('[REGISTER] BLOCKED - duplicate studentId+event:', studentId, normalizedEventId);
         return res.status(409).json({ error: 'This Student ID is already registered for this event.' });
       }
@@ -189,6 +195,41 @@ app.put('/api/registrations/:id/approve', (req, res) => {
   }
 });
 
+
+app.put('/api/registrations/:id/reject', (req, res) => {
+  try {
+    const regId = req.params.id;
+    const reg = registrationsList.find(r => r._id == regId || r.id == regId);
+
+    if (reg) {
+      reg.status = 'Declined';
+      res.json({ message: 'Registration declined.', registration: reg });
+    } else {
+      res.status(404).json({ error: 'Registration not found' });
+    }
+  } catch (error) {
+    console.error('Error declining registration:', error);
+    res.status(500).json({ error: 'Server error while declining registration' });
+  }
+});
+
+app.delete('/api/registrations/:id', (req, res) => {
+  try {
+    const regId = req.params.id;
+    const index = registrationsList.findIndex(r => r._id == regId || r.id == regId);
+
+    if (index !== -1) {
+      const removed = registrationsList.splice(index, 1)[0];
+      console.log('[DELETE] Removed registration:', removed._id || removed.id);
+      res.json({ message: 'Registration removed successfully.' });
+    } else {
+      res.status(404).json({ error: 'Registration not found' });
+    }
+  } catch (error) {
+    console.error('Error removing registration:', error);
+    res.status(500).json({ error: 'Server error while removing registration' });
+  }
+});
 
 // --- SERVER START ---
 const PORT = process.env.PORT || 5000;

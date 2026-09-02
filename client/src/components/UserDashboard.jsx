@@ -25,7 +25,10 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     fetch(`http://localhost:5000/api/registrations?email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(regData => {
-        setMyRegistrations(Array.isArray(regData) ? regData : []);
+        if (Array.isArray(regData) && regData.length > 0) {
+          // Only update if server actually has data (in-memory server may restart with empty list)
+          setMyRegistrations(regData);
+        }
         setIsRegLoading(false);
       })
       .catch(err => {
@@ -60,7 +63,9 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
 
     if (currentUser) {
-      if (!currentUser.studentId || currentUser.studentId === 'N/A') {
+      // Only auto-generate an ID for non-student accounts that have no ID yet
+      const isStudentUser = currentUser.userType === 'student';
+      if (!isStudentUser && (!currentUser.studentId || currentUser.studentId === 'N/A')) {
         const generatedId = '2026-' + Math.floor(100000 + Math.random() * 900000);
         currentUser = { ...currentUser, studentId: generatedId };
 
@@ -101,9 +106,21 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
 
     window.addEventListener('focus', handleWindowFocus);
 
+    // 6. Poll every 5 seconds to pick up admin approve/decline changes
+    let pollingEmail = null;
+    const storedForPoll = localStorage.getItem('currentUser');
+    if (storedForPoll) {
+      const parsedForPoll = JSON.parse(storedForPoll);
+      pollingEmail = parsedForPoll?.email || null;
+    }
+    const pollInterval = pollingEmail
+      ? setInterval(() => fetchRegistrations(pollingEmail), 5000)
+      : null;
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener('focus', handleWindowFocus);
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [fetchRegistrations]);
 
@@ -343,6 +360,20 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
               }}>
                 {user?.role || 'Member'}
               </span>
+              {user?.userType === 'student' && (
+                <span style={{
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  color: '#10b981',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  padding: '4px 12px',
+                  borderRadius: '9999px',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  textTransform: 'uppercase'
+                }}>
+                  Student
+                </span>
+              )}
             </div>
             <p style={{ fontSize: '1rem', color: '#94a3b8', margin: '6px 0 0 0' }}>
               {user?.email || 'No email provided'}
@@ -358,7 +389,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
           marginBottom: '30px'
         }}>
           
-          {/* Account ID Card */}
+          {/* Account ID / Student Number Card */}
           <div className="info-card" style={{
             background: isDarkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(255, 255, 255, 0.7)',
             backdropFilter: 'blur(16px)',
@@ -368,7 +399,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
           }}>
             <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Account ID
+              {user?.userType === 'student' ? 'Student Number' : 'Account ID'}
             </span>
             <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#38bdf8', marginTop: '8px' }}>
               {user?.studentId || 'Loading...'}
@@ -413,6 +444,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             {myRegistrations.map((reg) => {
               const regId = reg._id || reg.id;
               const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
+              const isDeclined = reg.status === 'Declined';
               const rawIdStr = String(regId || '');
               const shortRegId = rawIdStr.length > 6 ? rawIdStr.slice(-6).toUpperCase() : rawIdStr || 'SYN-404';
 
@@ -424,9 +456,12 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                     backdropFilter: 'blur(16px)',
                     padding: '24px 28px',
                     borderRadius: '20px',
-                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
+                    border: isDeclined
+                      ? '1px solid rgba(244, 63, 94, 0.3)'
+                      : isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
                     boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                    position: 'relative'
+                    position: 'relative',
+                    opacity: isDeclined ? 0.8 : 1
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '10px' }}>
@@ -441,9 +476,13 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                       fontSize: '0.75rem',
                       fontWeight: '700',
                       whiteSpace: 'nowrap',
-                      background: isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                      color: isConfirmed ? '#10b981' : '#f59e0b',
-                      border: `1px solid ${isConfirmed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                      background: isConfirmed
+                        ? 'rgba(16, 185, 129, 0.15)'
+                        : isDeclined
+                        ? 'rgba(244, 63, 94, 0.15)'
+                        : 'rgba(245, 158, 11, 0.15)',
+                      color: isConfirmed ? '#10b981' : isDeclined ? '#f43f5e' : '#f59e0b',
+                      border: `1px solid ${isConfirmed ? 'rgba(16, 185, 129, 0.3)' : isDeclined ? 'rgba(244, 63, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px'
@@ -453,6 +492,8 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                           <img src={checkboxIcon} alt="Check" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
                           Confirmed
                         </>
+                      ) : isDeclined ? (
+                        '❌ Declined'
                       ) : (
                         '⏳ Pending Approval'
                       )}
@@ -479,6 +520,12 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                       </p>
                       <p style={{ fontSize: '0.8rem', color: isDarkMode ? '#e2e8f0' : '#334155', margin: 0, fontWeight: '600' }}>
                         Registration ID: #{shortRegId}
+                      </p>
+                    </div>
+                  ) : isDeclined ? (
+                    <div style={{ marginTop: '16px', padding: '10px', background: 'rgba(244, 63, 94, 0.08)', borderRadius: '12px', border: '1px dashed rgba(244, 63, 94, 0.3)' }}>
+                      <p style={{ fontSize: '0.78rem', color: '#f43f5e', margin: 0, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        ❌ Your registration for this event was declined by the admin. You may contact the organizer for more information.
                       </p>
                     </div>
                   ) : (

@@ -10,6 +10,7 @@ import './styles/Auth.css';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
+  const [signupType, setSignupType] = useState('guest'); // 'student' | 'guest'
 
   // Check if a session exists in localStorage
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -34,7 +35,7 @@ export default function App() {
       {currentView === 'home' && (
         <Home 
           onNavigateLogin={() => setCurrentView('login')} 
-          onNavigateSignup={() => setCurrentView('signup')}
+          onNavigateSignup={(type) => { setSignupType(type || 'guest'); setCurrentView('signup'); }}
           onNavigateAbout={() => setCurrentView('about')} 
           onNavigateEvents={() => setCurrentView('event')}
         />
@@ -59,6 +60,7 @@ export default function App() {
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateEvents={() => setCurrentView('event')}
           onSignupSuccess={handleRegisterSuccess}
+          signupType={signupType}
         />
       )}
       
@@ -77,7 +79,7 @@ export default function App() {
         <Event 
           onNavigateHome={() => setCurrentView(currentUser ? 'user-dashboard' : 'home')} 
           onNavigateLogin={() => setCurrentView('login')} 
-          onNavigateSignup={() => setCurrentView('signup')}
+          onNavigateSignup={(type) => { setSignupType(type || 'guest'); setCurrentView('signup'); }}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateDashboard={() => setCurrentView('user-dashboard')}
           onLogout={() => setCurrentView('home')}

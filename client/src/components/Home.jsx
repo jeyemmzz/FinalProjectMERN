@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import sunIcon from '../assets/sun-fill (1).png';
 import moonIcon from '../assets/moon-fill (2).png';
+import heroBg from '../assets/hero_bg.jpg';
 import '../styles/Auth.css';
 
 export default function Home({ 
@@ -66,7 +67,24 @@ export default function Home({
   };
 
   return (
-    <div className="auth-page-wrapper">
+    <div
+      className="auth-page-wrapper home-bg"
+      style={{
+        background: `url(${heroBg}) center / cover no-repeat fixed`,
+        position: 'relative',
+      }}
+    >
+      {/* Dark overlay for readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(0,15,34,0.82) 0%, rgba(27,53,84,0.75) 50%, rgba(15,35,66,0.85) 100%)'
+          : 'linear-gradient(135deg, rgba(15,35,66,0.70) 0%, rgba(37,70,112,0.65) 50%, rgba(0,15,34,0.75) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition: 'background 0.5s ease',
+      }} />
       
       {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
       <nav style={{
@@ -76,7 +94,8 @@ export default function Home({
         position: 'relative',
         height: '70px',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        zIndex: 10
       }}>
         <div 
           style={{
@@ -225,7 +244,7 @@ export default function Home({
         </div>
       </nav>
 
-      <div className="auth-container" style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+      <div className="auth-container" style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 1 }}>
         <div className="auth-brand-side" style={{ alignItems: 'center', maxWidth: '700px', margin: '0 auto' }}>
           {isPageLoading ? (
             <div style={{ width: '100%', padding: '20px' }}>
@@ -236,8 +255,8 @@ export default function Home({
             </div>
           ) : (
             <>
-              <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: 'var(--auth-text-main, #ffffff)' }}>Welcome to Event Management System</h1>
-              <p style={{ fontSize: '1.15rem', marginBottom: '35px', maxWidth: '600px', color: 'var(--auth-text-sub, #80aad3)' }}>
+              <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: '#ffffff', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>Welcome to Event Management System</h1>
+              <p style={{ fontSize: '1.15rem', marginBottom: '35px', maxWidth: '600px', color: '#bde0fe', textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>
                 Your ultimate portal for organizing university activities, seamless participant sign-ups, and streamlined institutional calendars.
               </p>
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -255,10 +274,12 @@ export default function Home({
                     width: 'auto', 
                     padding: '12px 28px', 
                     fontSize: '1rem', 
-                    background: isDarkMode ? 'rgba(56, 189, 248, 0.1)' : 'rgba(15, 35, 66, 0.08)', 
-                    color: isDarkMode ? '#38bdf8' : '#0f2342', 
-                    border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(15, 35, 66, 0.3)',
-                    cursor: 'pointer'
+                    background: 'rgba(56, 189, 248, 0.15)',
+                    color: '#bde0fe', 
+                    border: '1px solid rgba(56, 189, 248, 0.6)',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(4px)',
+                    fontWeight: '600',
                   }}
                 >
                   Explore Events
