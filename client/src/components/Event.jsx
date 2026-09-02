@@ -6,15 +6,16 @@ import gradCapDark from '../assets/graduation-cap-line (1).png';
 import gradCapLight from '../assets/graduation-cap-line (2).png';
 import userIconDark from '../assets/user-3-line.png';
 import userIconLight from '../assets/user-3-line (1).png';
+import heroBg from '../assets/hero_bg2.jpg';
 import '../styles/Auth.css';
 
-export default function Event({ 
-  onNavigateHome, 
-  onNavigateLogin, 
-  onNavigateSignup, 
+export default function Event({
+  onNavigateHome,
+  onNavigateLogin,
+  onNavigateSignup,
   onNavigateAbout,
   onNavigateDashboard,
-  onLogout 
+  onLogout
 }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -61,7 +62,7 @@ export default function Event({
           fetch(`http://localhost:5000/api/registrations?email=${encodeURIComponent(parsedUser.email)}`)
             .then(r => r.json())
             .then(data => { if (Array.isArray(data)) setExistingRegistrations(data); })
-            .catch(() => {});
+            .catch(() => { });
         }
       } catch (e) {
         console.error("Error parsing currentUser from localStorage:", e);
@@ -213,17 +214,34 @@ export default function Event({
   const filteredEvents = eventsList.filter(ev => {
     const categoryMatch = ev.category || ev.type || 'Seminar';
     const matchesCategory = selectedCategory === 'All' || categoryMatch === selectedCategory;
-    
+
     const titleMatch = ev.title || '';
     const venueMatch = ev.venue || ev.location || '';
-    const matchesSearch = titleMatch.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          venueMatch.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = titleMatch.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      venueMatch.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="auth-page-wrapper">
-      
+    <div
+      className="auth-page-wrapper image-bg"
+      style={{
+        background: `url(${heroBg}) center / cover no-repeat fixed`,
+        position: 'relative',
+      }}
+    >
+      {/* Dark overlay for readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(0,15,34,0.82) 0%, rgba(27,53,84,0.75) 50%, rgba(15,35,66,0.85) 100%)'
+          : 'linear-gradient(135deg, rgba(15,35,66,0.70) 0%, rgba(37,70,112,0.65) 50%, rgba(0,15,34,0.75) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition: 'background 0.5s ease',
+      }} />
+
       {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
       <nav style={{
         width: '100%',
@@ -232,9 +250,10 @@ export default function Event({
         position: 'relative',
         height: '70px',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        zIndex: 1
       }}>
-        <div 
+        <div
           style={{
             position: 'absolute',
             left: isNavExpanded ? '50%' : '40px',
@@ -287,7 +306,7 @@ export default function Event({
                 <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
                   Events
                 </span>
-                
+
                 <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>
                   About
                 </span>
@@ -299,8 +318,8 @@ export default function Event({
               <button
                 className="nav-pill-btn"
                 onClick={toggleTheme}
-                style={{ 
-                  border: '1px solid rgba(56, 189, 248, 0.3)', 
+                style={{
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -309,26 +328,26 @@ export default function Event({
                   whiteSpace: 'nowrap'
                 }}
               >
-                <img 
-                  src={isDarkMode ? moonIcon : sunIcon} 
-                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'} 
-                  style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+                <img
+                  src={isDarkMode ? moonIcon : sunIcon}
+                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                  style={{ width: '16px', height: '16px', objectFit: 'contain' }}
                 />
                 {isDarkMode ? 'Dark' : 'Light'}
               </button>
 
               {currentUser ? (
-                <button 
+                <button
                   className="interactive-btn"
                   onClick={handleLogoutClick}
-                  style={{ 
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    padding: '6px 18px', 
+                  style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '6px 18px',
                     borderRadius: '9999px',
-                    cursor: 'pointer', 
-                    fontSize: '0.85rem', 
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
                     fontWeight: '700',
                     boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
                     whiteSpace: 'nowrap'
@@ -337,16 +356,11 @@ export default function Event({
                   Logout
                 </button>
               ) : (
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-                  <button 
-                    onClick={onNavigateLogin}
-                    style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
-                  >
-                    Login
-                  </button>
+                <div style={{ display: 'flex', gap: '8px', whiteSpace: 'nowrap' }}>
+                  <button className="nav-pill-btn active" onClick={onNavigateLogin} style={{ cursor: 'pointer' }}>Login</button>
 
-                  <button 
-                    className="nav-pill-btn register" 
+                  <button
+                    className="nav-pill-btn register"
                     onClick={onNavigateSignup}
                     style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
                   >
@@ -400,10 +414,10 @@ export default function Event({
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1100px', width: '92%', margin: '40px auto', display: 'flex', flexDirection: 'column', gap: '25px' }}>
+      <div className="image-content" style={{ maxWidth: '1100px', width: '92%', margin: '40px auto', display: 'flex', flexDirection: 'column', gap: '25px', position: 'relative', zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)', marginBottom: '8px' }}>Campus Events</h1>
-          <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted, #80aad3)' }}>Explore upcoming university activities, workshops, and seminars.</p>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)', marginBottom: '8px' }}>Public Events</h1>
+          <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted, #80aad3)' }}>Your gateway to public seminars, programs, and interactive learning.</p>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
@@ -428,8 +442,8 @@ export default function Event({
             ))}
           </div>
 
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search events or venue..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -465,7 +479,7 @@ export default function Event({
 
                 <div>
                   <h3 style={{ fontSize: '1.2rem', color: 'var(--auth-text-main)', fontWeight: '700', marginBottom: '6px' }}>{ev.title}</h3>
-                  
+
                   {/* Calendar Icon + Date */}
                   <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -491,8 +505,8 @@ export default function Event({
                   )}
                 </div>
 
-                <button 
-                  className="submit-btn" 
+                <button
+                  className="submit-btn"
                   onClick={() => handleOpenModal(ev)}
                   style={{ padding: '10px', width: '100%', fontSize: '0.85rem', marginTop: '4px', cursor: 'pointer' }}
                 >
@@ -509,7 +523,7 @@ export default function Event({
       </div>
 
       {selectedEvent && (
-        <div 
+        <div
           style={{
             position: 'fixed',
             top: 0,
@@ -524,7 +538,7 @@ export default function Event({
             zIndex: 1000
           }}
         >
-          <div 
+          <div
             className="auth-card-pro"
             style={{
               width: '90%',
@@ -532,7 +546,13 @@ export default function Event({
               padding: '30px',
               position: 'relative',
               borderRadius: '16px',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              background: isDarkMode ? 'rgba(0, 15, 34, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+              color: isDarkMode ? '#ffffff' : '#0f2342',
+              '--auth-text-main': isDarkMode ? '#ffffff' : '#0f2342',
+              '--auth-text-muted': isDarkMode ? '#80aad3' : '#334e68',
+              '--auth-input-bg': isDarkMode ? 'rgba(0,15,34,0.6)' : 'rgba(240,244,248,0.9)',
+              '--auth-border-color': isDarkMode ? 'rgba(192,230,253,0.15)' : 'rgba(63,101,147,0.25)',
             }}
           >
             <button
@@ -575,7 +595,7 @@ export default function Event({
               </svg>
               {selectedEvent.venue || selectedEvent.location}
             </p>
-            
+
             <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-main)', margin: '15px 0', lineHeight: '1.5' }}>
               {selectedEvent.description || 'No additional details provided for this event.'}
             </p>
@@ -713,7 +733,7 @@ export default function Event({
             ) : (
               <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <h4 style={{ fontSize: '1rem', color: 'var(--auth-text-main)', margin: '0 0 5px 0' }}>Register for this Event</h4>
-                
+
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
                     type="button"

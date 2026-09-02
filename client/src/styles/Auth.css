@@ -60,10 +60,26 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* Home page: image background, gradient handled by overlay div */
-.auth-page-wrapper.home-bg {
+/* Home page / Image page: photo background, gradient handled by overlay div */
+.auth-page-wrapper.home-bg,
+.auth-page-wrapper.image-bg {
   background: none;
   animation: pageSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Force white text on image-backed pages regardless of light/dark theme */
+/* Only applied to the content area, NOT the nav, so nav pill uses theme colors correctly */
+.auth-page-wrapper.image-bg {
+  --auth-input-bg: rgba(0, 15, 34, 0.6);
+  --auth-border-color: rgba(192, 230, 253, 0.2);
+  --auth-card-bg: rgba(0, 15, 34, 0.65);
+}
+
+/* Applied to content containers on image-bg pages to force white/light text over dark overlay */
+.image-content {
+  --auth-text-main: #ffffff;
+  --auth-text-muted: #bde0fe;
+  --auth-text-sub: #c0e6fd;
 }
 
 /* Astig at Smooth Page Transition Animation */

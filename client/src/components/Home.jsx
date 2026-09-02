@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import sunIcon from '../assets/sun-fill (1).png';
 import moonIcon from '../assets/moon-fill (2).png';
-import heroBg from '../assets/hero_bg.jpg';
+import heroBg from '../assets/hero_bg2.jpg';
 import '../styles/Auth.css';
 
-export default function Home({ 
-  onNavigateLogin, 
-  onNavigateSignup, 
-  onNavigateAbout, 
+export default function Home({
+  onNavigateLogin,
+  onNavigateSignup,
+  onNavigateAbout,
   onNavigateEvents,
   onNavigateDashboard,
-  onLogout 
+  onLogout
 }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   // State para sa Navbar: true = nasa gitna (expanded), false = naka-collapse na bilog sa kaliwa
   const [isNavExpanded, setIsNavExpanded] = useState(true);
 
@@ -85,7 +85,7 @@ export default function Home({
         pointerEvents: 'none',
         transition: 'background 0.5s ease',
       }} />
-      
+
       {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
       <nav style={{
         width: '100%',
@@ -97,7 +97,7 @@ export default function Home({
         alignItems: 'center',
         zIndex: 10
       }}>
-        <div 
+        <div
           style={{
             position: 'absolute',
             left: isNavExpanded ? '50%' : '40px',
@@ -142,7 +142,7 @@ export default function Home({
                     Dashboard
                   </span>
                 )}
-                
+
                 <span className="nav-item" style={{ color: '#38bdf8', fontWeight: '600' }}>Home</span>
                 <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>Events</span>
                 <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>About</span>
@@ -151,11 +151,11 @@ export default function Home({
               <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)', flexShrink: 0 }}></div>
 
               {/* Theme Toggle Button with Custom Assets Icons */}
-              <button 
-                className="nav-pill-btn" 
+              <button
+                className="nav-pill-btn"
                 onClick={toggleTheme}
-                style={{ 
-                  border: '1px solid rgba(56, 189, 248, 0.3)', 
+                style={{
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -164,27 +164,27 @@ export default function Home({
                   whiteSpace: 'nowrap'
                 }}
               >
-                <img 
-                  src={isDarkMode ? moonIcon : sunIcon} 
-                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'} 
-                  style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+                <img
+                  src={isDarkMode ? moonIcon : sunIcon}
+                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                  style={{ width: '16px', height: '16px', objectFit: 'contain' }}
                 />
                 {isDarkMode ? 'Dark' : 'Light'}
               </button>
 
               {/* Conditional Actions based on Authentication */}
               {currentUser ? (
-                <button 
+                <button
                   className="interactive-btn"
                   onClick={handleLogoutClick}
-                  style={{ 
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    padding: '6px 18px', 
+                  style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '6px 18px',
                     borderRadius: '9999px',
-                    cursor: 'pointer', 
-                    fontSize: '0.85rem', 
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
                     fontWeight: '700',
                     boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
                     whiteSpace: 'nowrap'
@@ -255,27 +255,27 @@ export default function Home({
             </div>
           ) : (
             <>
-              <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: '#ffffff', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>Welcome to Event Management System</h1>
+              <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: '#ffffff', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>Connecting People Through Events</h1>
               <p style={{ fontSize: '1.15rem', marginBottom: '35px', maxWidth: '600px', color: '#bde0fe', textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>
-                Your ultimate portal for organizing university activities, seamless participant sign-ups, and streamlined institutional calendars.
+                A powerful platform designed for public conferences, community programs, and effortless registrations—connecting organizers with attendees from all walks of life to deliver seamless and engaging experiences.
               </p>
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button 
-                  onClick={currentUser ? onNavigateDashboard : onNavigateLogin} 
+                <button
+                  onClick={currentUser ? onNavigateDashboard : onNavigateLogin}
                   className="submit-btn"
                   style={{ width: 'auto', padding: '12px 28px', fontSize: '1rem', cursor: 'pointer' }}
                 >
                   {currentUser ? 'Go to Dashboard' : 'Get Started'}
                 </button>
-                <button 
-                  onClick={onNavigateEvents} 
+                <button
+                  onClick={onNavigateEvents}
                   className="submit-btn"
-                  style={{ 
-                    width: 'auto', 
-                    padding: '12px 28px', 
-                    fontSize: '1rem', 
+                  style={{
+                    width: 'auto',
+                    padding: '12px 28px',
+                    fontSize: '1rem',
                     background: 'rgba(56, 189, 248, 0.15)',
-                    color: '#bde0fe', 
+                    color: '#bde0fe',
                     border: '1px solid rgba(56, 189, 248, 0.6)',
                     cursor: 'pointer',
                     backdropFilter: 'blur(4px)',

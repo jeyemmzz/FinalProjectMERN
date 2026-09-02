@@ -9,15 +9,16 @@ import lockIconLight from '../assets/lock-2-line.png';
 import lockIconDark from '../assets/lock-2-line (1).png';
 import brushIconLight from '../assets/brush-2-fill.png';
 import brushIconDark from '../assets/brush-2-fill (1).png';
+import heroBg from '../assets/hero_bg2.jpg';
 import '../styles/Auth.css';
 
-export default function About({ 
-  onNavigateHome, 
-  onNavigateLogin, 
-  onNavigateSignup, 
+export default function About({
+  onNavigateHome,
+  onNavigateLogin,
+  onNavigateSignup,
   onNavigateEvents,
   onNavigateDashboard,
-  onLogout 
+  onLogout
 }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -74,15 +75,32 @@ export default function About({
     }
   };
 
-  // Dynamic Icon Selection based on theme mode
-  const currentFlashlight = isDarkMode ? flashlightIconDark : flashlightIconLight;
-  const currentCalendar = isDarkMode ? calendarIconDark : calendarIconLight;
-  const currentLock = isDarkMode ? lockIconDark : lockIconLight;
-  const currentBrush = isDarkMode ? brushIconDark : brushIconLight;
+  // Always use dark-mode (white/light) icons since cards always have dark bg on image pages
+  const currentFlashlight = flashlightIconDark;
+  const currentCalendar = calendarIconDark;
+  const currentLock = lockIconDark;
+  const currentBrush = brushIconDark;
 
   return (
-    <div className="auth-page-wrapper">
-      
+    <div
+      className="auth-page-wrapper image-bg"
+      style={{
+        background: `url(${heroBg}) center / cover no-repeat fixed`,
+        position: 'relative',
+      }}
+    >
+      {/* Dark overlay for readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(0,15,34,0.82) 0%, rgba(27,53,84,0.75) 50%, rgba(15,35,66,0.85) 100%)'
+          : 'linear-gradient(135deg, rgba(15,35,66,0.70) 0%, rgba(37,70,112,0.65) 50%, rgba(0,15,34,0.75) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition: 'background 0.5s ease',
+      }} />
+
       {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
       <nav style={{
         width: '100%',
@@ -91,9 +109,10 @@ export default function About({
         position: 'relative',
         height: '70px',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        zIndex: 1
       }}>
-        <div 
+        <div
           style={{
             position: 'absolute',
             left: isNavExpanded ? '50%' : '40px',
@@ -158,8 +177,8 @@ export default function About({
               <button
                 className="nav-pill-btn"
                 onClick={toggleTheme}
-                style={{ 
-                  border: '1px solid rgba(56, 189, 248, 0.3)', 
+                style={{
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -168,26 +187,26 @@ export default function About({
                   whiteSpace: 'nowrap'
                 }}
               >
-                <img 
-                  src={isDarkMode ? moonIcon : sunIcon} 
-                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'} 
-                  style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+                <img
+                  src={isDarkMode ? moonIcon : sunIcon}
+                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                  style={{ width: '16px', height: '16px', objectFit: 'contain' }}
                 />
                 {isDarkMode ? 'Dark' : 'Light'}
               </button>
 
               {currentUser ? (
-                <button 
+                <button
                   className="interactive-btn"
                   onClick={handleLogoutClick}
-                  style={{ 
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    padding: '6px 18px', 
+                  style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '6px 18px',
                     borderRadius: '9999px',
-                    cursor: 'pointer', 
-                    fontSize: '0.85rem', 
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
                     fontWeight: '700',
                     boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
                     whiteSpace: 'nowrap'
@@ -196,16 +215,11 @@ export default function About({
                   Logout
                 </button>
               ) : (
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-                  <button 
-                    onClick={onNavigateLogin}
-                    style={{ background: 'none', border: 'none', color: 'var(--auth-text-main)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}
-                  >
-                    Login
-                  </button>
+                <div style={{ display: 'flex', gap: '8px', whiteSpace: 'nowrap' }}>
+                  <button className="nav-pill-btn active" onClick={onNavigateLogin} style={{ cursor: 'pointer' }}>Login</button>
 
-                  <button 
-                    className="nav-pill-btn register" 
+                  <button
+                    className="nav-pill-btn register"
                     onClick={onNavigateSignup}
                     style={{ padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
                   >
@@ -259,7 +273,7 @@ export default function About({
         </div>
       </nav>
 
-      <div className="auth-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '50px 20px', flexDirection: 'column' }}>
+      <div className="auth-container image-content" style={{ justifyContent: 'center', alignItems: 'center', padding: '50px 20px', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
         <div className="auth-card-pro" style={{ maxWidth: '800px', width: '100%', textAlign: 'left', padding: '50px', boxSizing: 'border-box' }}>
           {isPageLoading ? (
             <div>
@@ -272,19 +286,19 @@ export default function About({
             <>
               <h2 style={{ fontSize: '2.2rem', marginBottom: '16px', color: 'var(--auth-text-main)', letterSpacing: '-0.025em', fontWeight: '700' }}>About the System</h2>
               <p className="auth-subtitle" style={{ fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '30px', color: 'var(--auth-text-muted)' }}>
-                The <strong style={{ color: 'var(--auth-text-main)' }}>Syntax4 Event System</strong> is an enterprise-grade institutional portal engineered to optimize campus activity management, enhance participant tracking, and streamline administrative workflows with absolute reliability.
+                The <strong style={{ color: 'var(--auth-text-main)' }}>Syntax4 Event System</strong> is an enterprise-grade portal engineered to bring that vision to life. Designed for public conferences, community programs, and effortless registrations, the platform bridges the gap between event organizers and attendees from all walks of life—streamlining scheduling, tracking participation, and delivering seamless, engaging experiences with absolute reliability.
               </p>
 
               <div style={{ background: 'var(--auth-input-bg)', padding: '25px', borderRadius: '14px', border: '1px solid rgba(56, 189, 248, 0.15)', marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '1.2rem', color: '#38bdf8', marginBottom: '10px', fontWeight: '600' }}>Our Mission & Purpose</h3>
+                <h3 style={{ fontSize: '1.2rem', color: '#38bdf8', marginBottom: '10px', fontWeight: '600' }}>Our Vision & Mission</h3>
                 <p style={{ fontSize: '0.92rem', color: 'var(--auth-text-sub)', lineHeight: '1.6' }}>
-                  To bridge the gap between administrators, organizers, and participants by providing a centralized, secure, and lightning-fast digital platform that eliminates traditional paperwork and scheduling conflicts.
+                  Empowering administrators, organizers, and participants with a seamless, high-performance platform that resolves scheduling conflicts and removes traditional paperwork entirely.
                 </p>
               </div>
 
               <h3 style={{ fontSize: '1.2rem', color: 'var(--auth-text-main)', marginBottom: '16px', fontWeight: '600' }}>Core Capabilities</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '35px' }}>
-                
+
                 {/* Real-Time Attendance */}
                 <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
                   <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -319,6 +333,61 @@ export default function About({
                     Modern Glass UI
                   </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Sleek, dark-themed frosted glass design optimized for any device screen.</p>
+                </div>
+
+                {/* Seamless Registration */}
+                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                    </svg>
+                    Seamless Registration
+                  </h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Quick and effortless event sign-up for attendees — no paperwork, no hassle, just a few clicks.</p>
+                </div>
+
+                {/* Public Event Discovery */}
+                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Public Event Discovery
+                  </h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Browse and search upcoming public conferences, community programs, workshops, and seminars with ease.</p>
+                </div>
+
+                {/* Attendee Management */}
+                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    Attendee Management
+                  </h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Organizers can monitor registrations, view participant lists, and manage attendees efficiently in real time.</p>
+                </div>
+
+                {/* Multi-Category Events */}
+                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Multi-Category Events
+                  </h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Supports Seminars, Workshops, Competitions, and Meetings — all organized and filterable in one unified platform.</p>
+                </div>
+
+                {/* Organizer Dashboard */}
+                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
+                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                    </svg>
+                    Organizer Dashboard
+                  </h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>A powerful admin panel to create, edit, and manage events with full control over schedules, venues, and capacities.</p>
                 </div>
 
               </div>
