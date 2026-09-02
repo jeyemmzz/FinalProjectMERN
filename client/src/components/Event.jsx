@@ -29,6 +29,7 @@ export default function Event({
   const [registrationData, setRegistrationData] = useState({ name: '', email: '', studentId: '' });
   const [isRegistered, setIsRegistered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
 
   // Theme initialization, session check, at pag-fetch ng events
   useEffect(() => {
@@ -96,6 +97,7 @@ export default function Event({
   const handleOpenModal = (event) => {
     setSelectedEvent(event);
     setIsRegistered(false);
+    setRegistrationError('');
     setUserType('student');
     if (currentUser) {
       setRegistrationData(prev => ({
@@ -109,6 +111,7 @@ export default function Event({
 
   const handleCloseModal = () => {
     setSelectedEvent(null);
+    setRegistrationError('');
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -140,13 +143,14 @@ export default function Event({
 
       if (response.ok) {
         setIsRegistered(true);
+        setRegistrationError('');
       } else {
         const errorData = await response.json();
-        alert(`Registration failed: ${errorData.message || 'Please try again.'}`);
+        setRegistrationError(errorData.error || errorData.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      alert('A network error occurred. Please make sure the server is running.');
+      setRegistrationError('A network error occurred. Please make sure the server is running.');
     } finally {
       setIsSubmitting(false);
     }
@@ -547,7 +551,7 @@ export default function Event({
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
                     type="button"
-                    onClick={() => setUserType('student')}
+                    onClick={() => { setUserType('student'); setRegistrationError(''); }}
                     style={{
                       flex: 1,
                       padding: '8px',
@@ -567,6 +571,7 @@ export default function Event({
                     onClick={() => {
                       setUserType('non-student');
                       setRegistrationData(prev => ({ ...prev, studentId: '' }));
+                      setRegistrationError('');
                     }}
                     style={{
                       flex: 1,
@@ -635,6 +640,25 @@ export default function Event({
                       outline: 'none'
                     }}
                   />
+                )}
+
+
+                {/* Inline error message */}
+                {registrationError && (
+                  <div style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    color: '#f87171',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    ⚠️ {registrationError}
+                  </div>
                 )}
 
                 <button
