@@ -314,27 +314,71 @@ export default function Event({
 
               <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)', flexShrink: 0 }}></div>
 
-              {/* Theme Toggle Button with Asset Icons */}
-              <button
-                className="nav-pill-btn"
+              {/* Theme Toggle Switch */}
+              <div
                 onClick={toggleTheme}
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 style={{
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.85rem',
-                  whiteSpace: 'nowrap'
+                  gap: '7px',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <img
-                  src={isDarkMode ? moonIcon : sunIcon}
-                  alt={isDarkMode ? 'Dark Mode' : 'Light Mode'}
-                  style={{ width: '16px', height: '16px', objectFit: 'contain' }}
-                />
-                {isDarkMode ? 'Dark' : 'Light'}
-              </button>
+                {/* Track */}
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '48px',
+                    height: '26px',
+                    borderRadius: '999px',
+                    background: isDarkMode
+                      ? 'rgba(56, 189, 248, 0.18)'
+                      : 'rgba(251, 191, 36, 0.22)',
+                    border: isDarkMode
+                      ? '1px solid rgba(56, 189, 248, 0.35)'
+                      : '1px solid rgba(251, 191, 36, 0.45)',
+                    transition: 'background 0.3s, border-color 0.3s',
+                    boxSizing: 'border-box',
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Thumb */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: isDarkMode ? 'calc(100% - 22px)' : '3px',
+                      transform: 'translateY(-50%)',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: isDarkMode
+                        ? 'rgba(56, 189, 248, 0.85)'
+                        : 'rgba(251, 191, 36, 0.9)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: isDarkMode
+                        ? '0 0 6px rgba(56,189,248,0.5)'
+                        : '0 0 6px rgba(251,191,36,0.5)',
+                      transition: 'left 0.3s cubic-bezier(.4,0,.2,1), background 0.3s, box-shadow 0.3s',
+                    }}
+                  >
+                    <img
+                      src={isDarkMode ? moonIcon : sunIcon}
+                      alt={isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                      style={{ width: '11px', height: '11px', objectFit: 'contain' }}
+                    />
+                  </div>
+                </div>
+                {/* Label */}
+                <span style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)', letterSpacing: '0.02em' }}>
+                  {isDarkMode ? 'Dark' : 'Light'}
+                </span>
+              </div>
 
               {currentUser ? (
                 <button
