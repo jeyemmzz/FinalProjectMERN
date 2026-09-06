@@ -12,17 +12,55 @@ export default function App() {
   const [currentView, setCurrentView] = useState('home');
   const [signupType, setSignupType] = useState('guest'); // 'student' | 'guest'
 
-  // Check if a session exists in localStorage
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  // Check and store active session in React state
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || 'null');
+    } catch {
+      return null;
+    }
+  });
 
-  // Redirects to login page after successful registration
-  const handleRegisterSuccess = () => {
-    alert("Account registered");
-    setCurrentView('login');
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    setCurrentUser(null);
+    setCurrentView('home');
+  };
+
+  // After successful registration/account creation, set user and go to profile/dashboard
+  const handleRegisterSuccess = (registeredUser) => {
+    alert("Account registered successfully!");
+    if (registeredUser) {
+      setCurrentUser(registeredUser);
+    } else {
+      try {
+        const stored = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (stored) setCurrentUser(stored);
+      } catch {}
+    }
+    setCurrentView('user-dashboard');
   };
 
   // Handles login routing based on role
-  const handleLoginSuccess = (role) => {
+  const handleLoginSuccess = (userDataOrRole) => {
+    let role = 'user';
+    if (typeof userDataOrRole === 'string') {
+      role = userDataOrRole;
+      try {
+        const stored = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (stored) setCurrentUser(stored);
+      } catch {}
+    } else if (userDataOrRole?.role) {
+      role = userDataOrRole.role;
+      setCurrentUser(userDataOrRole);
+    } else {
+      try {
+        const stored = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (stored) setCurrentUser(stored);
+      } catch {}
+    }
+
     if (role === 'admin') {
       setCurrentView('admin-dashboard');
     } else {
@@ -34,10 +72,14 @@ export default function App() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {currentView === 'home' && (
         <Home 
+          currentUser={currentUser}
+          onNavigateHome={() => setCurrentView('home')}
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={(type) => { setSignupType(type || 'guest'); setCurrentView('signup'); }}
           onNavigateAbout={() => setCurrentView('about')} 
           onNavigateEvents={() => setCurrentView('event')}
+          onNavigateDashboard={() => setCurrentView('user-dashboard')}
+          onLogout={handleLogout}
         />
       )}
       
@@ -66,37 +108,40 @@ export default function App() {
       
       {currentView === 'about' && (
         <About 
-          onNavigateHome={() => setCurrentView(currentUser ? 'user-dashboard' : 'home')} 
+          onNavigateHome={() => setCurrentView('home')} 
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={() => setCurrentView('signup')} 
           onNavigateEvents={() => setCurrentView('event')}
           onNavigateDashboard={() => setCurrentView('user-dashboard')}
-          onLogout={() => setCurrentView('home')}
+          onLogout={handleLogout}
         />
       )}
 
       {currentView === 'event' && (
         <Event 
-          onNavigateHome={() => setCurrentView(currentUser ? 'user-dashboard' : 'home')} 
+          onNavigateHome={() => setCurrentView('home')} 
           onNavigateLogin={() => setCurrentView('login')} 
           onNavigateSignup={(type) => { setSignupType(type || 'guest'); setCurrentView('signup'); }}
           onNavigateAbout={() => setCurrentView('about')}
           onNavigateDashboard={() => setCurrentView('user-dashboard')}
-          onLogout={() => setCurrentView('home')}
+          onLogout={handleLogout}
         />
       )}
 
       {currentView === 'user-dashboard' && (
         <UserDashboard 
-          onLogout={() => setCurrentView('home')}
-          onNavigateHome={() => setCurrentView('user-dashboard')}
-          onNavigateEvents={() => setCurrentView('event')}  
+          user={currentUser}
+          onLogout={handleLogout}
+          onNavigateHome={() => setCurrentView('home')}
+          onNavigateEvents={() => setCurrentView('event')}
+          onNavigateAbout={() => setCurrentView('about')}  
         />
       )}
 
       {currentView === 'admin-dashboard' && (
         <AdminDashboard 
-          onLogout={() => setCurrentView('home')} 
+          onLogout={handleLogout} 
+          onNavigateHome={() => setCurrentView('home')}
         />
       )}
     </div>

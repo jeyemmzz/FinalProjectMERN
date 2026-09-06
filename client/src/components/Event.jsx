@@ -150,19 +150,39 @@ export default function Event({
     if (!selectedEvent) return;
 
     // ── Student ID Validation ──
-    // If the logged-in user is a student, the ID they type must exactly match their account's student number
-    if (userType === 'student' && currentUser && currentUser.userType === 'student') {
-      const storedId = (currentUser.studentId || '').trim();
+    // When registering as a student, user must provide their exact student ID number
+    if (userType === 'student') {
       const enteredId = (registrationData.studentId || '').trim();
       if (!enteredId) {
-        setRegistrationError('Please enter your Student ID Number to register.');
+        setRegistrationError('Incorrect student ID. Please enter your Student ID Number.');
         return;
       }
-      if (enteredId !== storedId) {
-        setRegistrationError(
-          `❌ Incorrect Student ID. The ID you entered does not match your account (${storedId}). Please check and try again.`
+
+      if (currentUser) {
+        const storedId = (currentUser.studentId || '').trim();
+        const isStudentAcc = currentUser.userType === 'student' || (storedId && storedId !== 'N/A');
+
+        if (!isStudentAcc) {
+          setRegistrationError('Incorrect student ID. This account is not registered as a student. Please select Non-Student / Guest.');
+          return;
+        }
+
+        if (storedId && enteredId.toLowerCase() !== storedId.toLowerCase()) {
+          setRegistrationError('Incorrect student ID. The ID you entered does not match your registered Student ID.');
+          return;
+        }
+      } else {
+        const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+        const matchedStudent = allUsers.find(u => 
+          u.studentId && 
+          u.studentId !== 'N/A' && 
+          u.studentId.trim().toLowerCase() === enteredId.toLowerCase()
         );
-        return;
+        const formatValid = /^\d{4}-\d{4,6}$/.test(enteredId);
+        if (!matchedStudent && !formatValid) {
+          setRegistrationError('Incorrect student ID. Please enter a valid Student ID (e.g. 2024-10234).');
+          return;
+        }
       }
     }
 
@@ -283,7 +303,7 @@ export default function Event({
           {isNavExpanded ? (
             <>
               {/* Logo / Title */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={handleDashboardOrHome}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onNavigateHome} title="Home">
                 <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
                   Syntax <span style={{ color: '#38bdf8' }}>4</span>
                 </span>
@@ -293,15 +313,9 @@ export default function Event({
 
               {/* Nav Links */}
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-                {currentUser ? (
-                  <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
-                    Profile
-                  </span>
-                ) : (
-                  <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
-                    Home
-                  </span>
-                )}
+                <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
+                  Home
+                </span>
 
                 <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
                   Events
@@ -310,6 +324,12 @@ export default function Event({
                 <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>
                   About
                 </span>
+
+                {currentUser && (
+                  <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
+                    Profile
+                  </span>
+                )}
               </div>
 
               <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)', flexShrink: 0 }}></div>

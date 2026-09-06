@@ -182,6 +182,26 @@ app.put('/api/registrations/:id/approve', (req, res) => {
 
     if (reg) {
       reg.status = 'Confirmed';
+
+      // Generate a unique random registration ID to avoid duplicate/same IDs
+      let uniqueRandomId;
+      let isDuplicate = true;
+      let attempts = 0;
+      while (isDuplicate && attempts < 1000) {
+        attempts++;
+        // Generate random 6-digit number (100000 - 999999)
+        uniqueRandomId = Math.floor(100000 + Math.random() * 900000).toString();
+        isDuplicate = registrationsList.some(r => 
+          (r._id != regId && r.id != regId) &&
+          (r.registrationId === uniqueRandomId || r.registrationCode === uniqueRandomId)
+        );
+      }
+
+      reg.registrationId = req.body?.registrationId || uniqueRandomId;
+      reg.approvedAt = new Date();
+
+      console.log(`[APPROVE] Registration ${regId} approved with unique Registration ID: #${reg.registrationId}`);
+
       res.json({
         message: 'Registration approved successfully!',
         registration: reg

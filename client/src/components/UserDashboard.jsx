@@ -6,7 +6,7 @@ import checkboxIcon from '../assets/checkbox-circle-fill.png';
 import moonIcon from '../assets/moon-fill (2).png';
 import sunIcon from '../assets/sun-fill (1).png';
 
-export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEvents }) {
+export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [user, setUser] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
@@ -242,6 +242,19 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
           {/* Nav Links */}
           <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
             <span 
+              onClick={onNavigateHome}
+              className="nav-link"
+              style={{ 
+                color: '#94a3b8', 
+                cursor: 'pointer', 
+                fontWeight: '600', 
+                fontSize: '0.9rem', 
+                whiteSpace: 'nowrap' 
+              }}
+            >
+              Home
+            </span>
+            <span 
               onClick={() => handleEventClick()}
               className="nav-link"
               style={{ 
@@ -253,6 +266,19 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
               }}
             >
               Events
+            </span>
+            <span 
+              onClick={onNavigateAbout}
+              className="nav-link"
+              style={{ 
+                color: '#94a3b8', 
+                cursor: 'pointer', 
+                fontWeight: '600', 
+                fontSize: '0.9rem', 
+                whiteSpace: 'nowrap' 
+              }}
+            >
+              About
             </span>
           </div>
 
@@ -369,41 +395,66 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
 
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: 0 }}>
-                {user?.name || user?.fullName || 'User Profile'}
-              </h1>
-              <span style={{
-                background: 'rgba(56, 189, 248, 0.15)',
-                color: '#38bdf8',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                padding: '4px 12px',
-                borderRadius: '9999px',
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                textTransform: 'uppercase'
-              }}>
-                {user?.role || 'Member'}
-              </span>
-              {user?.userType === 'student' && (
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: 0 }}>
+                  {user?.name || user?.fullName || 'User Profile'}
+                </h1>
                 <span style={{
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10b981',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  color: '#38bdf8',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
                   padding: '4px 12px',
                   borderRadius: '9999px',
                   fontSize: '0.8rem',
                   fontWeight: '700',
                   textTransform: 'uppercase'
                 }}>
-                  Student
+                  {user?.role || 'Member'}
                 </span>
-              )}
+                {user?.userType === 'student' && (
+                  <span style={{
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    color: '#10b981',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    textTransform: 'uppercase'
+                  }}>
+                    Student
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: '1rem', color: '#94a3b8', margin: '6px 0 0 0' }}>
+                {user?.email || 'No email provided'}
+              </p>
             </div>
-            <p style={{ fontSize: '1rem', color: '#94a3b8', margin: '6px 0 0 0' }}>
-              {user?.email || 'No email provided'}
-            </p>
+
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="interactive-btn"
+              style={{
+                background: isDarkMode ? 'rgba(56, 189, 248, 0.12)' : 'rgba(56, 189, 248, 0.15)',
+                color: '#38bdf8',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(56, 189, 248, 0.15)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>←</span> Back to Main Page
+            </button>
           </div>
         </div>
 
@@ -472,7 +523,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
               const isConfirmed = reg.status === 'Confirmed' || reg.status === 'Approved';
               const isDeclined = reg.status === 'Declined';
               const rawIdStr = String(regId || '');
-              const shortRegId = rawIdStr.length > 6 ? rawIdStr.slice(-6).toUpperCase() : rawIdStr || 'SYN-404';
+              const shortRegId = reg.registrationId || reg.registrationCode || (rawIdStr.length > 6 ? rawIdStr.slice(-6).toUpperCase() : rawIdStr || 'SYN-404');
 
               return (
                 <div

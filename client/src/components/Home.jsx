@@ -10,11 +10,20 @@ export default function Home({
   onNavigateAbout,
   onNavigateEvents,
   onNavigateDashboard,
-  onLogout
+  onLogout,
+  onNavigateHome,
+  currentUser: propUser
 }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    if (propUser) return propUser;
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || 'null');
+    } catch {
+      return null;
+    }
+  });
 
   // State para sa Navbar: true = nasa gitna (expanded), false = naka-collapse na bilog sa kaliwa
   const [isNavExpanded, setIsNavExpanded] = useState(true);
@@ -33,16 +42,21 @@ export default function Home({
     setIsDarkMode(savedTheme === 'dark');
     document.body.setAttribute('data-theme', savedTheme);
 
-    // Retrieve active logged-in user from localStorage
-    const storedUserData = localStorage.getItem('currentUser');
-    if (storedUserData) {
-      try {
-        setCurrentUser(JSON.parse(storedUserData));
-      } catch (e) {
-        console.error("Error parsing currentUser from localStorage:", e);
+    if (propUser !== undefined) {
+      setCurrentUser(propUser);
+    } else {
+      const storedUserData = localStorage.getItem('currentUser');
+      if (storedUserData) {
+        try {
+          setCurrentUser(JSON.parse(storedUserData));
+        } catch (e) {
+          console.error("Error parsing currentUser from localStorage:", e);
+        }
+      } else {
+        setCurrentUser(null);
       }
     }
-  }, []);
+  }, [propUser]);
 
   const toggleTheme = () => {
     const nextMode = !isDarkMode;
@@ -60,9 +74,11 @@ export default function Home({
     }
   };
 
-  const handleDashboardOrHome = () => {
-    if (currentUser && onNavigateDashboard) {
-      onNavigateDashboard();
+  // Logo click always routes/scrolls to Home, never hijacking to profile
+  const handleLogoClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (onNavigateHome) {
+      onNavigateHome();
     }
   };
 
@@ -127,7 +143,11 @@ export default function Home({
           {isNavExpanded ? (
             <>
               {/* Logo / Title */}
-              <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }} onClick={handleDashboardOrHome}>
+              <div 
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }} 
+                onClick={handleLogoClick}
+                title="Home"
+              >
                 <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
                   Syntax <span style={{ color: '#38bdf8' }}>4</span>
                 </span>
@@ -137,15 +157,20 @@ export default function Home({
 
               {/* Nav Links */}
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span className="nav-item" style={{ color: '#38bdf8', fontWeight: '600', cursor: 'pointer' }} onClick={handleLogoClick}>
+                  Home
+                </span>
+                <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>
+                  Events
+                </span>
+                <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>
+                  About
+                </span>
                 {currentUser && (
                   <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
-                    Dashboard
+                    Profile
                   </span>
                 )}
-
-                <span className="nav-item" style={{ color: '#38bdf8', fontWeight: '600' }}>Home</span>
-                <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>Events</span>
-                <span onClick={onNavigateAbout} className="nav-item" style={{ cursor: 'pointer' }}>About</span>
               </div>
 
               <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)', flexShrink: 0 }}></div>
@@ -309,7 +334,7 @@ export default function Home({
                   className="submit-btn"
                   style={{ width: 'auto', padding: '12px 28px', fontSize: '1rem', cursor: 'pointer' }}
                 >
-                  {currentUser ? 'Go to Dashboard' : 'Get Started'}
+                  {currentUser ? 'Go to Profile' : 'Get Started'}
                 </button>
                 <button
                   onClick={onNavigateEvents}

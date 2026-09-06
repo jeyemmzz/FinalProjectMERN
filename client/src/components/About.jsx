@@ -142,7 +142,7 @@ export default function About({
           {isNavExpanded ? (
             <>
               {/* Logo / Title */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={handleDashboardOrHome}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onNavigateHome} title="Home">
                 <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)' }}>
                   Syntax <span style={{ color: '#38bdf8' }}>4</span>
                 </span>
@@ -152,15 +152,9 @@ export default function About({
 
               {/* Nav Links */}
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-                {currentUser ? (
-                  <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
-                    Profile
-                  </span>
-                ) : (
-                  <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
-                    Home
-                  </span>
-                )}
+                <span onClick={onNavigateHome} className="nav-item" style={{ cursor: 'pointer' }}>
+                  Home
+                </span>
 
                 <span onClick={onNavigateEvents} className="nav-item" style={{ cursor: 'pointer' }}>
                   Events
@@ -169,6 +163,12 @@ export default function About({
                 <span className="nav-item" style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}>
                   About
                 </span>
+
+                {currentUser && (
+                  <span onClick={onNavigateDashboard} className="nav-item" style={{ cursor: 'pointer' }}>
+                    Profile
+                  </span>
+                )}
               </div>
 
               <div style={{ width: '1px', height: '18px', background: 'var(--auth-border-color)', flexShrink: 0 }}></div>
@@ -192,7 +192,7 @@ export default function About({
                     position: 'relative',
                     width: '48px',
                     height: '26px',
-                    borderRadius: '999px',
+                    borderRadius: '9999px',
                     background: isDarkMode
                       ? 'rgba(56, 189, 248, 0.18)'
                       : 'rgba(251, 191, 36, 0.22)',
@@ -437,8 +437,8 @@ export default function About({
               </div>
 
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                <button onClick={handleDashboardOrHome} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', cursor: 'pointer' }}>
-                  {currentUser ? 'Back to Dashboard' : 'Back to Home'}
+                <button onClick={currentUser ? onNavigateDashboard : onNavigateHome} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', cursor: 'pointer' }}>
+                  {currentUser ? 'Go to Profile' : 'Back to Home'}
                 </button>
                 <button onClick={onNavigateEvents} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer' }}>
                   Explore Events

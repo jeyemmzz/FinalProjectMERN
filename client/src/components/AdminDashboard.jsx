@@ -177,12 +177,19 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
   };
 
   const handleConfirmRegistration = async (id) => {
+    // Generate a unique random 6-digit registration ID
+    const randomRegId = Math.floor(100000 + Math.random() * 900000).toString();
+
     // Remove card from admin list immediately
     setRegistrations(prev => prev.filter(r => (r._id || r.id) != id));
 
     // Best-effort server sync — don't re-fetch (in-memory server resets on restart)
     try {
-      await fetch(`http://localhost:5000/api/registrations/${id}/approve`, { method: 'PUT' });
+      await fetch(`http://localhost:5000/api/registrations/${id}/approve`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: randomRegId })
+      });
     } catch (error) {
       console.error('Error confirming registration on server:', error);
     }
@@ -217,6 +224,10 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
           </div>
 
           <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.12)' }}></div>
+
+          <span onClick={onNavigateHome} className="nav-item" style={{ color: 'var(--auth-text-muted)', cursor: 'pointer' }}>
+            Home
+          </span>
 
           <span onClick={() => setActiveTab('manage-events')} className="nav-item" style={{ color: activeTab === 'manage-events' ? '#38bdf8' : 'var(--auth-text-muted)', fontWeight: activeTab === 'manage-events' ? '600' : '400', cursor: 'pointer' }}>
             Manage Events

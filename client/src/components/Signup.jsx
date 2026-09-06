@@ -32,6 +32,9 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     confirmPassword: ''
   });
 
+  const [studentIdError, setStudentIdError] = useState('');
+  const [formError, setFormError] = useState('');
+
   useEffect(() => {
     const timer = setTimeout(() => setAnimateIn(true), 10);
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -50,8 +53,21 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
+
+    // Student ID Validation
+    if (isStudent) {
+      const studentIdPattern = /^\d{4}-\d{4,6}$/;
+      const enteredStudentId = (formData.studentNumber || '').trim();
+      if (!enteredStudentId || !studentIdPattern.test(enteredStudentId)) {
+        setStudentIdError('Incorrect student ID. Must follow exact format: YYYY-XXXXX (e.g. 2024-10234)');
+        return;
+      }
+      setStudentIdError('');
+    }
 
     if (formData.password !== formData.confirmPassword) {
+      setFormError('Passwords do not match!');
       alert('Passwords do not match!');
       return;
     }
@@ -538,8 +554,14 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     required
                     placeholder="e.g. 2024-10234"
                     value={formData.studentNumber}
-                    onChange={(e) => setFormData({ ...formData, studentNumber: e.target.value })}
-                    style={inputStyle}
+                    onChange={(e) => {
+                      setFormData({ ...formData, studentNumber: e.target.value });
+                      if (studentIdError) setStudentIdError('');
+                    }}
+                    style={{
+                      ...inputStyle,
+                      border: studentIdError ? '1px solid #ef4444' : inputStyle.border
+                    }}
                   />
                   <img
                     src={isDarkMode
@@ -559,6 +581,11 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     }}
                   />
                 </div>
+                {studentIdError && (
+                  <div style={{ color: '#ef4444', fontSize: '0.82rem', marginTop: '6px', fontWeight: '600' }}>
+                    ⚠️ {studentIdError}
+                  </div>
+                )}
               </div>
             )}
 
