@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import calendarIcon from '../assets/calendar-2-line.png';
 import mapPinIcon from '../assets/map-pin-line.png';
 import couponIcon from '../assets/coupon-2-fill.png';
@@ -10,6 +10,10 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [user, setUser] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
+
+  // Profile Picture State & File Input Ref
+  const [profilePic, setProfilePic] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Dynamic Events State from Server
   const [events, setEvents] = useState([]);
@@ -25,8 +29,8 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     fetch(`http://localhost:5000/api/registrations?email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(regData => {
-        if (Array.isArray(regData) && regData.length > 0) {
-          // Only update if server actually has data (in-memory server may restart with empty list)
+        if (Array.isArray(regData)) {
+          // Always update registrations array (even if empty, to properly reflect state)
           setMyRegistrations(regData);
         }
         setIsRegLoading(false);
@@ -63,6 +67,11 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     let currentUser = storedUserData ? JSON.parse(storedUserData) : null;
 
     if (currentUser) {
+      // Load saved profile picture if present in user object or localStorage
+      if (currentUser.profilePic) {
+        setProfilePic(currentUser.profilePic);
+      }
+
       // Only auto-generate an ID for non-student accounts that have no ID yet
       const isStudentUser = currentUser.userType === 'student';
       if (!isStudentUser && (!currentUser.studentId || currentUser.studentId === 'N/A')) {
@@ -148,6 +157,41 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
       onLogout();
     } else if (onNavigateHome) {
       onNavigateHome();
+    }
+  };
+
+  // Handler for Profile Picture Upload
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setProfilePic(base64String);
+
+        // Update current user state and local storage
+        if (user) {
+          const updatedUser = { ...user, profilePic: base64String };
+          setUser(updatedUser);
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
+          // Also update allUsers array if it exists
+          const existingUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+          const updatedUsers = existingUsers.map(u => 
+            (u.email && updatedUser.email && u.email.toLowerCase() === updatedUser.email.toLowerCase()) 
+              ? updatedUser 
+              : u
+          );
+          localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -378,22 +422,56 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
           gap: '30px',
           flexWrap: 'wrap'
         }}>
-          {/* Avatar Circle */}
-          <div style={{
-            width: '90px',
-            height: '90px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2.5rem',
-            fontWeight: '800',
-            color: '#ffffff',
-            boxShadow: '0 8px 25px rgba(56, 189, 248, 0.4)'
-          }}>
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          {/* Avatar Circle / Upload Trigger */}
+          <div 
+            onClick={triggerFileInput}
+            title="Click to upload profile picture"
+            style={{
+              width: '90px',
+              height: '90px',
+              borderRadius: '50%',
+              background: profilePic ? 'transparent' : 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2.5rem',
+              fontWeight: '800',
+              color: '#ffffff',
+              boxShadow: '0 8px 25px rgba(56, 189, 248, 0.4)',
+              cursor: 'pointer',
+              position: 'relative',
+              overflow: 'hidden',
+              border: '2px dashed rgba(255, 255, 255, 0.4)'
+            }}
+          >
+            {profilePic ? (
+              <img src={profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              user?.name ? user.name.charAt(0).toUpperCase() : 'U'
+            )}
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              width: '100%',
+              background: 'rgba(0,0,0,0.6)',
+              fontSize: '9px',
+              textAlign: 'center',
+              color: '#fff',
+              padding: '2px 0',
+              fontWeight: '600',
+              letterSpacing: '0.5px'
+            }}>
+              CHANGE
+            </div>
           </div>
+          {/* Hidden File Input */}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleImageChange} 
+            accept="image/*" 
+            style={{ display: 'none' }} 
+          />
 
           <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>
@@ -656,7 +734,7 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                     <img src={calendarIcon} alt="Calendar" style={{ width: '15px', height: '15px', filter: isDarkMode ? 'invert(1)' : 'none', opacity: 0.7 }} />
                     {evt.date}
                   </p>
-                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: '4px 0', display: 'flex', alignItems: 'center', data: 'true', alignItems: 'center', gap: '6px' }}>
                     <img src={mapPinIcon} alt="Map Pin" style={{ width: '15px', height: '15px', filter: isDarkMode ? 'invert(1)' : 'none', opacity: 0.7 }} />
                     {evt.venue || evt.location || 'Not Specified'}
                   </p>

@@ -874,8 +874,7 @@ export default function Event({
                   </div>
                 )}
 
-                <button
-                  type="submit"
+                <button                  type="submit"
                   className="submit-btn"
                   disabled={isSubmitting}
                   style={{ padding: '10px', fontSize: '0.85rem', marginTop: '8px', fontWeight: '700', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}

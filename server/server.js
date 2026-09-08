@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const bcrypt = require('bcrypt');
 
 const app = express();
 
@@ -11,6 +12,10 @@ app.use(cors());
 // --- IN-MEMORY DATA STORAGE (Wala nang MongoDB na kailangan) ---
 let studentsList = [];
 let registrationsList = [];
+let usersList = [
+  { id: 1, name: 'Keith Jeremy Azul', email: 'kitazul32@gmail.com', password: '12345', userType: 'student', studentId: '2026-284933' },
+  { id: 2, name: 'Admin', email: 'admin@syntax4.com', password: '123', userType: 'admin' }
+];
 
 let eventsList = [
   {
@@ -248,6 +253,55 @@ app.delete('/api/registrations/:id', (req, res) => {
   } catch (error) {
     console.error('Error removing registration:', error);
     res.status(500).json({ error: 'Server error while removing registration' });
+  }
+});
+
+// --- USER PROFILE & PASSWORD UPDATE ROUTE (Idinagdag dito) ---
+app.put('/api/users/update/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { name, currentPassword, newPassword } = req.body;
+
+    const user = usersList.find(u => u.id == userId || u.email === req.body.email);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required" });
+      }
+      
+      let isMatch = false;
+      if (user.password.startsWith('$2b$')) {
+        isMatch = await bcrypt.compare(currentPassword, user.password);
+      } else {
+        isMatch = (user.password === currentPassword);
+      }
+
+      if (!isMatch) {
+        return res.status(400).json({ message: "Incorrect current password" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    if (name) {
+      user.name = name;
+    }
+
+    console.log('[UPDATE PROFILE] User updated:', user.email);
+    res.json({ 
+      success: true, 
+      message: "Profile updated successfully!", 
+      user: { id: user.id, name: user.name, email: user.email } 
+    });
+
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Server error while updating profile' });
   }
 });
 

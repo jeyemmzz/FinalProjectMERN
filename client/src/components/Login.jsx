@@ -13,6 +13,14 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
   const [animateIn, setAnimateIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // State para sa Password Update / Reset View (false = normal login, true = nag-a-update ng password)
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [newPasswordData, setNewPasswordData] = useState({
+    email: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
   // State para sa Navbar: true = nasa gitna (expanded), false = naka-collapse na bilog sa kaliwa
   const [isNavExpanded, setIsNavExpanded] = useState(true);
 
@@ -124,6 +132,53 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
       } else {
         showAlert("Login Failed", "Invalid email or password! Please check your credentials.", "error");
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function para i-handle ang pag-update ng password ng user
+  const handleUpdatePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const targetEmail = newPasswordData.email.toLowerCase().trim();
+
+    if (newPasswordData.newPassword !== newPasswordData.confirmPassword) {
+      showAlert("Password Mismatch", "New password and confirmation password do not match.", "error");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // 1. Kung may backend API ka para sa update password:
+      /*
+      const response = await fetch('http://localhost:5000/api/auth/update-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, newPassword: newPasswordData.newPassword })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update password.');
+      */
+
+      // 2. LocalStorage fallback para ma-update agad ang password sa stored accounts mo:
+      let allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+      const userIndex = allUsers.findIndex(u => u.email && u.email.toLowerCase().trim() === targetEmail);
+
+      if (userIndex !== -1) {
+        allUsers[userIndex].password = newPasswordData.newPassword;
+        localStorage.setItem('allUsers', JSON.stringify(allUsers));
+        
+        showAlert("Success!", "Password updated successfully! You can now log in with your new password.", "success", () => {
+          setIsForgotPasswordMode(false);
+          setFormData({ email: targetEmail, password: '' });
+        });
+      } else {
+        showAlert("Account Not Found", "No registered account matches this email address.", "error");
+      }
+
+    } catch (error) {
+      showAlert("Update Failed", error.message || "An error occurred while updating your password.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -310,7 +365,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         </div>
       )}
 
-      {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
+      {/* NAVIGATION BAR */}
       <nav style={{
         width: '100%',
         padding: '20px 40px',
@@ -324,8 +379,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           className={`animated-wrapper ${animateIn ? 'active' : ''}`}
           style={{
             position: 'absolute',
-            // Kapag expanded, nakapuwesto sa gitna (left: 50% tapos i-translate ng -50%). 
-            // Kapag naka-collapse, mag-i-slide papuntang kaliwa (left: 40px, translateX: 0).
             left: isNavExpanded ? '50%' : '40px',
             transform: isNavExpanded ? 'translateX(-50%)' : 'translateX(0)',
             width: isNavExpanded ? 'auto' : '48px',
@@ -341,7 +394,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
             boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
             border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(0,0,0,0.1)',
             overflow: 'hidden',
-            // Pinakamahalaga: Smooth physics-based transition para sa posisyon, laki, at kurbada
             transition: 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), width 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.6s cubic-bezier(0.16, 1, 0.3, 1), padding 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
             cursor: !isNavExpanded ? 'pointer' : 'default',
             zIndex: 10
@@ -349,7 +401,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           onClick={() => {
             if (!isNavExpanded) setIsNavExpanded(true);
           }}
-          title={!isNavExpanded ? "Click to open Navigation Menu" : ""}
         >
           {isNavExpanded ? (
             <>
@@ -470,14 +521,12 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                 Register
               </button>
 
-              {/* Collapse Button (Magse-slide pabalik sa kaliwa habang nagiging bilog) */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsNavExpanded(false);
                 }}
-                title="Collapse menu to avoid distraction"
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -496,7 +545,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
               </button>
             </>
           ) : (
-            /* Laman kapag Naging Bilog na sa Kaliwa (Hamburger Icon ☰) */
             <div style={{
               fontSize: '1.25rem',
               fontWeight: '700',
@@ -534,136 +582,285 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           width: '100%'
         }}>
 
-          <div style={{ textAlign: 'center', marginBottom: '35px' }}>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Welcome User</h1>
-            <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Log in to access your account credentials</p>
-          </div>
-
-          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-
-            <div>
-              <label style={labelStyle}>Email Address *</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  style={inputStyle}
-                />
-                <img
-                  src={currentUserIcon}
-                  alt="User Icon"
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '18px',
-                    height: '18px',
-                    objectFit: 'contain',
-                    pointerEvents: 'none',
-                    opacity: 0.85
-                  }}
-                />
+          {!isForgotPasswordMode ? (
+            /* ================= LOGIN FORM ================= */
+            <>
+              <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+                <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Welcome User</h1>
+                <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Log in to access your account credentials</p>
               </div>
-            </div>
 
-            <div>
-              <label style={labelStyle}>Password *</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  style={inputStyle}
-                />
-                <img
-                  src={currentLockIcon}
-                  alt="Lock Icon"
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '18px',
-                    height: '18px',
-                    objectFit: 'contain',
-                    pointerEvents: 'none',
-                    opacity: 0.85
-                  }}
-                />
+              <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                <div>
+                  <label style={labelStyle}>Email Address *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      style={inputStyle}
+                    />
+                    <img
+                      src={currentUserIcon}
+                      alt="User Icon"
+                      style={{
+                        position: 'absolute',
+                        left: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        opacity: 0.85
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Password *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      style={inputStyle}
+                    />
+                    <img
+                      src={currentLockIcon}
+                      alt="Lock Icon"
+                      style={{
+                        position: 'absolute',
+                        left: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        opacity: 0.85
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        padding: '4px 8px'
+                      }}
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <div style={{ textAlign: 'right', marginTop: '6px' }}>
+                    <span
+                      onClick={() => setIsForgotPasswordMode(true)}
+                      style={{ fontSize: '0.8rem', color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      Forgot / Update Password?
+                    </span>
+                  </div>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  type="submit"
+                  disabled={isLoading}
+                  className="interactive-btn"
                   style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'transparent',
+                    background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                    color: '#0f172a',
                     border: 'none',
-                    color: '#94a3b8',
+                    padding: '16px',
+                    borderRadius: '12px',
                     cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    fontWeight: '600',
-                    padding: '4px 8px'
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    marginTop: '10px',
+                    boxShadow: '0 6px 20px rgba(56, 189, 248, 0.4)',
+                    opacity: isLoading ? 0.8 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px'
                   }}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {isLoading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Verifying Account...
+                    </>
+                  ) : (
+                    'Log In'
+                  )}
                 </button>
+
+                <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                  <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+                    Don't have an account yet?{' '}
+                    <span
+                      onClick={onSwitchToSignup}
+                      className="nav-link"
+                      style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      Register here
+                    </span>
+                  </span>
+                </div>
+              </form>
+            </>
+          ) : (
+            /* ================= UPDATE / RESET PASSWORD FORM ================= */
+            <>
+              <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Update Password</h1>
+                <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Enter your email and set a new password</p>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="interactive-btn"
-              style={{
-                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
-                color: '#0f172a',
-                border: 'none',
-                padding: '16px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: '700',
-                fontSize: '1rem',
-                marginTop: '10px',
-                boxShadow: '0 6px 20px rgba(56, 189, 248, 0.4)',
-                opacity: isLoading ? 0.8 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px'
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <span className="loading-spinner"></span>
-                  Verifying Account...
-                </>
-              ) : (
-                'Log In'
-              )}
-            </button>
+              <form onSubmit={handleUpdatePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                <div>
+                  <label style={labelStyle}>Email Address *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={newPasswordData.email}
+                      onChange={(e) => setNewPasswordData({ ...newPasswordData, email: e.target.value })}
+                      style={inputStyle}
+                    />
+                    <img
+                      src={currentUserIcon}
+                      alt="User Icon"
+                      style={{
+                        position: 'absolute',
+                        left: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        opacity: 0.85
+                      }}
+                    />
+                  </div>
+                </div>
 
-            <div style={{ textAlign: 'center', marginTop: '12px' }}>
-              <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
-                Don't have an account yet?{' '}
-                <span
-                  onClick={onSwitchToSignup}
-                  className="nav-link"
-                  style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                <div>
+                  <label style={labelStyle}>New Password *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={newPasswordData.newPassword}
+                      onChange={(e) => setNewPasswordData({ ...newPasswordData, newPassword: e.target.value })}
+                      style={inputStyle}
+                    />
+                    <img
+                      src={currentLockIcon}
+                      alt="Lock Icon"
+                      style={{
+                        position: 'absolute',
+                        left: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        opacity: 0.85
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Confirm New Password *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={newPasswordData.confirmPassword}
+                      onChange={(e) => setNewPasswordData({ ...newPasswordData, confirmPassword: e.target.value })}
+                      style={inputStyle}
+                    />
+                    <img
+                      src={currentLockIcon}
+                      alt="Lock Icon"
+                      style={{
+                        position: 'absolute',
+                        left: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        opacity: 0.85
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="interactive-btn"
+                  style={{
+                    background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                    color: '#0f172a',
+                    border: 'none',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    marginTop: '10px',
+                    boxShadow: '0 6px 20px rgba(56, 189, 248, 0.4)',
+                    opacity: isLoading ? 0.8 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px'
+                  }}
                 >
-                  Register here
-                </span>
-              </span>
-            </div>
+                  {isLoading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Updating Password...
+                    </>
+                  ) : (
+                    'Save New Password'
+                  )}
+                </button>
 
-          </form>
+                <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                  <span
+                    onClick={() => setIsForgotPasswordMode(false)}
+                    style={{ fontSize: '0.9rem', color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    Back to Log In
+                  </span>
+                </div>
+              </form>
+            </>
+          )}
 
         </div>
       </div>
