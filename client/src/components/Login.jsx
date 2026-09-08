@@ -12,7 +12,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
   const [isLoading, setIsLoading] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // State para sa Navbar: true = nasa gitna (expanded), false = naka-collapse na bilog sa kaliwa
   const [isNavExpanded, setIsNavExpanded] = useState(true);
 
@@ -59,7 +59,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     const inputEmail = formData.email.toLowerCase().trim();
-    
+
     if (inputEmail === 'admin@syntax4.com') {
       if (formData.password === 'admin123') {
         showAlert("Success!", "Admin login successful!", "success", () => {
@@ -118,7 +118,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           role: 'user'
         };
         localStorage.setItem('currentUser', JSON.stringify(fallbackMatchedUser));
-        showAlert("Welcome Back!", "Login successful via local storage.", "success", () => {
+        showAlert("Welcome Back!", "Login successful", "success", () => {
           if (onLoginSuccess) onLoginSuccess(fallbackMatchedUser);
         });
       } else {
@@ -152,14 +152,14 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
   const currentUserIcon = isDarkMode ? userIconDark : userIconLight;
   const currentLockIcon = isDarkMode ? lockIconDark : lockIconLight;
-  const currentThemeIcon = isDarkMode ? moonIcon : sunIcon; 
+  const currentThemeIcon = isDarkMode ? moonIcon : sunIcon;
 
   return (
     <div style={{
       minHeight: '100vh',
       width: '100vw',
-      background: isDarkMode 
-        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)' 
+      background: isDarkMode
+        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)'
         : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
       display: 'flex',
       flexDirection: 'column',
@@ -169,7 +169,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
       paddingBottom: '60px',
       position: 'relative'
     }}>
-      
+
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -320,8 +320,8 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         display: 'flex',
         alignItems: 'center'
       }}>
-        <div 
-          className={`animated-wrapper ${animateIn ? 'active' : ''}`} 
+        <div
+          className={`animated-wrapper ${animateIn ? 'active' : ''}`}
           style={{
             position: 'absolute',
             // Kapag expanded, nakapuwesto sa gitna (left: 50% tapos i-translate ng -50%). 
@@ -353,7 +353,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
         >
           {isNavExpanded ? (
             <>
-              <span 
+              <span
                 onClick={onNavigateHome}
                 className="nav-link"
                 style={{ fontSize: '1rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -369,7 +369,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                   { name: 'Events', action: onNavigateEvents },
                   { name: 'About', action: onNavigateAbout }
                 ].map((link) => (
-                  <span 
+                  <span
                     key={link.name}
                     onClick={link.action}
                     className="nav-link"
@@ -533,14 +533,14 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           boxSizing: 'border-box',
           width: '100%'
         }}>
-          
+
           <div style={{ textAlign: 'center', marginBottom: '35px' }}>
             <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Welcome User</h1>
             <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Log in to access your account credentials</p>
           </div>
 
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-            
+
             <div>
               <label style={labelStyle}>Email Address *</label>
               <div style={{ position: 'relative' }}>
@@ -552,9 +552,9 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   style={inputStyle}
                 />
-                <img 
-                  src={currentUserIcon} 
-                  alt="User Icon" 
+                <img
+                  src={currentUserIcon}
+                  alt="User Icon"
                   style={{
                     position: 'absolute',
                     left: '14px',
@@ -581,9 +581,9 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   style={inputStyle}
                 />
-                <img 
-                  src={currentLockIcon} 
-                  alt="Lock Icon" 
+                <img
+                  src={currentLockIcon}
+                  alt="Lock Icon"
                   style={{
                     position: 'absolute',
                     left: '14px',
@@ -653,8 +653,8 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
             <div style={{ textAlign: 'center', marginTop: '12px' }}>
               <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
                 Don't have an account yet?{' '}
-                <span 
-                  onClick={onSwitchToSignup} 
+                <span
+                  onClick={onSwitchToSignup}
                   className="nav-link"
                   style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
                 >
