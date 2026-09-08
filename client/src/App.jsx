@@ -30,7 +30,6 @@ export default function App() {
 
   // After successful registration/account creation, set user and go to profile/dashboard
   const handleRegisterSuccess = (registeredUser) => {
-    alert("Account registered successfully!");
     if (registeredUser) {
       setCurrentUser(registeredUser);
     } else {

@@ -7,19 +7,63 @@ const lockIconLight = new URL('../assets/lock-line (1).png', import.meta.url).hr
 const moonIcon = new URL('../assets/moon-fill (2).png', import.meta.url).href;
 const sunIcon = new URL('../assets/sun-fill (1).png', import.meta.url).href;
 
+// Clean modern SVG icons for toggling password visibility
+const EyeIcon = ({ size = 18, color = '#94a3b8' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>
+);
+
+const EyeOffIcon = ({ size = 18, color = '#94a3b8' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+    <line x1="1" y1="1" x2="23" y2="23"></line>
+  </svg>
+);
+
 export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // State para sa Password Update / Reset View (false = normal login, true = nag-a-update ng password)
+  // States para sa Password Update / Reset View
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [isEmailTouched, setIsEmailTouched] = useState(false);
+
   const [newPasswordData, setNewPasswordData] = useState({
     email: '',
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Password validation & strength helpers
+  const getPasswordCriteria = (pass = '') => ({
+    hasLength: pass.length >= 8,
+    hasUpper: /[A-Z]/.test(pass),
+    hasLower: /[a-z]/.test(pass),
+    hasNumber: /[0-9]/.test(pass),
+    hasSpecial: /[^A-Za-z0-9]/.test(pass)
+  });
+
+  const getPasswordStrength = (pass = '') => {
+    if (!pass) return { score: 0, label: '', color: '#94a3b8', percent: 0 };
+    const criteria = getPasswordCriteria(pass);
+    const metCount = Object.values(criteria).filter(Boolean).length;
+    if (metCount <= 2) return { score: 1, label: 'Weak', color: '#ef4444', percent: 25 };
+    if (metCount === 3) return { score: 2, label: 'Fair', color: '#f59e0b', percent: 50 };
+    if (metCount === 4) return { score: 3, label: 'Good', color: '#38bdf8', percent: 75 };
+    return { score: 4, label: 'Strong', color: '#22c55e', percent: 100 };
+  };
+
+  const newPasswordCriteria = getPasswordCriteria(newPasswordData.newPassword);
+  const newPasswordStrength = getPasswordStrength(newPasswordData.newPassword);
+  const isPasswordMatchDirty = Boolean(newPasswordData.confirmPassword);
+  const isPasswordMatching = Boolean(newPasswordData.newPassword && newPasswordData.newPassword === newPasswordData.confirmPassword);
 
   // State para sa Navbar: true = nasa gitna (expanded), false = naka-collapse na bilog sa kaliwa
   const [isNavExpanded, setIsNavExpanded] = useState(true);
@@ -142,6 +186,25 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
     e.preventDefault();
     const targetEmail = newPasswordData.email.toLowerCase().trim();
 
+    // 1. Email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(targetEmail)) {
+      showAlert("Invalid Email", "Please provide a valid email address.", "error");
+      return;
+    }
+
+    // 2. Password requirements check
+    const criteria = getPasswordCriteria(newPasswordData.newPassword);
+    if (!criteria.hasLength) {
+      showAlert("Weak Password", "Password must be at least 8 characters long.", "error");
+      return;
+    }
+    if (!criteria.hasUpper || !criteria.hasLower || !criteria.hasNumber) {
+      showAlert("Weak Password", "Password must include uppercase, lowercase, and at least one number.", "error");
+      return;
+    }
+
+    // 3. Confirm password match check
     if (newPasswordData.newPassword !== newPasswordData.confirmPassword) {
       showAlert("Password Mismatch", "New password and confirmation password do not match.", "error");
       return;
@@ -150,31 +213,48 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
     try {
       setIsLoading(true);
 
-      // 1. Kung may backend API ka para sa update password:
-      /*
-      const response = await fetch('http://localhost:5000/api/auth/update-password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: targetEmail, newPassword: newPasswordData.newPassword })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Failed to update password.');
-      */
+      // Attempt backend update if server is running
+      let backendUpdated = false;
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/update-password', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: targetEmail, newPassword: newPasswordData.newPassword })
+        });
+        if (response.ok) {
+          backendUpdated = true;
+        }
+      } catch (err) {
+        // Backend offline or unreachable, fallback to localStorage
+      }
 
-      // 2. LocalStorage fallback para ma-update agad ang password sa stored accounts mo:
+      // LocalStorage update
       let allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
       const userIndex = allUsers.findIndex(u => u.email && u.email.toLowerCase().trim() === targetEmail);
 
-      if (userIndex !== -1) {
-        allUsers[userIndex].password = newPasswordData.newPassword;
-        localStorage.setItem('allUsers', JSON.stringify(allUsers));
-        
+      if (userIndex !== -1 || backendUpdated) {
+        if (userIndex !== -1) {
+          allUsers[userIndex].password = newPasswordData.newPassword;
+          localStorage.setItem('allUsers', JSON.stringify(allUsers));
+        }
+
+        // Also update currentUser if it's currently stored with same email
+        const currentSavedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (currentSavedUser && currentSavedUser.email && currentSavedUser.email.toLowerCase().trim() === targetEmail) {
+          currentSavedUser.password = newPasswordData.newPassword;
+          localStorage.setItem('currentUser', JSON.stringify(currentSavedUser));
+        }
+
         showAlert("Success!", "Password updated successfully! You can now log in with your new password.", "success", () => {
           setIsForgotPasswordMode(false);
+          setShowNewPassword(false);
+          setShowConfirmNewPassword(false);
+          setEmailError('');
           setFormData({ email: targetEmail, password: '' });
+          setNewPasswordData({ email: '', newPassword: '', confirmPassword: '' });
         });
       } else {
-        showAlert("Account Not Found", "No registered account matches this email address.", "error");
+        showAlert("Account Not Found", "No registered account matches this email address. Please make sure the email is registered.", "error");
       }
 
     } catch (error) {
@@ -649,6 +729,7 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? 'Hide password' : 'Show password'}
                       style={{
                         position: 'absolute',
                         right: '12px',
@@ -656,14 +737,17 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                         transform: 'translateY(-50%)',
                         background: 'transparent',
                         border: 'none',
-                        color: '#94a3b8',
+                        color: showPassword ? '#38bdf8' : '#94a3b8',
                         cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                        padding: '4px 8px'
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px',
+                        borderRadius: '6px',
+                        transition: 'color 0.2s'
                       }}
                     >
-                      {showPassword ? 'Hide' : 'Show'}
+                      {showPassword ? <EyeOffIcon size={18} color="#38bdf8" /> : <EyeIcon size={18} color="#94a3b8" />}
                     </button>
                   </div>
                   <div style={{ textAlign: 'right', marginTop: '6px' }}>
@@ -725,12 +809,13 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
           ) : (
             /* ================= UPDATE / RESET PASSWORD FORM ================= */
             <>
-              <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>Update Password</h1>
                 <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>Enter your email and set a new password</p>
               </div>
 
-              <form onSubmit={handleUpdatePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+              <form onSubmit={handleUpdatePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Email Address Field */}
                 <div>
                   <label style={labelStyle}>Email Address *</label>
                   <div style={{ position: 'relative' }}>
@@ -739,8 +824,35 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                       required
                       placeholder="name@example.com"
                       value={newPasswordData.email}
-                      onChange={(e) => setNewPasswordData({ ...newPasswordData, email: e.target.value })}
-                      style={inputStyle}
+                      onBlur={() => {
+                        setIsEmailTouched(true);
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (newPasswordData.email && !emailRegex.test(newPasswordData.email.trim())) {
+                          setEmailError('Please enter a valid email address (e.g. name@example.com)');
+                        } else {
+                          setEmailError('');
+                        }
+                      }}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewPasswordData({ ...newPasswordData, email: val });
+                        if (isEmailTouched) {
+                          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                          if (val && !emailRegex.test(val.trim())) {
+                            setEmailError('Please enter a valid email address.');
+                          } else {
+                            setEmailError('');
+                          }
+                        }
+                      }}
+                      style={{
+                        ...inputStyle,
+                        borderColor: emailError
+                          ? '#ef4444'
+                          : (newPasswordData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newPasswordData.email.trim())
+                            ? 'rgba(34, 197, 94, 0.6)'
+                            : inputStyle.border)
+                      }}
                     />
                     <img
                       src={currentUserIcon}
@@ -758,18 +870,30 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                       }}
                     />
                   </div>
+                  {emailError && (
+                    <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '5px', fontWeight: '600' }}>
+                      {emailError}
+                    </div>
+                  )}
                 </div>
 
+                {/* New Password Field */}
                 <div>
                   <label style={labelStyle}>New Password *</label>
                   <div style={{ position: 'relative' }}>
                     <input
-                      type="password"
+                      type={showNewPassword ? "text" : "password"}
                       required
                       placeholder="••••••••"
                       value={newPasswordData.newPassword}
                       onChange={(e) => setNewPasswordData({ ...newPasswordData, newPassword: e.target.value })}
-                      style={inputStyle}
+                      style={{
+                        ...inputStyle,
+                        paddingRight: '48px',
+                        borderColor: newPasswordData.newPassword
+                          ? (newPasswordStrength.score >= 3 ? 'rgba(34, 197, 94, 0.6)' : 'rgba(56, 189, 248, 0.5)')
+                          : inputStyle.border
+                      }}
                     />
                     <img
                       src={currentLockIcon}
@@ -786,19 +910,117 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                         opacity: 0.85
                       }}
                     />
+                    {/* Show / Hide Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      title={showNewPassword ? "Hide password" : "Show password"}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: showNewPassword ? '#38bdf8' : '#94a3b8',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px',
+                        borderRadius: '6px',
+                        transition: 'color 0.2s'
+                      }}
+                    >
+                      {showNewPassword ? <EyeOffIcon size={18} color="#38bdf8" /> : <EyeIcon size={18} color="#94a3b8" />}
+                    </button>
                   </div>
+
+                  {/* Dynamic Password Strength Meter & Requirements */}
+                  {newPasswordData.newPassword && (
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px', fontSize: '0.78rem' }}>
+                        <span style={{ color: '#94a3b8' }}>Password Strength</span>
+                        <span style={{ color: newPasswordStrength.color, fontWeight: '700' }}>
+                          {newPasswordStrength.label}
+                        </span>
+                      </div>
+
+                      <div style={{
+                        height: '5px',
+                        width: '100%',
+                        background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                        borderRadius: '999px',
+                        overflow: 'hidden',
+                        marginBottom: '8px'
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${newPasswordStrength.percent}%`,
+                          background: newPasswordStrength.color,
+                          borderRadius: '999px',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }} />
+                      </div>
+
+                      {/* Criteria Checklist Badges */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {[
+                          { label: '8+ chars', met: newPasswordCriteria.hasLength },
+                          { label: 'Uppercase', met: newPasswordCriteria.hasUpper },
+                          { label: 'Lowercase', met: newPasswordCriteria.hasLower },
+                          { label: 'Number', met: newPasswordCriteria.hasNumber },
+                          { label: 'Special char', met: newPasswordCriteria.hasSpecial }
+                        ].map((item, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: '600',
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: item.met
+                                ? (isDarkMode ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.12)')
+                                : (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)'),
+                              color: item.met ? '#22c55e' : (isDarkMode ? '#64748b' : '#94a3b8'),
+                              border: item.met
+                                ? '1px solid rgba(34, 197, 94, 0.35)'
+                                : (isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)'),
+                              transition: 'all 0.25s ease'
+                            }}
+                          >
+                            <span>{item.met ? '✓' : '○'}</span>
+                            {item.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* Confirm New Password Field */}
                 <div>
                   <label style={labelStyle}>Confirm New Password *</label>
                   <div style={{ position: 'relative' }}>
                     <input
-                      type="password"
+                      type={showConfirmNewPassword ? "text" : "password"}
                       required
                       placeholder="••••••••"
                       value={newPasswordData.confirmPassword}
                       onChange={(e) => setNewPasswordData({ ...newPasswordData, confirmPassword: e.target.value })}
-                      style={inputStyle}
+                      style={{
+                        ...inputStyle,
+                        paddingRight: '48px',
+                        borderColor: isPasswordMatchDirty
+                          ? (isPasswordMatching ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)')
+                          : inputStyle.border,
+                        boxShadow: isPasswordMatchDirty
+                          ? (isPasswordMatching ? '0 0 10px rgba(34, 197, 94, 0.15)' : '0 0 10px rgba(239, 68, 68, 0.15)')
+                          : 'none'
+                      }}
                     />
                     <img
                       src={currentLockIcon}
@@ -815,7 +1037,56 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                         opacity: 0.85
                       }}
                     />
+                    {/* Show / Hide Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                      title={showConfirmNewPassword ? "Hide password" : "Show password"}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: showConfirmNewPassword ? '#38bdf8' : '#94a3b8',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px',
+                        borderRadius: '6px',
+                        transition: 'color 0.2s'
+                      }}
+                    >
+                      {showConfirmNewPassword ? <EyeOffIcon size={18} color="#38bdf8" /> : <EyeIcon size={18} color="#94a3b8" />}
+                    </button>
                   </div>
+
+                  {/* Live Password Match Feedback */}
+                  {isPasswordMatchDirty && (
+                    <div style={{
+                      color: isPasswordMatching ? '#22c55e' : '#ef4444',
+                      fontSize: '0.8rem',
+                      marginTop: '6px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}>
+                      {isPasswordMatching ? (
+                        <>
+                          <span style={{ fontSize: '0.9rem' }}>✓</span>
+                          Passwords match
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: '0.9rem' }}>✕</span>
+                          Passwords do not match
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -852,7 +1123,13 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
 
                 <div style={{ textAlign: 'center', marginTop: '12px' }}>
                   <span
-                    onClick={() => setIsForgotPasswordMode(false)}
+                    onClick={() => {
+                      setIsForgotPasswordMode(false);
+                      setShowNewPassword(false);
+                      setShowConfirmNewPassword(false);
+                      setEmailError('');
+                    }}
+                    className="nav-link"
                     style={{ fontSize: '0.9rem', color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
                   >
                     Back to Log In

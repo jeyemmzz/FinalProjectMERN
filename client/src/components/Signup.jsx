@@ -10,8 +10,23 @@ const lockIconLight = new URL('../assets/lock-line (1).png', import.meta.url).hr
 const moonIcon = new URL('../assets/moon-fill (2).png', import.meta.url).href;
 const sunIcon = new URL('../assets/sun-fill (1).png', import.meta.url).href;
 
+// Clean modern SVG icons for toggling password visibility
+const EyeIcon = ({ size = 18, color = '#94a3b8' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>
+);
+
+const EyeOffIcon = ({ size = 18, color = '#94a3b8' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+    <line x1="1" y1="1" x2="23" y2="23"></line>
+  </svg>
+);
+
 export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHome, onNavigateEvents, onNavigateAbout, signupType }) {
-  const isStudent = signupType === 'student';
+  const [isStudent, setIsStudent] = useState(signupType === 'student');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -34,6 +49,58 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
 
   const [studentIdError, setStudentIdError] = useState('');
   const [formError, setFormError] = useState('');
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsError, setTermsError] = useState('');
+
+  // Custom in-app notification alert state
+  const [customAlert, setCustomAlert] = useState({
+    show: false,
+    title: '',
+    message: '',
+    type: 'error', // 'error' | 'success' | 'warning'
+    onConfirm: null
+  });
+
+  const showAlert = (title, message, type = 'error', onConfirmCallback = null) => {
+    setCustomAlert({
+      show: true,
+      title,
+      message,
+      type,
+      onConfirm: onConfirmCallback
+    });
+  };
+
+  // Password criteria & strength helpers
+  const getPasswordCriteria = (pass = '') => ({
+    hasLength: pass.length >= 8,
+    hasUpper: /[A-Z]/.test(pass),
+    hasLower: /[a-z]/.test(pass),
+    hasNumber: /[0-9]/.test(pass),
+    hasSpecial: /[^A-Za-z0-9]/.test(pass)
+  });
+
+  const getPasswordStrength = (pass = '') => {
+    if (!pass) return { score: 0, label: '', color: '#94a3b8', percent: 0 };
+    const criteria = getPasswordCriteria(pass);
+    const metCount = Object.values(criteria).filter(Boolean).length;
+    if (metCount <= 2) return { score: 1, label: 'Weak', color: '#ef4444', percent: 25 };
+    if (metCount === 3) return { score: 2, label: 'Fair', color: '#f59e0b', percent: 50 };
+    if (metCount === 4) return { score: 3, label: 'Good', color: '#38bdf8', percent: 75 };
+    return { score: 4, label: 'Strong', color: '#22c55e', percent: 100 };
+  };
+
+  const passwordCriteria = getPasswordCriteria(formData.password);
+  const passwordStrength = getPasswordStrength(formData.password);
+  const isPasswordMatchDirty = Boolean(formData.confirmPassword);
+  const isPasswordMatching = Boolean(formData.password && formData.password === formData.confirmPassword);
+
+  useEffect(() => {
+    if (signupType) {
+      setIsStudent(signupType === 'student');
+    }
+  }, [signupType]);
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimateIn(true), 10);
@@ -54,21 +121,37 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+    setTermsError('');
+
+    // Terms and Conditions agreement check
+    if (!agreeToTerms) {
+      setTermsError('You must agree to the Terms and Conditions and Privacy Policy to register.');
+      showAlert("Terms & Conditions Required", "Please accept the Terms and Conditions and Privacy Policy before proceeding.", "warning");
+      return;
+    }
 
     // Student ID Validation
     if (isStudent) {
       const studentIdPattern = /^\d{4}-\d{4,6}$/;
       const enteredStudentId = (formData.studentNumber || '').trim();
       if (!enteredStudentId || !studentIdPattern.test(enteredStudentId)) {
-        setStudentIdError('Incorrect student ID. Must follow exact format: YYYY-XXXXX (e.g. 2024-10234)');
+        const errMsg = 'Incorrect student ID. Must follow exact format: YYYY-XXXXX (e.g. 2024-10234)';
+        setStudentIdError(errMsg);
+        showAlert("Invalid Student ID", errMsg, "error");
         return;
       }
       setStudentIdError('');
     }
 
+    if (formData.password.length < 8) {
+      setFormError('Password must be at least 8 characters long.');
+      showAlert("Weak Password", "Password must be at least 8 characters long.", "error");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setFormError('Passwords do not match!');
-      alert('Passwords do not match!');
+      showAlert("Password Mismatch", "Passwords do not match. Please verify your confirmation password.", "error");
       return;
     }
 
@@ -122,11 +205,13 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
         localStorage.setItem('token', data.token);
       }
 
-      if (onSignupSuccess) {
-        onSignupSuccess(registeredUser);
-      } else if (onSwitchToLogin) {
-        onSwitchToLogin();
-      }
+      showAlert("Welcome!", "Account registered successfully! Redirecting to your dashboard...", "success", () => {
+        if (onSignupSuccess) {
+          onSignupSuccess(registeredUser);
+        } else if (onSwitchToLogin) {
+          onSwitchToLogin();
+        }
+      });
 
     } catch (error) {
       console.error('Signup error (local fallback):', error);
@@ -148,11 +233,13 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
       const filteredUsers = existingUsers.filter(u => u.email && u.email.toLowerCase() !== registeredUser.email.toLowerCase());
       localStorage.setItem('allUsers', JSON.stringify([...filteredUsers, registeredUser]));
 
-      if (onSignupSuccess) {
-        onSignupSuccess(registeredUser);
-      } else if (onSwitchToLogin) {
-        onSwitchToLogin();
-      }
+      showAlert("Welcome!", "Account registered successfully! Redirecting to your dashboard...", "success", () => {
+        if (onSignupSuccess) {
+          onSignupSuccess(registeredUser);
+        } else if (onSwitchToLogin) {
+          onSwitchToLogin();
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -245,6 +332,260 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
           display: inline-block;
         }
       `}</style>
+
+      {/* CUSTOM NOTIFICATION ALERT MODAL */}
+      {customAlert.show && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.65)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 10000,
+          padding: '20px',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{
+            background: isDarkMode ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(2, 132, 199, 0.2)',
+            padding: '32px',
+            borderRadius: '20px',
+            maxWidth: '400px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            animation: 'modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '50%',
+              background: customAlert.type === 'success'
+                ? 'rgba(34, 197, 94, 0.15)'
+                : customAlert.type === 'warning'
+                ? 'rgba(245, 158, 11, 0.15)'
+                : 'rgba(239, 68, 68, 0.15)',
+              color: customAlert.type === 'success'
+                ? '#22c55e'
+                : customAlert.type === 'warning'
+                ? '#f59e0b'
+                : '#ef4444',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.6rem',
+              fontWeight: '800',
+              margin: '0 auto 16px auto'
+            }}>
+              {customAlert.type === 'success' ? '✓' : customAlert.type === 'warning' ? '!' : '✕'}
+            </div>
+
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: '700',
+              color: isDarkMode ? '#ffffff' : '#0f172a',
+              margin: '0 0 8px 0'
+            }}>
+              {customAlert.title}
+            </h3>
+
+            <p style={{
+              fontSize: '0.95rem',
+              color: '#94a3b8',
+              margin: '0 0 24px 0',
+              lineHeight: '1.5'
+            }}>
+              {customAlert.message}
+            </p>
+
+            <button
+              type="button"
+              className="interactive-btn"
+              onClick={() => {
+                const callback = customAlert.onConfirm;
+                setCustomAlert({ show: false, title: '', message: '', type: 'error', onConfirm: null });
+                if (callback) callback();
+              }}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                color: '#0f172a',
+                border: 'none',
+                padding: '12px',
+                borderRadius: '10px',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(56, 189, 248, 0.3)'
+              }}
+            >
+              OK, Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TERMS & CONDITIONS MODAL */}
+      {showTermsModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{
+            background: isDarkMode ? 'rgba(15, 23, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+            border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(2, 132, 199, 0.2)',
+            padding: '30px',
+            borderRadius: '20px',
+            maxWidth: '560px',
+            width: '100%',
+            maxHeight: '85vh',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            animation: 'modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            boxSizing: 'border-box',
+            position: 'relative'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)', paddingBottom: '14px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a' }}>
+                  Terms & Conditions
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+                  Syntax 4 Event Management Platform
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '1.2rem',
+                  cursor: 'pointer',
+                  padding: '6px 10px',
+                  borderRadius: '8px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div style={{
+              overflowY: 'auto',
+              flex: 1,
+              paddingRight: '8px',
+              fontSize: '0.86rem',
+              lineHeight: '1.6',
+              color: isDarkMode ? '#cbd5e1' : '#475569'
+            }}>
+              <p style={{ marginTop: 0 }}>
+                Welcome to <strong>Syntax 4</strong>. Please read these Terms and Conditions carefully before creating an account. By registering, you agree to abide by the policies detailed below.
+              </p>
+
+              <h4 style={{ color: isDarkMode ? '#38bdf8' : '#0284c7', margin: '14px 0 6px 0', fontSize: '0.92rem' }}>
+                1. Account Registration & User Types
+              </h4>
+              <p style={{ margin: 0 }}>
+                You must provide accurate and verifiable information during registration. If registering as a <strong>Student</strong>, your Student ID must match an active enrollment at a recognized educational institution. Non-students register as guests with general event access privileges.
+              </p>
+
+              <h4 style={{ color: isDarkMode ? '#38bdf8' : '#0284c7', margin: '14px 0 6px 0', fontSize: '0.92rem' }}>
+                2. Privacy & Data Protection
+              </h4>
+              <p style={{ margin: 0 }}>
+                We respect your personal privacy. Your data (name, email address, institutional affiliation) will be strictly used for authentication, certificate generation, and event notifications. We do not sell or transfer your credentials to third-party advertisers.
+              </p>
+
+              <h4 style={{ color: isDarkMode ? '#38bdf8' : '#0284c7', margin: '14px 0 6px 0', fontSize: '0.92rem' }}>
+                3. Event Participation & Code of Conduct
+              </h4>
+              <p style={{ margin: 0 }}>
+                Syntax 4 fosters an inclusive and collaborative tech community. Harassment, disruption of workshops or hackathons, offensive behavior, or unauthorized automated activity will lead to immediate account termination.
+              </p>
+
+              <h4 style={{ color: isDarkMode ? '#38bdf8' : '#0284c7', margin: '14px 0 6px 0', fontSize: '0.92rem' }}>
+                4. Account Security
+              </h4>
+              <p style={{ margin: 0 }}>
+                You are solely responsible for maintaining the confidentiality of your account credentials. Promptly report any unauthorized access to the Syntax 4 administration team.
+              </p>
+            </div>
+
+            {/* Footer Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              marginTop: '20px',
+              borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+              paddingTop: '16px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="interactive-btn"
+                style={{
+                  flex: 1,
+                  background: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#e2e8f0',
+                  color: isDarkMode ? '#ffffff' : '#0f172a',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAgreeToTerms(true);
+                  setTermsError('');
+                  setShowTermsModal(false);
+                }}
+                className="interactive-btn"
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                  color: '#0f172a',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(56, 189, 248, 0.35)'
+                }}
+              >
+                I Agree & Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BUTTER-SMOOTH SLIDING & MORPHING NAVIGATION BAR */}
       <nav style={{
@@ -466,20 +807,109 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
           width: '100%'
         }}>
           
-          {/* Title — changes based on signup type */}
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          {/* Title — dynamically adapts to student or general signup */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: isDarkMode ? '#ffffff' : '#0f172a', margin: '0 0 8px 0' }}>
               {isStudent ? 'Student Sign Up' : 'Create Account'}
             </h1>
             <p style={{ fontSize: '0.95rem', color: '#94a3b8', margin: 0 }}>
               {isStudent
                 ? 'Register with your student credentials'
-                : 'Register your profile credentials directly to the database'}
+                : 'Register your personal or guest account credentials'}
             </p>
           </div>
 
           <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
+            {/* Student or Non-Student Question / Toggle Selector */}
+            <div style={{
+              background: isDarkMode ? 'rgba(15, 23, 42, 0.65)' : 'rgba(241, 245, 249, 0.8)',
+              padding: '16px 20px',
+              borderRadius: '16px',
+              border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid rgba(0, 0, 0, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: '700', color: isDarkMode ? '#f8fafc' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>🎓</span> Are you currently a student? *
+                </span>
+                <span style={{ fontSize: '0.78rem', color: isStudent ? '#38bdf8' : '#94a3b8', fontWeight: '600' }}>
+                  {isStudent ? 'Student Registration' : 'Non-Student / Guest Registration'}
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStudent(true);
+                    setStudentIdError('');
+                  }}
+                  className="interactive-btn"
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: isStudent
+                      ? '2px solid #38bdf8'
+                      : (isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'),
+                    background: isStudent
+                      ? (isDarkMode ? 'rgba(56, 189, 248, 0.18)' : 'rgba(56, 189, 248, 0.15)')
+                      : (isDarkMode ? 'rgba(30, 41, 59, 0.5)' : '#ffffff'),
+                    color: isStudent ? (isDarkMode ? '#38bdf8' : '#0284c7') : (isDarkMode ? '#94a3b8' : '#64748b'),
+                    fontWeight: isStudent ? '700' : '600',
+                    fontSize: '0.92rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.25s ease',
+                    boxShadow: isStudent ? '0 4px 15px rgba(56, 189, 248, 0.25)' : 'none'
+                  }}
+                >
+                  <span style={{ fontSize: '1.1rem' }}>🎓</span>
+                  <span>Yes, I am a Student</span>
+                  {isStudent && <span style={{ marginLeft: 'auto', fontSize: '0.85rem' }}>✓</span>}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStudent(false);
+                    setStudentIdError('');
+                    setFormData(prev => ({ ...prev, studentNumber: '' }));
+                  }}
+                  className="interactive-btn"
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: !isStudent
+                      ? '2px solid #38bdf8'
+                      : (isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'),
+                    background: !isStudent
+                      ? (isDarkMode ? 'rgba(56, 189, 248, 0.18)' : 'rgba(56, 189, 248, 0.15)')
+                      : (isDarkMode ? 'rgba(30, 41, 59, 0.5)' : '#ffffff'),
+                    color: !isStudent ? (isDarkMode ? '#38bdf8' : '#0284c7') : (isDarkMode ? '#94a3b8' : '#64748b'),
+                    fontWeight: !isStudent ? '700' : '600',
+                    fontSize: '0.92rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.25s ease',
+                    boxShadow: !isStudent ? '0 4px 15px rgba(56, 189, 248, 0.25)' : 'none'
+                  }}
+                >
+                  <span style={{ fontSize: '1.1rem' }}>👤</span>
+                  <span>No, Not a Student</span>
+                  {!isStudent && <span style={{ marginLeft: 'auto', fontSize: '0.85rem' }}>✓</span>}
+                </button>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               
               {/* Full Name Field with File-User Icon */}
@@ -560,7 +990,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     }}
                     style={{
                       ...inputStyle,
-                      border: studentIdError ? '1px solid #ef4444' : inputStyle.border
+                      borderColor: studentIdError ? '#ef4444' : inputStyle.border
                     }}
                   />
                   <img
@@ -583,7 +1013,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                 </div>
                 {studentIdError && (
                   <div style={{ color: '#ef4444', fontSize: '0.82rem', marginTop: '6px', fontWeight: '600' }}>
-                    ⚠️ {studentIdError}
+                    {studentIdError}
                   </div>
                 )}
               </div>
@@ -591,7 +1021,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               
-              {/* Password Field with Lock Icon */}
+              {/* Password Field with Lock Icon & Toggle */}
               <div>
                 <label style={labelStyle}>Password *</label>
                 <div style={{ position: 'relative' }}>
@@ -601,7 +1031,13 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    style={{ ...inputStyle, paddingRight: '60px' }}
+                    style={{
+                      ...inputStyle,
+                      paddingRight: '48px',
+                      borderColor: formData.password
+                        ? (passwordStrength.score >= 3 ? 'rgba(34, 197, 94, 0.6)' : 'rgba(56, 189, 248, 0.4)')
+                        : inputStyle.border
+                    }}
                   />
                   <img 
                     src={currentLockIcon} 
@@ -621,6 +1057,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Hide password" : "Show password"}
                     style={{
                       position: 'absolute',
                       right: '12px',
@@ -628,19 +1065,84 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                       transform: 'translateY(-50%)',
                       background: 'transparent',
                       border: 'none',
-                      color: '#94a3b8',
+                      color: showPassword ? '#38bdf8' : '#94a3b8',
                       cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      padding: '4px 8px'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '6px',
+                      borderRadius: '6px',
+                      transition: 'color 0.2s'
                     }}
                   >
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? <EyeOffIcon size={18} color="#38bdf8" /> : <EyeIcon size={18} color="#94a3b8" />}
                   </button>
                 </div>
+
+                {/* Password Strength Meter & Badges */}
+                {formData.password && (
+                  <div style={{ marginTop: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', fontSize: '0.76rem' }}>
+                      <span style={{ color: '#94a3b8' }}>Strength</span>
+                      <span style={{ color: passwordStrength.color, fontWeight: '700' }}>
+                        {passwordStrength.label}
+                      </span>
+                    </div>
+
+                    <div style={{
+                      height: '4px',
+                      width: '100%',
+                      background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                      borderRadius: '999px',
+                      overflow: 'hidden',
+                      marginBottom: '6px'
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${passwordStrength.percent}%`,
+                        background: passwordStrength.color,
+                        borderRadius: '999px',
+                        transition: 'all 0.3s ease'
+                      }} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {[
+                        { label: '8+ chars', met: passwordCriteria.hasLength },
+                        { label: 'Upper', met: passwordCriteria.hasUpper },
+                        { label: 'Lower', met: passwordCriteria.hasLower },
+                        { label: 'Number', met: passwordCriteria.hasNumber },
+                        { label: 'Symbol', met: passwordCriteria.hasSpecial }
+                      ].map((item, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: '600',
+                            padding: '1px 6px',
+                            borderRadius: '999px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            background: item.met
+                              ? (isDarkMode ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.12)')
+                              : (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)'),
+                            color: item.met ? '#22c55e' : (isDarkMode ? '#64748b' : '#94a3b8'),
+                            border: item.met
+                              ? '1px solid rgba(34, 197, 94, 0.35)'
+                              : (isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)')
+                          }}
+                        >
+                          <span>{item.met ? '✓' : '○'}</span>
+                          {item.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Confirm Password Field with Lock Icon */}
+              {/* Confirm Password Field with Lock Icon & Toggle */}
               <div>
                 <label style={labelStyle}>Confirm Password *</label>
                 <div style={{ position: 'relative' }}>
@@ -650,7 +1152,16 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    style={{ ...inputStyle, paddingRight: '60px' }}
+                    style={{
+                      ...inputStyle,
+                      paddingRight: '48px',
+                      borderColor: isPasswordMatchDirty
+                        ? (isPasswordMatching ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)')
+                        : inputStyle.border,
+                      boxShadow: isPasswordMatchDirty
+                        ? (isPasswordMatching ? '0 0 8px rgba(34, 197, 94, 0.15)' : '0 0 8px rgba(239, 68, 68, 0.15)')
+                        : 'none'
+                    }}
                   />
                   <img 
                     src={currentLockIcon} 
@@ -670,6 +1181,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
                     style={{
                       position: 'absolute',
                       right: '12px',
@@ -677,18 +1189,116 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                       transform: 'translateY(-50%)',
                       background: 'transparent',
                       border: 'none',
-                      color: '#94a3b8',
+                      color: showConfirmPassword ? '#38bdf8' : '#94a3b8',
                       cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      padding: '4px 8px'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '6px',
+                      borderRadius: '6px',
+                      transition: 'color 0.2s'
                     }}
                   >
-                    {showConfirmPassword ? 'Hide' : 'Show'}
+                    {showConfirmPassword ? <EyeOffIcon size={18} color="#38bdf8" /> : <EyeIcon size={18} color="#94a3b8" />}
                   </button>
                 </div>
+
+                {/* Match indicator */}
+                {isPasswordMatchDirty && (
+                  <div style={{
+                    color: isPasswordMatching ? '#22c55e' : '#ef4444',
+                    fontSize: '0.78rem',
+                    marginTop: '6px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {isPasswordMatching ? (
+                      <>
+                        <span>✓</span> Passwords match
+                      </>
+                    ) : (
+                      <>
+                        <span>✕</span> Passwords do not match
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
+            </div>
+
+            {/* Terms and Conditions Agreement Checkbox */}
+            <div style={{ marginTop: '6px' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px',
+                cursor: 'pointer',
+                userSelect: 'none',
+                fontSize: '0.88rem',
+                color: isDarkMode ? '#cbd5e1' : '#475569',
+                lineHeight: '1.45'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={agreeToTerms}
+                  onChange={(e) => {
+                    setAgreeToTerms(e.target.checked);
+                    if (termsError) setTermsError('');
+                  }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    marginTop: '2px',
+                    accentColor: '#38bdf8',
+                    cursor: 'pointer',
+                    borderRadius: '4px',
+                    flexShrink: 0
+                  }}
+                />
+                <span>
+                  I have read and agree to the{' '}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowTermsModal(true);
+                    }}
+                    style={{
+                      color: '#38bdf8',
+                      fontWeight: '700',
+                      textDecoration: 'underline',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Terms and Conditions
+                  </span>{' '}
+                  and{' '}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowTermsModal(true);
+                    }}
+                    style={{
+                      color: '#38bdf8',
+                      fontWeight: '700',
+                      textDecoration: 'underline',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Privacy Policy
+                  </span>
+                  . *
+                </span>
+              </label>
+              {termsError && (
+                <div style={{ color: '#ef4444', fontSize: '0.82rem', marginTop: '6px', fontWeight: '600' }}>
+                  {termsError}
+                </div>
+              )}
             </div>
 
             <button

@@ -443,7 +443,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                                 Decline
                               </button>
                               <button onClick={() => handleConfirmRegistration(regId)} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}>
-                                ✅ Confirm Registration
+                                Confirm Registration
                               </button>
                             </div>
                           </div>

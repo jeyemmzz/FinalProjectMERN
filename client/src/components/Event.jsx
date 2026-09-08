@@ -173,9 +173,9 @@ export default function Event({
         }
       } else {
         const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-        const matchedStudent = allUsers.find(u => 
-          u.studentId && 
-          u.studentId !== 'N/A' && 
+        const matchedStudent = allUsers.find(u =>
+          u.studentId &&
+          u.studentId !== 'N/A' &&
           u.studentId.trim().toLowerCase() === enteredId.toLowerCase()
         );
         const formatValid = /^\d{4}-\d{4,6}$/.test(enteredId);
@@ -759,7 +759,7 @@ export default function Event({
               <div style={{ textAlign: 'center', padding: '10px 0' }}>
                 {existingStatus === 'Declined' ? (
                   <>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>❌</div>
+
                     <h3 style={{ color: '#f43f5e', marginBottom: '8px', fontSize: '1.15rem' }}>Registration Declined</h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.6' }}>
                       Your registration for <strong>{selectedEvent?.title}</strong> was <span style={{ color: '#f43f5e', fontWeight: '700' }}>declined by the admin</span>.
@@ -771,7 +771,7 @@ export default function Event({
                   </>
                 ) : existingStatus === 'Confirmed' || existingStatus === 'Approved' ? (
                   <>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>✅</div>
+
                     <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.15rem' }}>Already Confirmed!</h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
                       Your registration for <strong>{selectedEvent?.title}</strong> has been <span style={{ color: '#10b981', fontWeight: '700' }}>confirmed</span>. Check your dashboard for your digital receipt.
@@ -779,7 +779,7 @@ export default function Event({
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🎉</div>
+
                     <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.2rem' }}>Registration Submitted!</h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
                       You are registered for <strong>{selectedEvent?.title}</strong>. Awaiting admin confirmation — check your dashboard for updates.
@@ -874,7 +874,7 @@ export default function Event({
                   </div>
                 )}
 
-                <button                  type="submit"
+                <button type="submit"
                   className="submit-btn"
                   disabled={isSubmitting}
                   style={{ padding: '10px', fontSize: '0.85rem', marginTop: '8px', fontWeight: '700', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
