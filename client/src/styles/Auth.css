@@ -67,19 +67,29 @@ body {
   animation: pageSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Force white text on image-backed pages regardless of light/dark theme */
-/* Only applied to the content area, NOT the nav, so nav pill uses theme colors correctly */
-.auth-page-wrapper.image-bg {
-  --auth-input-bg: rgba(0, 15, 34, 0.6);
-  --auth-border-color: rgba(192, 230, 253, 0.2);
-  --auth-card-bg: rgba(0, 15, 34, 0.65);
+/* Theme-specific variables on image-backed pages (Event, About) */
+body[data-theme="dark"] .auth-page-wrapper.image-bg {
+  --auth-input-bg: rgba(10, 24, 46, 0.7);
+  --auth-border-color: rgba(56, 189, 248, 0.2);
+  --auth-card-bg: linear-gradient(135deg, rgba(15, 35, 66, 0.92) 0%, rgba(27, 53, 84, 0.90) 100%);
 }
 
-/* Applied to content containers on image-bg pages to force white/light text over dark overlay */
-.image-content {
+body[data-theme="light"] .auth-page-wrapper.image-bg {
+  --auth-input-bg: rgba(241, 245, 249, 0.95);
+  --auth-border-color: rgba(203, 213, 225, 0.85);
+  --auth-card-bg: #ffffff;
+}
+
+body[data-theme="dark"] .image-content {
   --auth-text-main: #ffffff;
-  --auth-text-muted: #bde0fe;
+  --auth-text-muted: #80aad3;
   --auth-text-sub: #c0e6fd;
+}
+
+body[data-theme="light"] .image-content {
+  --auth-text-main: #0f2342;
+  --auth-text-muted: #475569;
+  --auth-text-sub: #334e68;
 }
 
 /* Astig at Smooth Page Transition Animation */

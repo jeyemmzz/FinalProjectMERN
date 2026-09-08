@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+const building1 = new URL('../assets/building1.jpg', import.meta.url).href;
 
 // Asset mapping batay sa mga eksaktong filenames mo
 const fileUserDark = new URL('../assets/file-user-fill.png', import.meta.url).href;
@@ -9,6 +10,10 @@ const lockIconDark = new URL('../assets/lock-line.png', import.meta.url).href;
 const lockIconLight = new URL('../assets/lock-line (1).png', import.meta.url).href;
 const moonIcon = new URL('../assets/moon-fill (2).png', import.meta.url).href;
 const sunIcon = new URL('../assets/sun-fill (1).png', import.meta.url).href;
+const gradCapDark = new URL('../assets/graduation-cap-line (1).png', import.meta.url).href;
+const gradCapLight = new URL('../assets/graduation-cap-line (2).png', import.meta.url).href;
+const userFillDark = new URL('../assets/user-fill.png', import.meta.url).href;
+const userFillLight = new URL('../assets/user-fill (1).png', import.meta.url).href;
 
 // Clean modern SVG icons for toggling password visibility
 const EyeIcon = ({ size = 18, color = '#94a3b8' }) => (
@@ -276,17 +281,31 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     <div style={{
       minHeight: '100vh',
       width: '100vw',
-      background: isDarkMode 
-        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)' 
-        : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
+      backgroundImage: `url(${building1})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'fixed',
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',
       overflowX: 'hidden',
-      transition: 'background 0.5s ease',
-      paddingBottom: '60px'
+      paddingBottom: '60px',
+      position: 'relative'
     }}>
       
+      {/* Dark overlay for readability */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(0,15,34,0.82) 0%, rgba(27,53,84,0.75) 50%, rgba(15,35,66,0.85) 100%)'
+          : 'linear-gradient(135deg, rgba(15,35,66,0.70) 0%, rgba(37,70,112,0.65) 50%, rgba(0,15,34,0.75) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition: 'background 0.5s ease',
+      }} />
+
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -699,9 +718,6 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     <img src={currentThemeIcon} alt="Theme Icon" style={{ width: '11px', height: '11px', objectFit: 'contain' }} />
                   </div>
                 </div>
-                <span style={{ fontSize: '0.82rem', color: isDarkMode ? '#94a3b8' : '#64748b', letterSpacing: '0.02em' }}>
-                  {isDarkMode ? 'Dark' : 'Light'}
-                </span>
               </div>
 
               <button
@@ -835,7 +851,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                 <span style={{ fontSize: '0.9rem', fontWeight: '700', color: isDarkMode ? '#f8fafc' : '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>🎓</span> Are you currently a student? *
                 </span>
-                <span style={{ fontSize: '0.78rem', color: isStudent ? '#38bdf8' : '#94a3b8', fontWeight: '600' }}>
+                <span style={{ fontSize: '0.78rem', color: isDarkMode ? '#38bdf8' : '#0284c7', fontWeight: '600' }}>
                   {isStudent ? 'Student Registration' : 'Non-Student / Guest Registration'}
                 </span>
               </div>
@@ -849,7 +865,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                   }}
                   className="interactive-btn"
                   style={{
-                    padding: '12px 16px',
+                    padding: '12px 18px',
                     borderRadius: '12px',
                     border: isStudent
                       ? '2px solid #38bdf8'
@@ -863,15 +879,33 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
+                    justifyContent: 'space-between',
                     transition: 'all 0.25s ease',
                     boxShadow: isStudent ? '0 4px 15px rgba(56, 189, 248, 0.25)' : 'none'
                   }}
                 >
-                  <span style={{ fontSize: '1.1rem' }}>🎓</span>
-                  <span>Yes, I am a Student</span>
-                  {isStudent && <span style={{ marginLeft: 'auto', fontSize: '0.85rem' }}>✓</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img
+                      src={isDarkMode ? gradCapDark : gradCapLight}
+                      alt="Student"
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        opacity: isStudent ? 1 : 0.75
+                      }}
+                    />
+                    <span>Yes, I am a Student</span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    width: '18px',
+                    textAlign: 'right',
+                    visibility: isStudent ? 'visible' : 'hidden',
+                    opacity: isStudent ? 1 : 0,
+                    transition: 'opacity 0.2s ease, visibility 0.2s ease'
+                  }}>✓</span>
                 </button>
 
                 <button
@@ -883,7 +917,7 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                   }}
                   className="interactive-btn"
                   style={{
-                    padding: '12px 16px',
+                    padding: '12px 18px',
                     borderRadius: '12px',
                     border: !isStudent
                       ? '2px solid #38bdf8'
@@ -897,15 +931,33 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
+                    justifyContent: 'space-between',
                     transition: 'all 0.25s ease',
                     boxShadow: !isStudent ? '0 4px 15px rgba(56, 189, 248, 0.25)' : 'none'
                   }}
                 >
-                  <span style={{ fontSize: '1.1rem' }}>👤</span>
-                  <span>No, Not a Student</span>
-                  {!isStudent && <span style={{ marginLeft: 'auto', fontSize: '0.85rem' }}>✓</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img
+                      src={isDarkMode ? userFillDark : userFillLight}
+                      alt="Non-Student"
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        objectFit: 'contain',
+                        opacity: !isStudent ? 1 : 0.75
+                      }}
+                    />
+                    <span>No, Not a Student</span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    width: '18px',
+                    textAlign: 'right',
+                    visibility: !isStudent ? 'visible' : 'hidden',
+                    opacity: !isStudent ? 1 : 0,
+                    transition: 'opacity 0.2s ease, visibility 0.2s ease'
+                  }}>✓</span>
                 </button>
               </div>
             </div>

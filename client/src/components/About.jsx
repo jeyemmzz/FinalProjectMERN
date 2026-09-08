@@ -75,11 +75,11 @@ export default function About({
     }
   };
 
-  // Always use dark-mode (white/light) icons since cards always have dark bg on image pages
-  const currentFlashlight = flashlightIconDark;
-  const currentCalendar = calendarIconDark;
-  const currentLock = lockIconDark;
-  const currentBrush = brushIconDark;
+  // Use dark-mode icons on dark background, light-mode (darker) icons on white background
+  const currentFlashlight = isDarkMode ? flashlightIconDark : flashlightIconLight;
+  const currentCalendar = isDarkMode ? calendarIconDark : calendarIconLight;
+  const currentLock = isDarkMode ? lockIconDark : lockIconLight;
+  const currentBrush = isDarkMode ? brushIconDark : brushIconLight;
 
   return (
     <div
@@ -233,10 +233,6 @@ export default function About({
                     />
                   </div>
                 </div>
-                {/* Label */}
-                <span style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)', letterSpacing: '0.02em' }}>
-                  {isDarkMode ? 'Dark' : 'Light'}
-                </span>
               </div>
 
               {currentUser ? (
@@ -318,7 +314,26 @@ export default function About({
       </nav>
 
       <div className="auth-container image-content" style={{ justifyContent: 'center', alignItems: 'center', padding: '50px 20px', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
-        <div className="auth-card-pro" style={{ maxWidth: '800px', width: '100%', textAlign: 'left', padding: '50px', boxSizing: 'border-box' }}>
+        <div
+          className="auth-card-pro"
+          style={{
+            maxWidth: '800px',
+            width: '100%',
+            textAlign: 'left',
+            padding: '50px',
+            boxSizing: 'border-box',
+            background: isDarkMode
+              ? 'linear-gradient(135deg, rgba(15, 35, 66, 0.94) 0%, rgba(27, 53, 84, 0.92) 100%)'
+              : '#ffffff',
+            border: isDarkMode
+              ? '1px solid rgba(56, 189, 248, 0.25)'
+              : '1px solid rgba(226, 232, 240, 0.9)',
+            boxShadow: isDarkMode
+              ? '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(15, 35, 66, 0.25)'
+              : '0 20px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05)',
+            transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
+          }}
+        >
           {isPageLoading ? (
             <div>
               <div className="skeleton-loader" style={{ height: '35px', width: '40%', marginBottom: '20px' }}></div>
@@ -328,110 +343,161 @@ export default function About({
             </div>
           ) : (
             <>
-              <h2 style={{ fontSize: '2.2rem', marginBottom: '16px', color: 'var(--auth-text-main)', letterSpacing: '-0.025em', fontWeight: '700' }}>About the System</h2>
-              <p className="auth-subtitle" style={{ fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '30px', color: 'var(--auth-text-muted)' }}>
-                The <strong style={{ color: 'var(--auth-text-main)' }}>Syntax4 Event System</strong> is an enterprise-grade portal engineered to bring that vision to life. Designed for public conferences, community programs, and effortless registrations, the platform bridges the gap between event organizers and attendees from all walks of life—streamlining scheduling, tracking participation, and delivering seamless, engaging experiences with absolute reliability.
+              <h2 style={{ fontSize: '2.2rem', marginBottom: '16px', color: isDarkMode ? '#ffffff' : '#0f2342', letterSpacing: '-0.025em', fontWeight: '700' }}>About the System</h2>
+              <p className="auth-subtitle" style={{ fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '30px', color: isDarkMode ? '#c0e6fd' : '#475569' }}>
+                The <strong style={{ color: isDarkMode ? '#ffffff' : '#0f2342' }}>Syntax4 Event System</strong> is an enterprise-grade portal engineered to bring that vision to life. Designed for public conferences, community programs, and effortless registrations, the platform bridges the gap between event organizers and attendees from all walks of life—streamlining scheduling, tracking participation, and delivering seamless, engaging experiences with absolute reliability.
               </p>
 
-              <div style={{ background: 'var(--auth-input-bg)', padding: '25px', borderRadius: '14px', border: '1px solid rgba(56, 189, 248, 0.15)', marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '1.2rem', color: '#38bdf8', marginBottom: '10px', fontWeight: '600' }}>Our Vision & Mission</h3>
-                <p style={{ fontSize: '0.92rem', color: 'var(--auth-text-sub)', lineHeight: '1.6' }}>
+              <div style={{
+                background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                padding: '25px',
+                borderRadius: '14px',
+                border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(226, 232, 240, 0.9)',
+                marginBottom: '30px'
+              }}>
+                <h3 style={{ fontSize: '1.2rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '10px', fontWeight: '600' }}>Our Vision & Mission</h3>
+                <p style={{ fontSize: '0.92rem', color: isDarkMode ? '#c0e6fd' : '#475569', lineHeight: '1.6' }}>
                   Empowering administrators, organizers, and participants with a seamless, high-performance platform that resolves scheduling conflicts and removes traditional paperwork entirely.
                 </p>
               </div>
 
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--auth-text-main)', marginBottom: '16px', fontWeight: '600' }}>Core Capabilities</h3>
+              <h3 style={{ fontSize: '1.2rem', color: isDarkMode ? '#ffffff' : '#0f2342', marginBottom: '16px', fontWeight: '600' }}>Core Capabilities</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '35px' }}>
 
                 {/* Real-Time Attendance */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <img src={currentFlashlight} alt="Real-Time Attendance" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
                     Real-Time Attendance
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Instantly log and verify participant check-ins with automated audit trails.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Instantly log and verify participant check-ins with automated audit trails.</p>
                 </div>
 
                 {/* Institutional Calendars */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <img src={currentCalendar} alt="Institutional Calendars" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
                     Institutional Calendars
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>View upcoming university milestones and seminars in an organized timeline.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>View upcoming university milestones and seminars in an organized timeline.</p>
                 </div>
 
                 {/* Role-Based Security */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <img src={currentLock} alt="Role-Based Security" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
                     Role-Based Security
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Restricted access levels ensuring complete safety for admin and student accounts.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Restricted access levels ensuring complete safety for admin and student accounts.</p>
                 </div>
 
                 {/* Modern Glass UI */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <img src={currentBrush} alt="Modern Glass UI" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
                     Modern Glass UI
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Sleek, dark-themed frosted glass design optimized for any device screen.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Sleek, dark-themed frosted glass design optimized for any device screen.</p>
                 </div>
 
                 {/* Seamless Registration */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                     </svg>
                     Seamless Registration
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Quick and effortless event sign-up for attendees — no paperwork, no hassle, just a few clicks.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Quick and effortless event sign-up for attendees — no paperwork, no hassle, just a few clicks.</p>
                 </div>
 
                 {/* Public Event Discovery */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     Public Event Discovery
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Browse and search upcoming public conferences, community programs, workshops, and seminars with ease.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Browse and search upcoming public conferences, community programs, workshops, and seminars with ease.</p>
                 </div>
 
                 {/* Attendee Management */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
                     </svg>
                     Attendee Management
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Organizers can monitor registrations, view participant lists, and manage attendees efficiently in real time.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Organizers can monitor registrations, view participant lists, and manage attendees efficiently in real time.</p>
                 </div>
 
                 {/* Multi-Category Events */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
                     </svg>
                     Multi-Category Events
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>Supports Seminars, Workshops, Competitions, and Meetings — all organized and filterable in one unified platform.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>Supports Seminars, Workshops, Competitions, and Meetings — all organized and filterable in one unified platform.</p>
                 </div>
 
                 {/* Organizer Dashboard */}
-                <div style={{ background: 'var(--auth-input-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--auth-border-color)' }}>
-                  <h4 style={{ fontSize: '1rem', color: '#38bdf8', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{
+                  background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.18)' : '1px solid rgba(226, 232, 240, 0.9)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#38bdf8' : '#0284c7', marginBottom: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
                     </svg>
                     Organizer Dashboard
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.5' }}>A powerful admin panel to create, edit, and manage events with full control over schedules, venues, and capacities.</p>
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#64748b', lineHeight: '1.5' }}>A powerful admin panel to create, edit, and manage events with full control over schedules, venues, and capacities.</p>
                 </div>
 
               </div>
@@ -440,7 +506,7 @@ export default function About({
                 <button onClick={currentUser ? onNavigateDashboard : onNavigateHome} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', cursor: 'pointer' }}>
                   {currentUser ? 'Go to Profile' : 'Back to Home'}
                 </button>
-                <button onClick={onNavigateEvents} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', cursor: 'pointer' }}>
+                <button onClick={onNavigateEvents} className="submit-btn" style={{ width: 'auto', padding: '12px 28px', background: isDarkMode ? 'rgba(56, 189, 248, 0.1)' : 'rgba(2, 132, 199, 0.1)', color: isDarkMode ? '#38bdf8' : '#0284c7', border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(2, 132, 199, 0.3)', cursor: 'pointer' }}>
                   Explore Events
                 </button>
               </div>

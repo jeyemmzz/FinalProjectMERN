@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+const building1 = new URL('../assets/building1.jpg', import.meta.url).href;
 
 const userIconDark = new URL('../assets/user-3-line.png', import.meta.url).href;
 const userIconLight = new URL('../assets/user-3-line (1).png', import.meta.url).href;
@@ -293,19 +294,33 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
     <div style={{
       minHeight: '100vh',
       width: '100vw',
-      background: isDarkMode
-        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)'
-        : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
+      backgroundImage: `url(${building1})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'fixed',
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',
       overflowX: 'hidden',
-      transition: 'background 0.5s ease',
       paddingBottom: '60px',
       position: 'relative'
     }}>
 
+      {/* Dark overlay for readability */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(0,15,34,0.82) 0%, rgba(27,53,84,0.75) 50%, rgba(15,35,66,0.85) 100%)'
+          : 'linear-gradient(135deg, rgba(15,35,66,0.70) 0%, rgba(37,70,112,0.65) 50%, rgba(0,15,34,0.75) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition: 'background 0.5s ease',
+      }} />
+
       <style>{`
+
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -557,9 +572,6 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
                     <img src={currentThemeIcon} alt="Theme Icon" style={{ width: '11px', height: '11px', objectFit: 'contain' }} />
                   </div>
                 </div>
-                <span style={{ fontSize: '0.82rem', color: isDarkMode ? '#94a3b8' : '#64748b', letterSpacing: '0.02em' }}>
-                  {isDarkMode ? 'Dark' : 'Light'}
-                </span>
               </div>
 
               <button

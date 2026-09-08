@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 
@@ -22,9 +22,10 @@ let eventsList = [
     id: 101,
     title: 'React Workshop & UI Design',
     type: 'Workshop',
-    date: '2026-08-25',
+    date: 'Aug 25, 2026',
     venue: 'Lab 301',
-    description: 'Hands-on session using local memory.'
+    description: 'Hands-on session covering React fundamentals, component design, and UI best practices with live coding exercises.',
+    status: 'Upcoming'
   },
   {
     id: 102,
@@ -32,7 +33,62 @@ let eventsList = [
     type: 'Seminar',
     date: 'Oct 12, 2026',
     venue: 'NU MOA Main Auditorium',
-    description: 'Annual technology summit and networking.'
+    description: 'Annual technology summit featuring industry leaders sharing insights on emerging trends in AI, cloud, and software development.',
+    status: 'Upcoming'
+  },
+  {
+    id: 103,
+    title: 'Advanced Node.js & REST API Development',
+    type: 'Workshop',
+    date: 'Sep 18, 2026',
+    venue: 'Computer Lab 205, 2nd Floor',
+    description: 'Deep-dive workshop on building scalable REST APIs with Node.js, Express, and MongoDB. Includes authentication and deployment strategies.',
+    status: 'Upcoming'
+  },
+  {
+    id: 104,
+    title: 'Cybersecurity Awareness Seminar',
+    type: 'Seminar',
+    date: 'Nov 5, 2026',
+    venue: 'Innovation Hub, Room 401',
+    description: 'An informative seminar on modern cybersecurity threats, ethical hacking basics, and best practices for data protection in 2026.',
+    status: 'Upcoming'
+  },
+  {
+    id: 105,
+    title: 'Hackathon: Build for the Future',
+    type: 'Competition',
+    date: 'Oct 3, 2026',
+    venue: 'NU MOA Tech Arena',
+    description: 'A 24-hour hackathon where teams compete to build innovative solutions addressing real-world social and environmental challenges.',
+    status: 'Upcoming'
+  },
+  {
+    id: 106,
+    title: 'Web Design Showdown 2026',
+    type: 'Competition',
+    date: 'Nov 20, 2026',
+    venue: 'Digital Arts Studio, Room 102',
+    description: 'Teams compete to design and deploy a fully functional website in 6 hours. Judged on creativity, usability, and responsiveness.',
+    status: 'Upcoming'
+  },
+  {
+    id: 107,
+    title: 'Student Council General Assembly',
+    type: 'Meeting',
+    date: 'Sep 10, 2026',
+    venue: 'Conference Hall A, 3rd Floor',
+    description: 'Quarterly general assembly for all student council members to discuss academic calendar updates, upcoming events, and student concerns.',
+    status: 'Upcoming'
+  },
+  {
+    id: 108,
+    title: 'Department Heads Coordination Meeting',
+    type: 'Meeting',
+    date: 'Oct 28, 2026',
+    venue: 'Faculty Lounge, Room 210',
+    description: 'Monthly coordination meeting for department heads to align on curriculum updates, faculty concerns, and inter-department projects.',
+    status: 'Upcoming'
   }
 ];
 

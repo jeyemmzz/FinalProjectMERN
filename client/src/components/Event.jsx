@@ -394,10 +394,6 @@ export default function Event({
                     />
                   </div>
                 </div>
-                {/* Label */}
-                <span style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)', letterSpacing: '0.02em' }}>
-                  {isDarkMode ? 'Dark' : 'Light'}
-                </span>
               </div>
 
               {currentUser ? (
@@ -480,8 +476,8 @@ export default function Event({
 
       <div className="image-content" style={{ maxWidth: '1100px', width: '92%', margin: '40px auto', display: 'flex', flexDirection: 'column', gap: '25px', position: 'relative', zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--auth-text-main, #ffffff)', marginBottom: '8px' }}>Public Events</h1>
-          <p style={{ fontSize: '0.95rem', color: 'var(--auth-text-muted, #80aad3)' }}>Your gateway to public seminars, programs, and interactive learning.</p>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.5)', marginBottom: '8px' }}>Public Events</h1>
+          <p style={{ fontSize: '0.95rem', color: '#c0e6fd', textShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>Your gateway to public seminars, programs, and interactive learning.</p>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
@@ -493,12 +489,20 @@ export default function Event({
                 style={{
                   padding: '8px 16px',
                   borderRadius: '20px',
-                  border: selectedCategory === cat ? '1px solid #38bdf8' : '1px solid var(--auth-border-color)',
-                  background: selectedCategory === cat ? 'rgba(56, 189, 248, 0.15)' : 'var(--auth-input-bg)',
-                  color: selectedCategory === cat ? '#38bdf8' : 'var(--auth-text-muted)',
+                  border: selectedCategory === cat
+                    ? '1px solid #38bdf8'
+                    : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid rgba(226, 232, 240, 0.9)'),
+                  background: selectedCategory === cat
+                    ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7')
+                    : (isDarkMode ? 'linear-gradient(135deg, rgba(15, 35, 66, 0.92) 0%, rgba(27, 53, 84, 0.90) 100%)' : '#ffffff'),
+                  color: selectedCategory === cat
+                    ? (isDarkMode ? '#38bdf8' : '#ffffff')
+                    : (isDarkMode ? '#80aad3' : '#0f2342'),
                   fontSize: '0.85rem',
                   cursor: 'pointer',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  boxShadow: isDarkMode ? '0 4px 12px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 {cat}
@@ -514,39 +518,69 @@ export default function Event({
             style={{
               padding: '10px 16px',
               borderRadius: '10px',
-              border: '1px solid var(--auth-border-color)',
-              background: 'var(--auth-input-bg)',
-              color: 'var(--auth-text-main)',
+              border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid rgba(226, 232, 240, 0.9)',
+              background: isDarkMode ? 'rgba(15, 35, 66, 0.92)' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#0f2342',
               fontSize: '0.85rem',
               outline: 'none',
-              width: '260px'
+              width: '260px',
+              boxShadow: isDarkMode ? '0 4px 12px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.08)'
             }}
           />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px' }}>
           {isLoading ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--auth-text-muted)' }}>
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: isDarkMode ? 'var(--auth-text-muted)' : '#ffffff' }}>
               Loading events...
             </div>
           ) : filteredEvents.length > 0 ? (
             filteredEvents.map(ev => (
-              <div key={ev.id || ev._id} className="auth-card-pro" style={{ padding: '25px', margin: 0, display: 'flex', flexDirection: 'column', gap: '14px', boxSizing: 'border-box' }}>
+              <div
+                key={ev.id || ev._id}
+                className="auth-card-pro"
+                style={{
+                  padding: '25px',
+                  margin: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '14px',
+                  boxSizing: 'border-box',
+                  background: isDarkMode
+                    ? 'linear-gradient(135deg, rgba(15, 35, 66, 0.94) 0%, rgba(27, 53, 84, 0.92) 100%)'
+                    : '#ffffff',
+                  border: isDarkMode
+                    ? '1px solid rgba(56, 189, 248, 0.25)'
+                    : '1px solid rgba(226, 232, 240, 0.9)',
+                  boxShadow: isDarkMode
+                    ? '0 10px 25px rgba(0, 0, 0, 0.35), 0 0 15px rgba(15, 35, 66, 0.2)'
+                    : '0 10px 25px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04)',
+                  borderRadius: '16px',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease',
+                }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontWeight: '600' }}>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    padding: '3px 10px',
+                    borderRadius: '6px',
+                    background: isDarkMode ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.1)',
+                    color: isDarkMode ? '#38bdf8' : '#0284c7',
+                    fontWeight: '600'
+                  }}>
                     {ev.category || ev.type || 'Seminar'}
                   </span>
-                  <span style={{ fontSize: '0.75rem', color: ev.status === 'Full' ? '#f43f5e' : '#10b981', fontWeight: '600' }}>
+                  <span style={{ fontSize: '0.75rem', color: ev.status === 'Full' ? '#f43f5e' : (isDarkMode ? '#10b981' : '#059669'), fontWeight: '600' }}>
                     {ev.status || 'Upcoming'}
                   </span>
                 </div>
 
                 <div>
-                  <h3 style={{ fontSize: '1.2rem', color: 'var(--auth-text-main)', fontWeight: '700', marginBottom: '6px' }}>{ev.title}</h3>
+                  <h3 style={{ fontSize: '1.2rem', color: isDarkMode ? '#ffffff' : '#0f2342', fontWeight: '700', marginBottom: '6px' }}>{ev.title}</h3>
 
                   {/* Calendar Icon + Date */}
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                       <line x1="16" y1="2" x2="16" y2="6"></line>
                       <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -556,8 +590,8 @@ export default function Event({
                   </p>
 
                   {/* Map Pin Icon + Venue */}
-                  <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569', margin: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                       <circle cx="12" cy="10" r="3"></circle>
                     </svg>
@@ -565,7 +599,7 @@ export default function Event({
                   </p>
 
                   {ev.description && (
-                    <p style={{ fontSize: '0.8rem', color: 'var(--auth-text-muted)', margin: '6px 0 0 0' }}>{ev.description}</p>
+                    <p style={{ fontSize: '0.8rem', color: isDarkMode ? '#94a3b8' : '#64748b', margin: '6px 0 0 0' }}>{ev.description}</p>
                   )}
                 </div>
 
@@ -579,7 +613,7 @@ export default function Event({
               </div>
             ))
           ) : (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--auth-text-muted)' }}>
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: isDarkMode ? 'var(--auth-text-muted)' : '#ffffff' }}>
               No matching events found.
             </div>
           )}
@@ -611,12 +645,16 @@ export default function Event({
               position: 'relative',
               borderRadius: '16px',
               boxSizing: 'border-box',
-              background: isDarkMode ? 'rgba(0, 15, 34, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+              background: isDarkMode
+                ? 'linear-gradient(135deg, rgba(15, 35, 66, 0.96) 0%, rgba(27, 53, 84, 0.94) 100%)'
+                : '#ffffff',
               color: isDarkMode ? '#ffffff' : '#0f2342',
+              border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid rgba(226, 232, 240, 0.9)',
+              boxShadow: isDarkMode ? '0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)',
               '--auth-text-main': isDarkMode ? '#ffffff' : '#0f2342',
-              '--auth-text-muted': isDarkMode ? '#80aad3' : '#334e68',
-              '--auth-input-bg': isDarkMode ? 'rgba(0,15,34,0.6)' : 'rgba(240,244,248,0.9)',
-              '--auth-border-color': isDarkMode ? 'rgba(192,230,253,0.15)' : 'rgba(63,101,147,0.25)',
+              '--auth-text-muted': isDarkMode ? '#80aad3' : '#475569',
+              '--auth-input-bg': isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+              '--auth-border-color': isDarkMode ? 'rgba(56, 189, 248, 0.2)' : 'rgba(203, 213, 225, 0.9)',
             }}
           >
             <button
@@ -627,7 +665,7 @@ export default function Event({
                 right: '15px',
                 background: 'none',
                 border: 'none',
-                color: 'var(--auth-text-muted)',
+                color: isDarkMode ? '#80aad3' : '#64748b',
                 fontSize: '1.2rem',
                 cursor: 'pointer'
               }}
@@ -635,15 +673,22 @@ export default function Event({
               ✕
             </button>
 
-            <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontWeight: '600' }}>
+            <span style={{
+              fontSize: '0.75rem',
+              padding: '3px 10px',
+              borderRadius: '6px',
+              background: isDarkMode ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.1)',
+              color: isDarkMode ? '#38bdf8' : '#0284c7',
+              fontWeight: '600'
+            }}>
               {selectedEvent.category || selectedEvent.type || 'Seminar'}
             </span>
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--auth-text-main)', margin: '10px 0 6px 0', fontWeight: '800' }}>
+            <h2 style={{ fontSize: '1.5rem', color: isDarkMode ? '#ffffff' : '#0f2342', margin: '10px 0 6px 0', fontWeight: '800' }}>
               {selectedEvent.title}
             </h2>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -652,19 +697,19 @@ export default function Event({
               {selectedEvent.date}
             </p>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0284c7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
               {selectedEvent.venue || selectedEvent.location}
             </p>
 
-            <p style={{ fontSize: '0.9rem', color: 'var(--auth-text-main)', margin: '15px 0', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '0.9rem', color: isDarkMode ? '#c0e6fd' : '#334e68', margin: '15px 0', lineHeight: '1.5' }}>
               {selectedEvent.description || 'No additional details provided for this event.'}
             </p>
 
-            <div style={{ width: '100%', height: '1px', background: 'var(--auth-border-color)', margin: '20px 0' }}></div>
+            <div style={{ width: '100%', height: '1px', background: isDarkMode ? 'rgba(56, 189, 248, 0.2)' : 'rgba(226, 232, 240, 0.9)', margin: '20px 0' }}></div>
 
             {/* ── GUEST PROMPT (not logged in) ── */}
             {showGuestPrompt ? (
@@ -674,10 +719,10 @@ export default function Event({
                   alt="Event ticket"
                   style={{ width: '52px', height: '52px', objectFit: 'contain', marginBottom: '10px' }}
                 />
-                <h3 style={{ color: 'var(--auth-text-main)', fontSize: '1.1rem', marginBottom: '8px', fontWeight: '700' }}>
+                <h3 style={{ color: isDarkMode ? '#ffffff' : '#0f2342', fontSize: '1.1rem', marginBottom: '8px', fontWeight: '700' }}>
                   Create an account to register
                 </h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', marginBottom: '22px', lineHeight: '1.5' }}>
+                <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569', marginBottom: '22px', lineHeight: '1.5' }}>
                   You need a free account to sign up for events.<br />
                   Choose your account type below to get started.
                 </p>
@@ -691,9 +736,9 @@ export default function Event({
                       minWidth: '140px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      border: '1px solid rgba(56, 189, 248, 0.5)',
-                      background: 'linear-gradient(135deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.05) 100%)',
-                      color: '#38bdf8',
+                      border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid rgba(2, 132, 199, 0.35)',
+                      background: isDarkMode ? 'linear-gradient(135deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.05) 100%)' : 'rgba(2, 132, 199, 0.08)',
+                      color: isDarkMode ? '#38bdf8' : '#0284c7',
                       fontSize: '0.9rem',
                       fontWeight: '700',
                       cursor: 'pointer',
@@ -710,7 +755,7 @@ export default function Event({
                       style={{ width: '36px', height: '36px', objectFit: 'contain' }}
                     />
                     Student
-                    <span style={{ fontSize: '0.72rem', color: 'var(--auth-text-muted)', fontWeight: '400' }}>Sign up with Student ID</span>
+                    <span style={{ fontSize: '0.72rem', color: isDarkMode ? '#80aad3' : '#64748b', fontWeight: '400' }}>Sign up with Student ID</span>
                   </button>
 
                   {/* Non-Student / Guest sign-up */}
@@ -721,9 +766,9 @@ export default function Event({
                       minWidth: '140px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      border: '1px solid rgba(139, 92, 246, 0.5)',
-                      background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)',
-                      color: '#a78bfa',
+                      border: isDarkMode ? '1px solid rgba(139, 92, 246, 0.5)' : '1px solid rgba(124, 58, 237, 0.35)',
+                      background: isDarkMode ? 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)' : 'rgba(124, 58, 237, 0.08)',
+                      color: isDarkMode ? '#a78bfa' : '#7c3aed',
                       fontSize: '0.9rem',
                       fontWeight: '700',
                       cursor: 'pointer',
@@ -740,15 +785,15 @@ export default function Event({
                       style={{ width: '36px', height: '36px', objectFit: 'contain' }}
                     />
                     Non-Student / Guest
-                    <span style={{ fontSize: '0.72rem', color: 'var(--auth-text-muted)', fontWeight: '400' }}>Sign up as a visitor</span>
+                    <span style={{ fontSize: '0.72rem', color: isDarkMode ? '#80aad3' : '#64748b', fontWeight: '400' }}>Sign up as a visitor</span>
                   </button>
                 </div>
 
-                <p style={{ marginTop: '18px', fontSize: '0.82rem', color: 'var(--auth-text-muted)' }}>
+                <p style={{ marginTop: '18px', fontSize: '0.82rem', color: isDarkMode ? '#80aad3' : '#475569' }}>
                   Already have an account?{' '}
                   <span
                     onClick={() => { handleCloseModal(); onNavigateLogin && onNavigateLogin(); }}
-                    style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: '600' }}
+                    style={{ color: isDarkMode ? '#38bdf8' : '#0284c7', cursor: 'pointer', fontWeight: '600' }}
                   >
                     Log in here
                   </span>
@@ -759,9 +804,8 @@ export default function Event({
               <div style={{ textAlign: 'center', padding: '10px 0' }}>
                 {existingStatus === 'Declined' ? (
                   <>
-
                     <h3 style={{ color: '#f43f5e', marginBottom: '8px', fontSize: '1.15rem' }}>Registration Declined</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)', lineHeight: '1.6' }}>
+                    <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569', lineHeight: '1.6' }}>
                       Your registration for <strong>{selectedEvent?.title}</strong> was <span style={{ color: '#f43f5e', fontWeight: '700' }}>declined by the admin</span>.
                       <br />Please contact the event organizer for more information.
                     </p>
@@ -771,17 +815,15 @@ export default function Event({
                   </>
                 ) : existingStatus === 'Confirmed' || existingStatus === 'Approved' ? (
                   <>
-
                     <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.15rem' }}>Already Confirmed!</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
+                    <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569' }}>
                       Your registration for <strong>{selectedEvent?.title}</strong> has been <span style={{ color: '#10b981', fontWeight: '700' }}>confirmed</span>. Check your dashboard for your digital receipt.
                     </p>
                   </>
                 ) : (
                   <>
-
                     <h3 style={{ color: '#10b981', marginBottom: '8px', fontSize: '1.2rem' }}>Registration Submitted!</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--auth-text-muted)' }}>
+                    <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#80aad3' : '#475569' }}>
                       You are registered for <strong>{selectedEvent?.title}</strong>. Awaiting admin confirmation — check your dashboard for updates.
                     </p>
                   </>
@@ -796,7 +838,7 @@ export default function Event({
               </div>
             ) : (
               <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h4 style={{ fontSize: '1rem', color: 'var(--auth-text-main)', margin: '0 0 5px 0' }}>Register for this Event</h4>
+                <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#ffffff' : '#0f2342', margin: '0 0 5px 0', fontWeight: '700' }}>Register for this Event</h4>
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
@@ -806,9 +848,15 @@ export default function Event({
                       flex: 1,
                       padding: '8px',
                       borderRadius: '8px',
-                      border: userType === 'student' ? '1px solid #38bdf8' : '1px solid var(--auth-border-color)',
-                      background: userType === 'student' ? 'rgba(56, 189, 248, 0.15)' : 'var(--auth-input-bg)',
-                      color: userType === 'student' ? '#38bdf8' : 'var(--auth-text-muted)',
+                      border: userType === 'student'
+                        ? (isDarkMode ? '1px solid #38bdf8' : '1px solid #0284c7')
+                        : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)'),
+                      background: userType === 'student'
+                        ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7')
+                        : (isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc'),
+                      color: userType === 'student'
+                        ? (isDarkMode ? '#38bdf8' : '#ffffff')
+                        : (isDarkMode ? '#80aad3' : '#475569'),
                       fontSize: '0.85rem',
                       fontWeight: '600',
                       cursor: 'pointer'
@@ -827,9 +875,15 @@ export default function Event({
                       flex: 1,
                       padding: '8px',
                       borderRadius: '8px',
-                      border: userType === 'non-student' ? '1px solid #38bdf8' : '1px solid var(--auth-border-color)',
-                      background: userType === 'non-student' ? 'rgba(56, 189, 248, 0.15)' : 'var(--auth-input-bg)',
-                      color: userType === 'non-student' ? '#38bdf8' : 'var(--auth-text-muted)',
+                      border: userType === 'non-student'
+                        ? (isDarkMode ? '1px solid #38bdf8' : '1px solid #0284c7')
+                        : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)'),
+                      background: userType === 'non-student'
+                        ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7')
+                        : (isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc'),
+                      color: userType === 'non-student'
+                        ? (isDarkMode ? '#38bdf8' : '#ffffff')
+                        : (isDarkMode ? '#80aad3' : '#475569'),
                       fontSize: '0.85rem',
                       fontWeight: '600',
                       cursor: 'pointer'
@@ -845,7 +899,15 @@ export default function Event({
                   required
                   value={registrationData.name}
                   onChange={(e) => setRegistrationData({ ...registrationData, name: e.target.value })}
-                  style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', fontSize: '0.85rem', outline: 'none' }}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)',
+                    background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                    color: isDarkMode ? '#ffffff' : '#0f2342',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
                 />
 
                 <input
@@ -854,7 +916,15 @@ export default function Event({
                   required
                   value={registrationData.email}
                   onChange={(e) => setRegistrationData({ ...registrationData, email: e.target.value })}
-                  style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', fontSize: '0.85rem', outline: 'none' }}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)',
+                    background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                    color: isDarkMode ? '#ffffff' : '#0f2342',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
                 />
 
                 {userType === 'student' && (
@@ -864,13 +934,21 @@ export default function Event({
                     required
                     value={registrationData.studentId}
                     onChange={(e) => setRegistrationData({ ...registrationData, studentId: e.target.value })}
-                    style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--auth-border-color)', background: 'var(--auth-input-bg)', color: 'var(--auth-text-main)', fontSize: '0.85rem', outline: 'none' }}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)',
+                      background: isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc',
+                      color: isDarkMode ? '#ffffff' : '#0f2342',
+                      fontSize: '0.85rem',
+                      outline: 'none'
+                    }}
                   />
                 )}
 
                 {registrationError && (
                   <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', fontSize: '0.82rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    ⚠️ {registrationError}
+                    {registrationError}
                   </div>
                 )}
 

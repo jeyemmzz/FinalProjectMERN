@@ -301,10 +301,6 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                 />
               </div>
             </div>
-            {/* Label */}
-            <span style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)', letterSpacing: '0.02em' }}>
-              {isDarkMode ? 'Dark' : 'Light'}
-            </span>
           </div>
 
           <button className="nav-pill-btn register" onClick={onLogout} style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '6px 16px', fontSize: '0.85rem', cursor: 'pointer' }}>
@@ -403,11 +399,11 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
                                   </span>
                                   {reg.userType === 'student' ? (
                                     <span style={{ backgroundColor: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.35)', padding: '3px 9px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700' }}>
-                                      🎓 Student
+                                      Student
                                     </span>
                                   ) : (
                                     <span style={{ backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#a78bfa', border: '1px solid rgba(139, 92, 246, 0.35)', padding: '3px 9px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700' }}>
-                                      👤 Non-Student / Guest
+                                      Non-Student / Guest
                                     </span>
                                   )}
                                 </div>

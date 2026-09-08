@@ -372,9 +372,6 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
                 <img src={isDarkMode ? moonIcon : sunIcon} alt="Theme Icon" style={{ width: '11px', height: '11px', objectFit: 'contain' }} />
               </div>
             </div>
-            <span style={{ fontSize: '0.82rem', color: isDarkMode ? '#94a3b8' : '#64748b', letterSpacing: '0.02em' }}>
-              {isDarkMode ? 'Dark' : 'Light'}
-            </span>
           </div>
 
           <button

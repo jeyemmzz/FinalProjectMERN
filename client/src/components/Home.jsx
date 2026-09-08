@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import sunIcon from '../assets/sun-fill (1).png';
 import moonIcon from '../assets/moon-fill (2).png';
-import heroBg from '../assets/hero_bg2.jpg';
+import heroBg from '../assets/buildingGIF.gif';
 import '../styles/Auth.css';
 
 export default function Home({
@@ -235,10 +235,6 @@ export default function Home({
                     />
                   </div>
                 </div>
-                {/* Label */}
-                <span style={{ fontSize: '0.82rem', color: 'var(--auth-text-muted)', letterSpacing: '0.02em' }}>
-                  {isDarkMode ? 'Dark' : 'Light'}
-                </span>
               </div>
 
               {/* Conditional Actions based on Authentication */}
