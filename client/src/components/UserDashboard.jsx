@@ -5,6 +5,8 @@ import couponIcon from '../assets/coupon-2-fill.png';
 import checkboxIcon from '../assets/checkbox-circle-fill.png';
 import moonIcon from '../assets/moon-fill (2).png';
 import sunIcon from '../assets/sun-fill (1).png';
+import korpoLight from '../assets/Korpo.jpg';
+import korpoDark from '../assets/Korpo2.jpg';
 
 export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEvents, onNavigateAbout }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -195,13 +197,14 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
     }
   };
 
+  const currentBg = isDarkMode ? korpoDark : korpoLight;
+
   return (
     <div style={{
       minHeight: '100vh',
-      width: '100vw',
-      background: isDarkMode 
-        ? 'linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%)' 
-        : 'linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 50%, #f8fafc 100%)',
+      width: '100%',
+      background: `url(${currentBg}) center / cover no-repeat fixed`,
+      position: 'relative',
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',
@@ -209,6 +212,17 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
       transition: 'background 0.5s ease',
       paddingBottom: '60px'
     }}>
+      {/* Dynamic theme overlay for contrast & readability */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: isDarkMode
+          ? 'linear-gradient(135deg, rgba(9, 13, 22, 0.80) 0%, rgba(15, 23, 42, 0.75) 50%, rgba(30, 27, 75, 0.82) 100%)'
+          : 'linear-gradient(135deg, rgba(241, 245, 249, 0.82) 0%, rgba(224, 231, 255, 0.78) 50%, rgba(248, 250, 252, 0.82) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        transition: 'background 0.5s ease',
+      }} />
       
       <style>{`
         .animated-wrapper {
@@ -258,7 +272,9 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         padding: '20px 40px',
         display: 'flex',
         justifyContent: 'center',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 10
       }}>
         <div className={`animated-wrapper ${animateIn ? 'active' : ''}`} style={{
           display: 'flex',
@@ -402,7 +418,9 @@ export default function UserDashboard({ onLogout, onNavigateHome, onNavigateEven
         width: '92%',
         margin: '30px auto 50px auto',
         flex: 1,
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 1
       }}>
         
         {/* Profile Banner */}
