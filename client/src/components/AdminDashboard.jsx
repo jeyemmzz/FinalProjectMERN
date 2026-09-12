@@ -111,6 +111,30 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     setFormData(initialFormState);
   };
 
+  // Lock background scrolling when modal is open, re-enable on cancel/close
+  useEffect(() => {
+    if (isModalOpen) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape' && !isSubmitting) {
+          handleCloseModal();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isModalOpen, isSubmitting]);
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.date || !formData.venue) {

@@ -91,6 +91,30 @@ export default function Login({ onSwitchToSignup, onLoginSuccess, onNavigateHome
     return () => clearTimeout(timer);
   }, []);
 
+  // Lock background scroll when alert modal is open, re-enable on cancel/close
+  useEffect(() => {
+    if (customAlert.show) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setCustomAlert(prev => ({ ...prev, show: false }));
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [customAlert.show]);
+
   const toggleTheme = () => {
     const nextMode = !isDarkMode;
     setIsDarkMode(nextMode);

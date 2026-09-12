@@ -107,6 +107,31 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess, onNavigateHom
     }
   }, [signupType]);
 
+  // Lock background scroll when modal is open, re-enable on cancel/close
+  useEffect(() => {
+    if (showTermsModal || customAlert.show) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          if (showTermsModal) setShowTermsModal(false);
+          if (customAlert.show) setCustomAlert(prev => ({ ...prev, show: false }));
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showTermsModal, customAlert.show]);
+
   useEffect(() => {
     const timer = setTimeout(() => setAnimateIn(true), 10);
     const savedTheme = localStorage.getItem('theme') || 'dark';
