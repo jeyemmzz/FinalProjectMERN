@@ -427,3 +427,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# --- Firebase ---
+# Never commit service account keys or .env!
+serviceAccountKey.json
+*serviceAccount*.json
+server/.env
+.env
