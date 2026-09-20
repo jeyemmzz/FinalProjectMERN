@@ -115,12 +115,18 @@ export default function Event({
     setIsRegistered(false);
     setExistingStatus(null);
     setRegistrationError('');
-    setUserType('student');
+
     if (!currentUser) {
+      // Not logged in — show guest prompt (type toggle will appear there)
+      setUserType('non-student');
       setShowGuestPrompt(true);
       return;
     }
     setShowGuestPrompt(false);
+
+    // Auto-detect user type from account — no need for the toggle
+    const accountType = (currentUser.userType || '').toLowerCase();
+    setUserType(accountType === 'student' ? 'student' : 'non-student');
 
     // Check if this user already has a registration for this event
     const eventId = String(event.id || event._id);
@@ -845,34 +851,53 @@ export default function Event({
               ) : (
                 <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <h4 style={{ fontSize: '1rem', color: isDarkMode ? '#ffffff' : '#0f2342', margin: '0 0 5px 0', fontWeight: '700' }}>Register for this Event</h4>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                      type="button"
-                      onClick={() => { setUserType('student'); setRegistrationError(''); }}
-                      style={{
-                        flex: 1, padding: '8px', borderRadius: '8px',
-                        border: userType === 'student' ? (isDarkMode ? '1px solid #38bdf8' : '1px solid #0284c7') : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)'),
-                        background: userType === 'student' ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7') : (isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc'),
-                        color: userType === 'student' ? (isDarkMode ? '#38bdf8' : '#ffffff') : (isDarkMode ? '#80aad3' : '#475569'),
-                        fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer'
-                      }}
-                    >
-                      Student
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setUserType('non-student'); setRegistrationData(prev => ({ ...prev, studentId: '' })); setRegistrationError(''); }}
-                      style={{
-                        flex: 1, padding: '8px', borderRadius: '8px',
-                        border: userType === 'non-student' ? (isDarkMode ? '1px solid #38bdf8' : '1px solid #0284c7') : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)'),
-                        background: userType === 'non-student' ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7') : (isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc'),
-                        color: userType === 'non-student' ? (isDarkMode ? '#38bdf8' : '#ffffff') : (isDarkMode ? '#80aad3' : '#475569'),
-                        fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer'
-                      }}
-                    >
-                      Non-Student / Guest
-                    </button>
-                  </div>
+
+                  {/* Only show the Student/Non-Student toggle when no account is logged in */}
+                  {!currentUser ? (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setUserType('student'); setRegistrationError(''); }}
+                        style={{
+                          flex: 1, padding: '8px', borderRadius: '8px',
+                          border: userType === 'student' ? (isDarkMode ? '1px solid #38bdf8' : '1px solid #0284c7') : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)'),
+                          background: userType === 'student' ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7') : (isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc'),
+                          color: userType === 'student' ? (isDarkMode ? '#38bdf8' : '#ffffff') : (isDarkMode ? '#80aad3' : '#475569'),
+                          fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer'
+                        }}
+                      >
+                        Student
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setUserType('non-student'); setRegistrationData(prev => ({ ...prev, studentId: '' })); setRegistrationError(''); }}
+                        style={{
+                          flex: 1, padding: '8px', borderRadius: '8px',
+                          border: userType === 'non-student' ? (isDarkMode ? '1px solid #38bdf8' : '1px solid #0284c7') : (isDarkMode ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid rgba(203, 213, 225, 0.9)'),
+                          background: userType === 'non-student' ? (isDarkMode ? 'rgba(56, 189, 248, 0.2)' : '#0284c7') : (isDarkMode ? 'rgba(10, 24, 46, 0.7)' : '#f8fafc'),
+                          color: userType === 'non-student' ? (isDarkMode ? '#38bdf8' : '#ffffff') : (isDarkMode ? '#80aad3' : '#475569'),
+                          fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer'
+                        }}
+                      >
+                        Non-Student / Guest
+                      </button>
+                    </div>
+                  ) : (
+                    /* Logged-in: show a read-only badge indicating their account type */
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        padding: '5px 14px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600',
+                        background: isDarkMode ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.1)',
+                        border: isDarkMode ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid rgba(2, 132, 199, 0.3)',
+                        color: isDarkMode ? '#38bdf8' : '#0284c7'
+                      }}>
+                        {userType === 'student' ? '🎓 Student' : '👤 Non-Student / Guest'}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: isDarkMode ? '#64748b' : '#94a3b8' }}>
+                        (from your account)
+                      </span>
+                    </div>
+                  )}
                   <input
                     type="text" placeholder="Full Name" required
                     value={registrationData.name}

@@ -1,17 +1,9 @@
-/**
- * seed.js — Run this ONCE to populate Firestore with initial data.
- *
- * Usage:
- *   node seed.js
- *
- * It is safe to run multiple times — it only inserts data if the
- * collection is currently EMPTY (won't duplicate records).
- */
+
 
 const bcrypt = require('bcryptjs');
 const { db } = require('./firebase');
 
-// ─── Initial Events ───────────────────────────────────────────────────────────
+
 const INITIAL_EVENTS = [
   {
     id: '101',

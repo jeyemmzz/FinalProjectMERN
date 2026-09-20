@@ -39,6 +39,28 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
 
   const [formData, setFormData] = useState(initialFormState);
 
+  // Custom modal state (replaces window.confirm / alert)
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    type: 'confirm',     // 'confirm' | 'alert'
+    variant: 'danger',   // 'danger' | 'success' | 'info'
+    title: '',
+    message: '',
+    onConfirm: null
+  });
+
+  const openConfirmModal = ({ title, message, variant = 'danger', onConfirm }) => {
+    setConfirmModal({ show: true, type: 'confirm', variant, title, message, onConfirm });
+  };
+
+  const showAlert = ({ title, message, variant = 'info' }) => {
+    setConfirmModal({ show: true, type: 'alert', variant, title, message, onConfirm: null });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal(prev => ({ ...prev, show: false, onConfirm: null }));
+  };
+
   // Theme initialization and data fetching
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -138,7 +160,7 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.date || !formData.venue) {
-      alert('Please fill out all required fields.');
+      showAlert({ title: 'Missing Information', message: 'Please fill out all required fields before submitting.', variant: 'info' });
       return;
     }
 
@@ -158,32 +180,35 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
 
       if (!response.ok) throw new Error(`Failed to ${isEditing ? 'update' : 'create'} event.`);
 
-      alert(`Event successfully ${isEditing ? 'updated' : 'created'}!`);
+      showAlert({ title: 'Success', message: `Event successfully ${isEditing ? 'updated' : 'created'}!`, variant: 'success' });
       handleCloseModal();
       await fetchEvents();
     } catch (error) {
       console.error('Error saving event:', error);
-      alert('Database action failed. Please check backend API server.');
+      showAlert({ title: 'Error', message: 'Database action failed. Please check backend API server.', variant: 'danger' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteEvent = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/events/${id}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to delete event.');
-
-      alert('Event deleted successfully.');
-      await fetchEvents();
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('Failed to delete event from database.');
-    }
+  const handleDeleteEvent = (id) => {
+    openConfirmModal({
+      title: 'Delete Event',
+      message: 'Are you sure you want to delete this event? This cannot be undone.',
+      variant: 'danger',
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const response = await fetch(`http://localhost:5000/api/events/${id}`, { method: 'DELETE' });
+          if (!response.ok) throw new Error('Failed to delete event.');
+          showAlert({ title: 'Deleted', message: 'Event deleted successfully.', variant: 'success' });
+          await fetchEvents();
+        } catch (error) {
+          console.error('Error deleting event:', error);
+          showAlert({ title: 'Error', message: 'Failed to delete event from database.', variant: 'danger' });
+        }
+      }
+    });
   };
 
   // --- API OPERATIONS (REGISTRATIONS) ---
@@ -219,22 +244,122 @@ export default function AdminDashboard({ onLogout, onNavigateHome, currentAdmin 
     }
   };
 
-  const handleRejectRegistration = async (id) => {
-    if (!window.confirm('Are you sure you want to decline this registration request?')) return;
-
-    // Remove card from admin list immediately
-    setRegistrations(prev => prev.filter(r => (r._id || r.id) != id));
-
-    // Best-effort server sync — don't re-fetch (in-memory server resets on restart)
-    try {
-      await fetch(`http://localhost:5000/api/registrations/${id}/reject`, { method: 'PUT' });
-    } catch (error) {
-      console.error('Error declining registration on server:', error);
-    }
+  const handleRejectRegistration = (id) => {
+    openConfirmModal({
+      title: 'Decline Registration',
+      message: 'Are you sure you want to decline this registration request?',
+      variant: 'danger',
+      onConfirm: async () => {
+        closeConfirmModal();
+        setRegistrations(prev => prev.filter(r => (r._id || r.id) != id));
+        try {
+          await fetch(`http://localhost:5000/api/registrations/${id}/reject`, { method: 'PUT' });
+        } catch (error) {
+          console.error('Error declining registration on server:', error);
+        }
+      }
+    });
   };
 
   return (
     <div className="auth-page-wrapper">
+
+      {/* ── Custom Confirm / Alert Modal ───────────────────────────── */}
+      {confirmModal.show && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)'
+        }}>
+          <div style={{
+            background: isDarkMode ? '#0f1f35' : '#ffffff',
+            border: isDarkMode ? '1px solid rgba(56,189,248,0.18)' : '1px solid rgba(0,0,0,0.08)',
+            borderRadius: '18px',
+            padding: '32px 28px 24px',
+            width: '100%', maxWidth: '380px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.45)',
+            animation: 'fadeInUp 0.18s ease'
+          }}>
+            {/* Icon */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '54px', height: '54px', borderRadius: '50%',
+                background: confirmModal.variant === 'danger'
+                  ? 'rgba(239,68,68,0.12)'
+                  : confirmModal.variant === 'success'
+                  ? 'rgba(34,197,94,0.12)'
+                  : 'rgba(56,189,248,0.12)',
+                fontSize: '26px'
+              }}>
+                {confirmModal.variant === 'danger' ? '⚠️'
+                  : confirmModal.variant === 'success' ? '✅' : 'ℹ️'}
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 style={{
+              margin: '0 0 8px', textAlign: 'center',
+              fontSize: '1.1rem', fontWeight: '700',
+              color: isDarkMode ? '#f1f5f9' : '#0f172a'
+            }}>
+              {confirmModal.title}
+            </h3>
+
+            {/* Message */}
+            <p style={{
+              margin: '0 0 24px', textAlign: 'center',
+              fontSize: '0.88rem', lineHeight: '1.55',
+              color: isDarkMode ? '#94a3b8' : '#475569'
+            }}>
+              {confirmModal.message}
+            </p>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              {confirmModal.type === 'confirm' && (
+                <button
+                  onClick={closeConfirmModal}
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: '10px', fontSize: '0.88rem',
+                    fontWeight: '600', cursor: 'pointer',
+                    background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+                    border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
+                    color: isDarkMode ? '#94a3b8' : '#475569',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                onClick={confirmModal.type === 'confirm' ? confirmModal.onConfirm : closeConfirmModal}
+                style={{
+                  flex: 1, padding: '10px 0', borderRadius: '10px', fontSize: '0.88rem',
+                  fontWeight: '700', cursor: 'pointer', border: 'none',
+                  background: confirmModal.variant === 'danger'
+                    ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                    : confirmModal.variant === 'success'
+                    ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                    : 'linear-gradient(135deg, #38bdf8, #0284c7)',
+                  color: '#ffffff',
+                  boxShadow: confirmModal.variant === 'danger'
+                    ? '0 4px 14px rgba(239,68,68,0.35)'
+                    : confirmModal.variant === 'success'
+                    ? '0 4px 14px rgba(34,197,94,0.35)'
+                    : '0 4px 14px rgba(56,189,248,0.35)',
+                  transition: 'all 0.15s'
+                }}
+              >
+                {confirmModal.type === 'alert' ? 'OK'
+                  : confirmModal.variant === 'danger' ? 'Yes, Confirm'
+                  : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navbar */}
       <nav className="auth-navbar-centered">
         <div className="nav-pill-container" style={{ gap: '14px', padding: '10px 24px', flexWrap: 'wrap' }}>
